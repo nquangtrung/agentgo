@@ -20,7 +20,10 @@ func main() {
 
 	apiKey := os.Getenv("OPENAI_API_KEY")
 
-	var provider providers.AgentProvider = providers.OpenAIProvider{APIKey: apiKey}
+	var provider providers.AgentProvider = providers.OpenAIProvider{
+		APIKey: apiKey,
+		Model:  "gpt-5-mini",
+	}
 	output, err := agentgo.GenerateText(agentgo.GenerateTextParams{
 		Provider: provider,
 		Prompt:   "Say this is a test",
@@ -28,5 +31,10 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println(output.Text)
+	fmt.Printf("[output] - %s\n", output.Model)
+	fmt.Printf("Text: %s\n", output.Text)
+	fmt.Printf("Input Tokens: %d\n", output.Usage.InputTokens)
+	fmt.Printf("Output Tokens: %d\n", output.Usage.OutputTokens)
+	fmt.Printf("Cached Tokens: %d\n", output.Usage.CachedTokens)
+	fmt.Printf("Reasoning Tokens: %d\n", output.Usage.ReasoningTokens)
 }

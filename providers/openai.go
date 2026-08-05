@@ -12,6 +12,7 @@ import (
 
 type OpenAIProvider struct {
 	APIKey string
+	Model  string
 }
 
 func (p OpenAIProvider) GenerateText(prompt string) (models.LanguageModelOutput, error) {
@@ -20,11 +21,11 @@ func (p OpenAIProvider) GenerateText(prompt string) (models.LanguageModelOutput,
 	)
 
 	resp, err := client.Responses.New(context.TODO(), responses.ResponseNewParams{
-		Model: "gpt-5-mini",
+		Model: p.Model,
 		Input: responses.ResponseNewParamsInputUnion{OfString: openai.String(prompt)},
 	})
 	if err != nil {
-		panic(err.Error())
+		return models.LanguageModelOutput{}, err
 	}
 
 	return models.LanguageModelOutput{
@@ -35,5 +36,6 @@ func (p OpenAIProvider) GenerateText(prompt string) (models.LanguageModelOutput,
 			CachedTokens:    int(resp.Usage.InputTokensDetails.CachedTokens) + int(resp.Usage.InputTokensDetails.CacheWriteTokens),
 			ReasoningTokens: int(resp.Usage.OutputTokensDetails.ReasoningTokens),
 		},
+		Model: p.Model,
 	}, nil
 }

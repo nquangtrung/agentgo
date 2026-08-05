@@ -10,4 +10,5 @@ type LanguageModelUsage struct {
 type LanguageModelOutput struct {
 	Text  string
 	Usage LanguageModelUsage
+	Model string
 }
