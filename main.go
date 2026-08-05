@@ -6,10 +6,25 @@ import (
 )
 
 type GenerateTextParams struct {
-	Provider providers.AgentProvider
-	Prompt   string
+	Provider  providers.AgentProvider
+	Prompt    string
+	ModelName string
 }
 
 func GenerateText(params GenerateTextParams) (models.LanguageModelOutput, error) {
+	if params.ModelName != "" {
+		var provider, err = providers.CreateAgentProvider(providers.AgentProviderFactoryParams{
+			ModelName: params.ModelName,
+		})
+		if err != nil {
+			return models.LanguageModelOutput{}, err
+		}
+		params.Provider = provider
+	}
+
+	if params.Provider == nil {
+		return models.LanguageModelOutput{}, &models.UnsupportedModelError{ModelName: "nil provider"}
+	}
+
 	return params.Provider.GenerateText(params.Prompt)
 }

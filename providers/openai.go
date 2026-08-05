@@ -11,8 +11,9 @@ import (
 )
 
 type OpenAIProvider struct {
-	APIKey    string
-	ModelName string
+	AgentProviderImpl
+
+	APIKey string
 }
 
 func (p OpenAIProvider) GenerateText(prompt string) (models.LanguageModelOutput, error) {
@@ -21,7 +22,7 @@ func (p OpenAIProvider) GenerateText(prompt string) (models.LanguageModelOutput,
 	)
 
 	resp, err := client.Responses.New(context.TODO(), responses.ResponseNewParams{
-		Model: p.ModelName,
+		Model: p.AgentProviderImpl.Context.ModelName,
 		Input: responses.ResponseNewParamsInputUnion{OfString: openai.String(prompt)},
 	})
 	if err != nil {
@@ -36,13 +37,15 @@ func (p OpenAIProvider) GenerateText(prompt string) (models.LanguageModelOutput,
 			CachedTokens:    int(resp.Usage.InputTokensDetails.CachedTokens) + int(resp.Usage.InputTokensDetails.CacheWriteTokens),
 			ReasoningTokens: int(resp.Usage.OutputTokensDetails.ReasoningTokens),
 		},
-		ModelName: p.ModelName,
+		ModelName: p.AgentProviderImpl.Context.ModelName,
 	}, nil
 }
 
 func NewOpenAIProvider(apiKey, modelName string) OpenAIProvider {
 	return OpenAIProvider{
-		APIKey:    apiKey,
-		ModelName: modelName,
+		APIKey: apiKey,
+		AgentProviderImpl: AgentProviderImpl{
+			Context: models.NewLanguageModelContext(modelName),
+		},
 	}
 }
