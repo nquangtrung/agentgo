@@ -15,46 +15,66 @@ const (
 	PartTypeStepEnd   PartType = "step_end"
 )
 
+type FinishReason string
+
+const (
+	FinishReasonCompleted FinishReason = "completed"
+	FinishReasonFailed    FinishReason = "failed"
+	FinishReasonCancelled FinishReason = "cancelled"
+	FinishReasonTimeout   FinishReason = "timeout"
+)
+
 type Part interface {
-	String() string
+	GetContext() LanguageModelContext
 	GetType() PartType
+	GetModelName() string
 }
 
-type TextPart struct {
-	Text string `json:"text,omitempty"`
+type PartImpl struct {
+	Type    PartType             `json:"type,omitempty"`
+	Context LanguageModelContext `json:"context,omitempty"`
 }
 
-func (t TextPart) String() string {
-	return t.Text
+func (p PartImpl) GetType() PartType {
+	return p.Type
 }
 
-func (t TextPart) GetType() PartType {
-	return PartTypeText
+func (p PartImpl) GetModelName() string {
+	return p.Context.ModelName
 }
 
-type GeneralPart struct {
-	Type PartType               `json:"type"`
-	Data map[string]interface{} `json:"data,omitempty"`
+func (p PartImpl) GetContext() LanguageModelContext {
+	return p.Context
 }
 
-func (g GeneralPart) String() string {
-	if g.Type == PartTypeText {
-		return g.Data["text"].(string)
+func NewPart(context LanguageModelContext, partType PartType) PartImpl {
+	return PartImpl{
+		Type:    partType,
+		Context: context,
 	}
-	return ""
 }
 
-func (g GeneralPart) GetType() PartType {
-	return g.Type
+type EndPart interface {
+	GetUsage() LanguageModelUsage
+	GetFinishReason() FinishReason
 }
 
-func (e GeneralPart) ToSpecificEvent() Part {
-	switch e.Type {
-	case PartTypeText:
-		return TextPart{
-			Text: e.Data["text"].(string),
-		}
-	default:
-		return e
+type EndPartImpl struct {
+	Usage        LanguageModelUsage `json:"usage,omitempty"`
+	FinishReason FinishReason       `json:"finish_reason,omitempty"`
+}
+
+func (p EndPartImpl) GetUsage() LanguageModelUsage {
+	return p.Usage
+}
+
+func (p EndPartImpl) GetFinishReason() FinishReason {
+	return p.FinishReason
+}
+
+func NewPartEnd(usage LanguageModelUsage, finishReason FinishReason) EndPartImpl {
+	return EndPartImpl{
+		Usage:        usage,
+		FinishReason: finishReason,
 	}
 }

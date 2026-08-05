@@ -1,32 +1,84 @@
 package models
 
-type ToolStartPart struct {
-	ToolName string                 `json:"tool_name,omitempty"`
-	Data     map[string]interface{} `json:"data,omitempty"`
+type ToolPart interface {
+	Part
+	GetToolName() string
 }
 
-func (t ToolStartPart) String() string {
+type ToolResultPart interface {
+	ToolPart
+	EndPart
+	GetResult() map[string]interface{}
+	GetUsage() LanguageModelUsage
+}
+
+type ToolErrorPart interface {
+	ToolPart
+	EndPart
+	GetError() map[string]interface{}
+}
+
+type ToolPartImpl struct {
+	PartImpl
+	ToolName string `json:"tool_name,omitempty"`
+}
+
+func (t ToolPartImpl) GetToolName() string {
 	return t.ToolName
 }
 
-func (t ToolStartPart) GetType() PartType {
-	return PartTypeToolStart
+type ToolStartPartImpl struct {
+	ToolPartImpl
+	Data map[string]interface{} `json:"data,omitempty"`
 }
 
-type ToolResultPart struct {
-	ToolName string                 `json:"tool_name,omitempty"`
-	Data     map[string]interface{} `json:"data,omitempty"`
+type ToolResultPartImpl struct {
+	ToolPartImpl
+	EndPartImpl
+	Data map[string]interface{} `json:"data,omitempty"`
 }
 
-func (t ToolResultPart) String() string {
-	return t.ToolName
+func (t ToolResultPartImpl) GetResult() map[string]interface{} {
+	return t.Data
 }
 
-func (t ToolResultPart) GetType() PartType {
-	return PartTypeToolResult
+type ToolErrorPartImpl struct {
+	ToolPartImpl
+	EndPartImpl
+	Error map[string]interface{} `json:"error,omitempty"`
 }
 
-type ToolErrorPart struct {
-	ToolName string                 `json:"tool_name,omitempty"`
-	Data     map[string]interface{} `json:"data,omitempty"`
+func (t ToolErrorPartImpl) GetError() map[string]interface{} {
+	return t.Error
+}
+
+func NewToolStartPart(context LanguageModelContext, toolName string) ToolPart {
+	return ToolStartPartImpl{
+		ToolPartImpl: ToolPartImpl{
+			PartImpl: NewPart(context, PartTypeToolStart),
+			ToolName: toolName,
+		},
+	}
+}
+
+func NewToolResultPart(context LanguageModelContext, toolName string, result map[string]interface{}, usage LanguageModelUsage) ToolResultPart {
+	return ToolResultPartImpl{
+		EndPartImpl: NewPartEnd(usage, FinishReasonCompleted),
+		ToolPartImpl: ToolPartImpl{
+			PartImpl: NewPart(context, PartTypeToolResult),
+			ToolName: toolName,
+		},
+		Data: result,
+	}
+}
+
+func NewToolErrorPart(context LanguageModelContext, toolName string, errorData map[string]interface{}) ToolErrorPart {
+	return ToolErrorPartImpl{
+		EndPartImpl: NewPartEnd(LanguageModelUsage{}, FinishReasonFailed),
+		ToolPartImpl: ToolPartImpl{
+			PartImpl: NewPart(context, PartTypeToolError),
+			ToolName: toolName,
+		},
+		Error: errorData,
+	}
 }
