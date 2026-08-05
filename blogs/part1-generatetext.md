@@ -4,7 +4,7 @@ Hey there! 👋 Welcome! I'm excited to share this journey with you. We're build
 
 If you've ever wondered how libraries like the OpenAI SDK work under the hood, this is our chance to learn together! In this first part, we'll build the **foundation** using three powerful patterns: **Interfaces**, **Composition** (Go's take on inheritance), and the **Factory Pattern**. 
 
-These aren't just fancy buzzwords—they're practical tools that make code flexible, testable, and easy to extend. By the end, you'll understand how to support multiple AI services (OpenAI, Gemini, Claude) with clean, maintainable Go code. Let's dive in! 🚀
+These aren't just fancy buzzwords—they're practical tools that make code flexible, testable, and easy to extend. Let's start with making a simple `GenerateText` function that is simple but flexible enough to handle different LLM providers. By the end, you'll understand how to support multiple AI services (OpenAI, Gemini, Claude) with clean, maintainable Go code. Let's dive in! 🚀
 
 **📌 All the code from this blog is available on GitHub: https://github.com/nquangtrung/agentgo**
 
