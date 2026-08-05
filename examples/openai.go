@@ -21,7 +21,10 @@ func main() {
 	apiKey := os.Getenv("OPENAI_API_KEY")
 
 	var provider providers.AgentProvider = providers.OpenAIProvider{APIKey: apiKey}
-	output, err := agentgo.GenerateText(provider, "Say this is a test")
+	output, err := agentgo.GenerateText(agentgo.GenerateTextParams{
+		Provider: provider,
+		Prompt:   "Say this is a test",
+	})
 	if err != nil {
 		log.Fatal(err)
 	}

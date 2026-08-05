@@ -5,6 +5,11 @@ import (
 	"trontria.com/agentgo/providers"
 )
 
-func GenerateText(provider providers.AgentProvider, prompt string) (models.LanguageModelOutput, error) {
-	return provider.GenerateText(prompt)
+type GenerateTextParams struct {
+	Provider providers.AgentProvider
+	Prompt   string
+}
+
+func GenerateText(params GenerateTextParams) (models.LanguageModelOutput, error) {
+	return params.Provider.GenerateText(params.Prompt)
 }
