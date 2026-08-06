@@ -31,26 +31,26 @@ type Part interface {
 }
 
 type PartImpl struct {
-	Type    PartType             `json:"type,omitempty"`
-	Context LanguageModelContext `json:"context,omitempty"`
+	partType PartType
+	context  LanguageModelContext
 }
 
 func (p PartImpl) GetType() PartType {
-	return p.Type
+	return p.partType
 }
 
 func (p PartImpl) GetModelName() string {
-	return p.Context.ModelName
+	return p.context.ModelName
 }
 
 func (p PartImpl) GetContext() LanguageModelContext {
-	return p.Context
+	return p.context
 }
 
 func NewPart(context LanguageModelContext, partType PartType) PartImpl {
 	return PartImpl{
-		Type:    partType,
-		Context: context,
+		partType: partType,
+		context:  context,
 	}
 }
 

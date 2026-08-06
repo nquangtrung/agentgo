@@ -11,7 +11,7 @@ type StepStartPart interface {
 
 type StepPartImpl struct {
 	PartImpl
-	StepName string `json:"step_name,omitempty"`
+	stepName string
 }
 
 type StepStartPartImpl struct {
@@ -29,14 +29,14 @@ type StepEndPartImpl struct {
 }
 
 func (s StepPartImpl) GetStepName() string {
-	return s.StepName
+	return s.stepName
 }
 
 func NewStepStartPart(context LanguageModelContext, stepName string) StepStartPart {
 	return StepStartPartImpl{
 		StepPartImpl: StepPartImpl{
 			PartImpl: NewPart(context, PartTypeStepStart),
-			StepName: stepName,
+			stepName: stepName,
 		},
 	}
 }
@@ -52,7 +52,7 @@ func NewStepEndPart(context LanguageModelContext, stepName string, usage Languag
 	return StepEndPartImpl{
 		StepPartImpl: StepPartImpl{
 			PartImpl: NewPart(context, PartTypeStepEnd),
-			StepName: stepName,
+			stepName: stepName,
 		},
 		EndPartImpl: NewEndPart(usage, FinishReasonCompleted),
 	}

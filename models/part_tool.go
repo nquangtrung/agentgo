@@ -20,43 +20,43 @@ type ToolErrorPart interface {
 
 type ToolPartImpl struct {
 	PartImpl
-	ToolName string `json:"tool_name,omitempty"`
+	toolName string
 }
 
 func (t ToolPartImpl) GetToolName() string {
-	return t.ToolName
+	return t.toolName
 }
 
 type ToolStartPartImpl struct {
 	ToolPartImpl
-	Data map[string]interface{} `json:"data,omitempty"`
+	data map[string]interface{}
 }
 
 type ToolResultPartImpl struct {
 	ToolPartImpl
 	EndPartImpl
-	Data map[string]interface{} `json:"data,omitempty"`
+	data map[string]interface{}
 }
 
 func (t ToolResultPartImpl) GetResult() map[string]interface{} {
-	return t.Data
+	return t.data
 }
 
 type ToolErrorPartImpl struct {
 	ToolPartImpl
 	EndPartImpl
-	Error map[string]interface{} `json:"error,omitempty"`
+	error map[string]interface{}
 }
 
 func (t ToolErrorPartImpl) GetError() map[string]interface{} {
-	return t.Error
+	return t.error
 }
 
 func NewToolStartPart(context LanguageModelContext, toolName string) ToolPart {
 	return ToolStartPartImpl{
 		ToolPartImpl: ToolPartImpl{
 			PartImpl: NewPart(context, PartTypeToolStart),
-			ToolName: toolName,
+			toolName: toolName,
 		},
 	}
 }
@@ -66,9 +66,9 @@ func NewToolResultPart(context LanguageModelContext, toolName string, result map
 		EndPartImpl: NewEndPart(usage, FinishReasonCompleted),
 		ToolPartImpl: ToolPartImpl{
 			PartImpl: NewPart(context, PartTypeToolResult),
-			ToolName: toolName,
+			toolName: toolName,
 		},
-		Data: result,
+		data: result,
 	}
 }
 
@@ -77,8 +77,8 @@ func NewToolErrorPart(context LanguageModelContext, toolName string, errorData m
 		EndPartImpl: NewEndPart(LanguageModelUsage{}, FinishReasonFailed),
 		ToolPartImpl: ToolPartImpl{
 			PartImpl: NewPart(context, PartTypeToolError),
-			ToolName: toolName,
+			toolName: toolName,
 		},
-		Error: errorData,
+		error: errorData,
 	}
 }

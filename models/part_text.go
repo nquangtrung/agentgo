@@ -7,17 +7,17 @@ type TextPart interface {
 
 type TextPartImpl struct {
 	PartImpl
-	Text string `json:"text,omitempty"`
+	text string
 }
 
 func (t TextPartImpl) GetText() string {
-	return t.Text
+	return t.text
 }
 
 func NewTextPart(context LanguageModelContext, text string) TextPart {
 	return TextPartImpl{
 		PartImpl: NewPart(context, PartTypeText),
-		Text:     text,
+		text:     text,
 	}
 }
 
