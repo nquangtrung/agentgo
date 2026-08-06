@@ -1,11 +1,12 @@
 package main
 
 import (
+	"log"
+
 	"trontria.com/agentgo"
 	"trontria.com/agentgo/models"
 	"trontria.com/agentgo/utils"
 
-	"fmt"
 	"testing"
 )
 
@@ -18,39 +19,39 @@ func TestGenerateTextOpenAI(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Printf("[output] - %s\n", output.ModelName)
-	fmt.Printf("Text: %s\n", output.Text)
-	fmt.Printf("Input Tokens: %d\n", output.Usage.InputTokens)
-	fmt.Printf("Output Tokens: %d\n", output.Usage.OutputTokens)
-	fmt.Printf("Cached Tokens: %d\n", output.Usage.CachedTokens)
-	fmt.Printf("Reasoning Tokens: %d\n", output.Usage.ReasoningTokens)
+	log.Printf("[output] - %s\n", output.ModelName)
+	log.Printf("Text: %s\n", output.Text)
+	log.Printf("Input Tokens: %d\n", output.Usage.InputTokens)
+	log.Printf("Output Tokens: %d\n", output.Usage.OutputTokens)
+	log.Printf("Cached Tokens: %d\n", output.Usage.CachedTokens)
+	log.Printf("Reasoning Tokens: %d\n", output.Usage.ReasoningTokens)
 }
 
 func TestStreamTextOpenAI(t *testing.T) {
 	utils.LoadEnv("../.env")
-	c := agentgo.StreamText(agentgo.StreamTextParams{
+	output := agentgo.StreamText(agentgo.StreamTextParams{
 		ModelName: "gpt-5-mini",
-		Prompt:    "Say this is a test 10 times fast.",
+		Prompt:    "Say \"this is a test\" 10 times fast.",
 	})
-	if c == nil {
-		panic("channel is nil")
+	if output == (models.LanguageModelStreamOutput{}) {
+		panic("stream output is nil")
 	}
-	for part := range c {
+	for part := range output.Channel {
 		switch part.GetType() {
 		case models.PartTypeStepStart:
 			if stepStartPart, ok := models.ToStepStartPart(part); ok {
-				fmt.Printf("[step start] - %s\n", stepStartPart.GetStepName())
+				log.Printf("[step start] - %s\n", stepStartPart.GetStepName())
 			}
 		case models.PartTypeStepEnd:
 			if stepEndPart, ok := models.ToStepEndPart(part); ok {
-				fmt.Printf("[step end] - %s\n", stepEndPart.GetStepName())
+				log.Printf("[step end] - %s\n", stepEndPart.GetStepName())
 			}
 		case models.PartTypeText:
 			if textPart, ok := models.ToTextPart(part); ok {
-				fmt.Printf("[text] - %s\n", textPart.GetText())
+				log.Printf("[text] - %s\n", textPart.GetText())
 			}
 		default:
-			fmt.Printf("[unknown] - %s\n", part.GetType())
+			log.Printf("[unknown] - %s\n", part.GetType())
 		}
 	}
 }

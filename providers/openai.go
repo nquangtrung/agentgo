@@ -2,6 +2,7 @@ package providers
 
 import (
 	"context"
+	"log"
 
 	"github.com/openai/openai-go/v3"
 	"github.com/openai/openai-go/v3/option"
@@ -41,8 +42,9 @@ func (p OpenAIProvider) GenerateText(prompt string) (models.LanguageModelOutput,
 	}, nil
 }
 
-func (p OpenAIProvider) StreamText(prompt string) chan models.Part {
+func (p OpenAIProvider) StreamText(prompt string) models.LanguageModelStreamOutput {
 	c := make(chan models.Part)
+	output := models.NewLanguageModelStreamOutput(c, p.GetContext().ModelName)
 
 	go func() {
 		client := openai.NewClient(
@@ -50,16 +52,17 @@ func (p OpenAIProvider) StreamText(prompt string) chan models.Part {
 		)
 		stream := client.Responses.NewStreaming(context.Background(), responses.ResponseNewParams{
 			Model: p.AgentProviderImpl.Context.ModelName,
-			Input: responses.ResponseNewParamsInputUnion{OfString: openai.String("Say 'double bubble bath' ten times fast.")},
+			Input: responses.ResponseNewParamsInputUnion{OfString: openai.String(prompt)},
 		})
 
 		c <- models.NewStepStartPart(p.GetContext(), "streaming started")
 
 		for stream.Next() {
 			chunk := stream.Current()
+			log.Println("Received chunk:", chunk.Type)
 			switch chunk.Type {
 			case "response.output_text.delta":
-				c <- models.NewTextPart(p.GetContext(), string(chunk.Text))
+				c <- models.NewTextPart(p.GetContext(), string(chunk.Delta))
 			case "response.completed":
 				c <- models.NewStepEndPart(p.GetContext(), "stream completed", models.NewLanguageModelUsage(
 					int(chunk.Response.Usage.OutputTokens),
@@ -73,7 +76,7 @@ func (p OpenAIProvider) StreamText(prompt string) chan models.Part {
 		close(c)
 	}()
 
-	return c
+	return output
 }
 
 func NewOpenAIProvider(apiKey, modelName string) OpenAIProvider {

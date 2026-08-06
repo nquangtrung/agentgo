@@ -30,6 +30,18 @@ func NewLanguageModelOutput(text string, usage LanguageModelUsage, modelName str
 	}
 }
 
+type LanguageModelStreamOutput struct {
+	Channel   chan Part
+	ModelName string
+}
+
+func NewLanguageModelStreamOutput(channel chan Part, modelName string) LanguageModelStreamOutput {
+	return LanguageModelStreamOutput{
+		Channel:   channel,
+		ModelName: modelName,
+	}
+}
+
 type LanguageModelContext struct {
 	ModelName string
 }

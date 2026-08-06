@@ -35,7 +35,7 @@ type StreamTextParams struct {
 	ModelName string
 }
 
-func StreamText(params StreamTextParams) chan models.Part {
+func StreamText(params StreamTextParams) models.LanguageModelStreamOutput {
 	if params.ModelName != "" {
 		var provider, err = providers.CreateAgentProvider(providers.AgentProviderFactoryParams{
 			ModelName: params.ModelName,
