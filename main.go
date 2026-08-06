@@ -28,3 +28,27 @@ func GenerateText(params GenerateTextParams) (models.LanguageModelOutput, error)
 
 	return params.Provider.GenerateText(params.Prompt)
 }
+
+type StreamTextParams struct {
+	Provider  providers.AgentProvider
+	Prompt    string
+	ModelName string
+}
+
+func StreamText(params StreamTextParams) chan models.Part {
+	if params.ModelName != "" {
+		var provider, err = providers.CreateAgentProvider(providers.AgentProviderFactoryParams{
+			ModelName: params.ModelName,
+		})
+		if err != nil {
+			panic(err)
+		}
+		params.Provider = provider
+	}
+
+	if params.Provider == nil {
+		panic("nil provider")
+	}
+
+	return params.Provider.StreamText(params.Prompt)
+}

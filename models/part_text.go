@@ -20,3 +20,10 @@ func NewTextPart(context LanguageModelContext, text string) TextPart {
 		Text:     text,
 	}
 }
+
+func ToTextPart(part Part) (TextPart, bool) {
+	if textPart, ok := part.(TextPart); ok {
+		return textPart, true
+	}
+	return nil, false
+}

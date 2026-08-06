@@ -44,28 +44,34 @@ func (p OpenAIProvider) GenerateText(prompt string) (models.LanguageModelOutput,
 func (p OpenAIProvider) StreamText(prompt string) chan models.Part {
 	c := make(chan models.Part)
 
-	client := openai.NewClient(
-		option.WithAPIKey(p.APIKey),
-	)
-	stream := client.Responses.NewStreaming(context.Background(), responses.ResponseNewParams{
-		Model: p.AgentProviderImpl.Context.ModelName,
-		Input: responses.ResponseNewParamsInputUnion{OfString: openai.String("Say 'double bubble bath' ten times fast.")},
-	})
+	go func() {
+		client := openai.NewClient(
+			option.WithAPIKey(p.APIKey),
+		)
+		stream := client.Responses.NewStreaming(context.Background(), responses.ResponseNewParams{
+			Model: p.AgentProviderImpl.Context.ModelName,
+			Input: responses.ResponseNewParamsInputUnion{OfString: openai.String("Say 'double bubble bath' ten times fast.")},
+		})
 
-	for stream.Next() {
-		chunk := stream.Current()
-		switch chunk.Type {
-		case "response.output_text.delta":
-			c <- models.NewTextPart(p.GetContext(), string(chunk.Text))
-		case "response.completed":
-			c <- models.NewStepEndPart(p.GetContext(), "stream completed", models.NewLanguageModelUsage(
-				int(chunk.Response.Usage.OutputTokens),
-				int(chunk.Response.Usage.InputTokens),
-				int(chunk.Response.Usage.InputTokensDetails.CachedTokens)+int(chunk.Response.Usage.InputTokensDetails.CacheWriteTokens),
-				int(chunk.Response.Usage.OutputTokensDetails.ReasoningTokens),
-			))
+		c <- models.NewStepStartPart(p.GetContext(), "streaming started")
+
+		for stream.Next() {
+			chunk := stream.Current()
+			switch chunk.Type {
+			case "response.output_text.delta":
+				c <- models.NewTextPart(p.GetContext(), string(chunk.Text))
+			case "response.completed":
+				c <- models.NewStepEndPart(p.GetContext(), "stream completed", models.NewLanguageModelUsage(
+					int(chunk.Response.Usage.OutputTokens),
+					int(chunk.Response.Usage.InputTokens),
+					int(chunk.Response.Usage.InputTokensDetails.CachedTokens)+int(chunk.Response.Usage.InputTokensDetails.CacheWriteTokens),
+					int(chunk.Response.Usage.OutputTokensDetails.ReasoningTokens),
+				))
+			}
 		}
-	}
+
+		close(c)
+	}()
 
 	return c
 }
