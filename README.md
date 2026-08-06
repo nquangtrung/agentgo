@@ -148,7 +148,7 @@ All providers embed this, so they don't repeat the common code.
 ### The Factory (Hide Complexity)
 ```go
 provider, err := CreateAgentProvider(AgentProviderFactoryParams{
-	ModelName: "gpt-4",
+	ModelName: "gpt-5-mini",
 })
 ```
 
@@ -194,14 +194,11 @@ This is an educational project! Contributions are welcome:
 - Submit issues or suggestions
 
 
-## Next Steps
+## Full series
 
-1. Read [Part 1: GenerateText](blogs/part1-generatetext.md) to understand the architecture
-2. Check out `examples/openai.go` to see it in action
-3. Try adding your own provider!
-4. Keep an eye out for Part 2 on streaming responses
-
-Happy coding! 🎉
+Check out the full series here:  
+- [Part 1: GenerateText](https://blog.trontria.com/posts/agentgo/part1-generatetext/)  
+- [Part 2: StreamText & Polymorphic Parts](https://blog.trontria.com/posts/agentgo/part2-streamtext/)
 
 ## License
 
