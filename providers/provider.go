@@ -7,10 +7,23 @@ import (
 	"trontria.com/agentgo/utils"
 )
 
+type AgentProviderPromptMessageParams struct {
+	Prompt   string
+	Messages []models.Message
+}
+
+type AgentProviderGenerateTextParams struct {
+	AgentProviderPromptMessageParams
+}
+
+type AgentProviderStreamTextParams struct {
+	AgentProviderPromptMessageParams
+}
+
 type AgentProvider interface {
 	GetContext() models.LanguageModelContext
-	GenerateText(prompt string) (models.LanguageModelOutput, error)
-	StreamText(prompt string, channel chan models.Part)
+	GenerateText(params AgentProviderGenerateTextParams) (models.LanguageModelOutput, error)
+	StreamText(params AgentProviderStreamTextParams, channel chan models.Part)
 }
 
 type AgentProviderImpl struct {

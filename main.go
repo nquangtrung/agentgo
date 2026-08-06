@@ -9,6 +9,7 @@ type GenerateTextParams struct {
 	Provider  providers.AgentProvider
 	Prompt    string
 	ModelName string
+	Messages  []models.Message
 }
 
 func GenerateText(params GenerateTextParams) (models.LanguageModelOutput, error) {
@@ -26,13 +27,19 @@ func GenerateText(params GenerateTextParams) (models.LanguageModelOutput, error)
 		return models.LanguageModelOutput{}, &models.UnsupportedModelError{ModelName: "nil provider"}
 	}
 
-	return params.Provider.GenerateText(params.Prompt)
+	return params.Provider.GenerateText(providers.AgentProviderGenerateTextParams{
+		AgentProviderPromptMessageParams: providers.AgentProviderPromptMessageParams{
+			Prompt:   params.Prompt,
+			Messages: params.Messages,
+		},
+	})
 }
 
 type StreamTextParams struct {
 	Provider  providers.AgentProvider
 	Prompt    string
 	ModelName string
+	Messages  []models.Message
 }
 
 func StreamText(params StreamTextParams) models.LanguageModelStreamOutput {
@@ -53,7 +60,12 @@ func StreamText(params StreamTextParams) models.LanguageModelStreamOutput {
 	channel := make(chan models.Part)
 	go func() {
 		defer close(channel)
-		params.Provider.StreamText(params.Prompt, channel)
+		params.Provider.StreamText(providers.AgentProviderStreamTextParams{
+			AgentProviderPromptMessageParams: providers.AgentProviderPromptMessageParams{
+				Prompt:   params.Prompt,
+				Messages: params.Messages,
+			},
+		}, channel)
 	}()
 
 	return models.NewLanguageModelStreamOutput(channel, params.Provider.GetContext().ModelName)
