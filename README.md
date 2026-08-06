@@ -193,9 +193,6 @@ This is an educational project! Contributions are welcome:
 - Add tests
 - Submit issues or suggestions
 
-## License
-
-MIT - Feel free to use this for learning!
 
 ## Next Steps
 
@@ -205,3 +202,7 @@ MIT - Feel free to use this for learning!
 4. Keep an eye out for Part 2 on streaming responses
 
 Happy coding! 🎉
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
