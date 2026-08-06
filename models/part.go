@@ -72,7 +72,7 @@ func (p EndPartImpl) GetFinishReason() FinishReason {
 	return p.FinishReason
 }
 
-func NewPartEnd(usage LanguageModelUsage, finishReason FinishReason) EndPartImpl {
+func NewEndPart(usage LanguageModelUsage, finishReason FinishReason) EndPartImpl {
 	return EndPartImpl{
 		Usage:        usage,
 		FinishReason: finishReason,

@@ -63,7 +63,7 @@ func NewToolStartPart(context LanguageModelContext, toolName string) ToolPart {
 
 func NewToolResultPart(context LanguageModelContext, toolName string, result map[string]interface{}, usage LanguageModelUsage) ToolResultPart {
 	return ToolResultPartImpl{
-		EndPartImpl: NewPartEnd(usage, FinishReasonCompleted),
+		EndPartImpl: NewEndPart(usage, FinishReasonCompleted),
 		ToolPartImpl: ToolPartImpl{
 			PartImpl: NewPart(context, PartTypeToolResult),
 			ToolName: toolName,
@@ -74,7 +74,7 @@ func NewToolResultPart(context LanguageModelContext, toolName string, result map
 
 func NewToolErrorPart(context LanguageModelContext, toolName string, errorData map[string]interface{}) ToolErrorPart {
 	return ToolErrorPartImpl{
-		EndPartImpl: NewPartEnd(LanguageModelUsage{}, FinishReasonFailed),
+		EndPartImpl: NewEndPart(LanguageModelUsage{}, FinishReasonFailed),
 		ToolPartImpl: ToolPartImpl{
 			PartImpl: NewPart(context, PartTypeToolError),
 			ToolName: toolName,

@@ -47,6 +47,6 @@ func NewStepEndPart(context LanguageModelContext, stepName string, usage Languag
 			PartImpl: NewPart(context, PartTypeStepEnd),
 			StepName: stepName,
 		},
-		EndPartImpl: NewPartEnd(usage, FinishReasonCompleted),
+		EndPartImpl: NewEndPart(usage, FinishReasonCompleted),
 	}
 }
