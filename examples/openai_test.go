@@ -2,11 +2,14 @@ package main
 
 import (
 	"trontria.com/agentgo"
+	"trontria.com/agentgo/utils"
 
 	"fmt"
+	"testing"
 )
 
-func main() {
+func TestGenerateTextOpenAI(t *testing.T) {
+	utils.LoadEnv("../.env")
 	output, err := agentgo.GenerateText(agentgo.GenerateTextParams{
 		ModelName: "gpt-5-mini",
 		Prompt:    "Say this is a test",

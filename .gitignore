@@ -1,4 +1,4 @@
 .env
 
-examples/experiments.go
+examples/experiments_test.go
 examples/playground.go
