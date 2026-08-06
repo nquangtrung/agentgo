@@ -10,7 +10,7 @@ import (
 type AgentProvider interface {
 	GetContext() models.LanguageModelContext
 	GenerateText(prompt string) (models.LanguageModelOutput, error)
-	StreamText(prompt string) models.LanguageModelStreamOutput
+	StreamText(prompt string, channel chan models.Part)
 }
 
 type AgentProviderImpl struct {

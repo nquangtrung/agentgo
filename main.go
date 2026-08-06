@@ -50,5 +50,11 @@ func StreamText(params StreamTextParams) models.LanguageModelStreamOutput {
 		panic("nil provider")
 	}
 
-	return params.Provider.StreamText(params.Prompt)
+	channel := make(chan models.Part)
+	go func() {
+		defer close(channel)
+		params.Provider.StreamText(params.Prompt, channel)
+	}()
+
+	return models.NewLanguageModelStreamOutput(channel, params.Provider.GetContext().ModelName)
 }

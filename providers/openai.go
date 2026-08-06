@@ -42,41 +42,32 @@ func (p OpenAIProvider) GenerateText(prompt string) (models.LanguageModelOutput,
 	}, nil
 }
 
-func (p OpenAIProvider) StreamText(prompt string) models.LanguageModelStreamOutput {
-	c := make(chan models.Part)
-	output := models.NewLanguageModelStreamOutput(c, p.GetContext().ModelName)
+func (p OpenAIProvider) StreamText(prompt string, channel chan models.Part) {
+	client := openai.NewClient(
+		option.WithAPIKey(p.APIKey),
+	)
+	stream := client.Responses.NewStreaming(context.Background(), responses.ResponseNewParams{
+		Model: p.AgentProviderImpl.Context.ModelName,
+		Input: responses.ResponseNewParamsInputUnion{OfString: openai.String(prompt)},
+	})
 
-	go func() {
-		client := openai.NewClient(
-			option.WithAPIKey(p.APIKey),
-		)
-		stream := client.Responses.NewStreaming(context.Background(), responses.ResponseNewParams{
-			Model: p.AgentProviderImpl.Context.ModelName,
-			Input: responses.ResponseNewParamsInputUnion{OfString: openai.String(prompt)},
-		})
+	channel <- models.NewStepStartPart(p.GetContext(), "streaming started")
 
-		c <- models.NewStepStartPart(p.GetContext(), "streaming started")
-
-		for stream.Next() {
-			chunk := stream.Current()
-			log.Println("Received chunk:", chunk.Type)
-			switch chunk.Type {
-			case "response.output_text.delta":
-				c <- models.NewTextPart(p.GetContext(), string(chunk.Delta))
-			case "response.completed":
-				c <- models.NewStepEndPart(p.GetContext(), "stream completed", models.NewLanguageModelUsage(
-					int(chunk.Response.Usage.OutputTokens),
-					int(chunk.Response.Usage.InputTokens),
-					int(chunk.Response.Usage.InputTokensDetails.CachedTokens)+int(chunk.Response.Usage.InputTokensDetails.CacheWriteTokens),
-					int(chunk.Response.Usage.OutputTokensDetails.ReasoningTokens),
-				))
-			}
+	for stream.Next() {
+		chunk := stream.Current()
+		log.Println("Received chunk:", chunk.Type)
+		switch chunk.Type {
+		case "response.output_text.delta":
+			channel <- models.NewTextPart(p.GetContext(), string(chunk.Delta))
+		case "response.completed":
+			channel <- models.NewStepEndPart(p.GetContext(), "stream completed", models.NewLanguageModelUsage(
+				int(chunk.Response.Usage.OutputTokens),
+				int(chunk.Response.Usage.InputTokens),
+				int(chunk.Response.Usage.InputTokensDetails.CachedTokens)+int(chunk.Response.Usage.InputTokensDetails.CacheWriteTokens),
+				int(chunk.Response.Usage.OutputTokensDetails.ReasoningTokens),
+			))
 		}
-
-		close(c)
-	}()
-
-	return output
+	}
 }
 
 func NewOpenAIProvider(apiKey, modelName string) OpenAIProvider {
