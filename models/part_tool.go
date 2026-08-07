@@ -5,6 +5,7 @@ type ToolPart interface {
 }
 
 type ToolResultPart interface {
+	Part
 	ToolPart
 	EndPart
 	GetResult() map[string]interface{}
@@ -12,6 +13,7 @@ type ToolResultPart interface {
 }
 
 type ToolErrorPart interface {
+	Part
 	ToolPart
 	EndPart
 	GetError() map[string]interface{}
@@ -24,6 +26,11 @@ type ToolPartImpl struct {
 
 func (t ToolPartImpl) GetToolName() string {
 	return t.toolName
+}
+
+type ToolStartPart interface {
+	Part
+	ToolPart
 }
 
 type ToolStartPartImpl struct {
@@ -51,7 +58,7 @@ func (t ToolErrorPartImpl) GetError() map[string]interface{} {
 	return t.error
 }
 
-func NewToolStartPart(context LanguageModelContext, toolName string) ToolPart {
+func NewToolStartPart(context LanguageModelContext, toolName string) ToolStartPart {
 	return ToolStartPartImpl{
 		ToolPartImpl: ToolPartImpl{
 			PartImpl: NewPart(context, PartTypeToolStart),

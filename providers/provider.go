@@ -8,7 +8,6 @@ import (
 )
 
 type AgentProviderPromptMessageParams struct {
-	Prompt   string
 	Messages []models.Message
 }
 
@@ -24,6 +23,7 @@ type AgentProvider interface {
 	GetContext() models.LanguageModelContext
 	GenerateText(params AgentProviderGenerateTextParams) (models.LanguageModelOutput, error)
 	StreamText(params AgentProviderStreamTextParams, channel chan models.Part)
+	ResolveToolCalls(params AgentProviderPromptMessageParams, toolParams []models.Tool) ([]models.ToolCall, error)
 }
 
 type AgentProviderImpl struct {

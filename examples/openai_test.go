@@ -12,7 +12,7 @@ import (
 
 func TestGenerateTextOpenAI(t *testing.T) {
 	utils.LoadEnv("../.env")
-	output, err := agentgo.GenerateText(agentgo.GenerateTextParams{
+	output, err := agentgo.GenerateText(agentgo.Params{
 		ModelName: "gpt-5-mini",
 		Prompt:    "Say this is a test",
 	})
@@ -37,7 +37,7 @@ func TestGenerateTextOpenAIWithInput(t *testing.T) {
 		models.NewHumanStringMessage("My name is John. Can you tell me a joke?"),
 	}
 
-	output1, err := agentgo.GenerateText(agentgo.GenerateTextParams{
+	output1, err := agentgo.GenerateText(agentgo.Params{
 		ModelName: modelName,
 		Messages:  messages,
 	})
@@ -57,7 +57,7 @@ func TestGenerateTextOpenAIWithInput(t *testing.T) {
 		models.NewAssistantStringMessage(output1.Text),
 		models.NewHumanStringMessage("What is my name?"),
 	)
-	output2, err := agentgo.GenerateText(agentgo.GenerateTextParams{
+	output2, err := agentgo.GenerateText(agentgo.Params{
 		ModelName: modelName,
 		Messages:  messages,
 	})
@@ -75,7 +75,7 @@ func TestGenerateTextOpenAIWithInput(t *testing.T) {
 
 func TestStreamTextOpenAI(t *testing.T) {
 	utils.LoadEnv("../.env")
-	output := agentgo.StreamText(agentgo.StreamTextParams{
+	output := agentgo.StreamText(agentgo.Params{
 		ModelName: "gpt-5-mini",
 		Prompt:    "Say \"this is a test\" 10 times fast.",
 	})
@@ -112,7 +112,7 @@ func TestStreamTextOpenAIWithInput(t *testing.T) {
 		models.NewHumanStringMessage("My name is John. Can you tell me a joke?"),
 	}
 
-	output1 := agentgo.StreamText(agentgo.StreamTextParams{
+	output1 := agentgo.StreamText(agentgo.Params{
 		ModelName: modelName,
 		Messages:  messages,
 	})
@@ -147,7 +147,7 @@ func TestStreamTextOpenAIWithInput(t *testing.T) {
 		models.NewHumanStringMessage("What is my name?"),
 	)
 
-	output2 := agentgo.StreamText(agentgo.StreamTextParams{
+	output2 := agentgo.StreamText(agentgo.Params{
 		ModelName: modelName,
 		Messages:  messages,
 	})

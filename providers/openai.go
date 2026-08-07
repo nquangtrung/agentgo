@@ -19,11 +19,11 @@ type OpenAIProvider struct {
 }
 
 func (p OpenAIProvider) GetInputFromParams(params AgentProviderPromptMessageParams) responses.ResponseNewParamsInputUnion {
-	if len(params.Messages) > 0 {
-		return p.ConvertMessageObjectToInput(params.Messages)
+	if len(params.Messages) == 0 {
+		panic("no messages provided to GetInputFromParams")
 	}
 
-	return responses.ResponseNewParamsInputUnion{OfString: openai.String(params.Prompt)}
+	return p.ConvertMessageObjectToInput(params.Messages)
 }
 
 func (p OpenAIProvider) ConvertMessageObjectToInput(messages []models.Message) responses.ResponseNewParamsInputUnion {
@@ -118,6 +118,10 @@ func (p OpenAIProvider) StreamText(params AgentProviderStreamTextParams, channel
 			))
 		}
 	}
+}
+
+func (p OpenAIProvider) ResolveToolCalls(params AgentProviderPromptMessageParams, toolParams []models.Tool) ([]models.ToolCall, error) {
+	return []models.ToolCall{}, nil
 }
 
 func NewOpenAIProvider(apiKey, modelName string) OpenAIProvider {

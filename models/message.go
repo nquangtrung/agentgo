@@ -1,5 +1,9 @@
 package models
 
+import (
+	"encoding/json"
+)
+
 type MessageRole string
 
 const (
@@ -54,6 +58,16 @@ func NewHumanStringMessage(content string) Message {
 
 func NewAssistantStringMessage(content string) Message {
 	return NewStringMessage(MessageRoleAssistant, content)
+}
+
+func NewMessageFromToolResult(output ToolExecuteOutput) Message {
+	if output.Error != nil {
+		stringError, _ := json.Marshal(output.Error)
+		return NewAssistantStringMessage("Tool execution error: " + string(stringError))
+	} else {
+		stringResult, _ := json.Marshal(output.Result)
+		return NewAssistantStringMessage("Tool execution result: " + string(stringResult))
+	}
 }
 
 func NewSystemStringMessage(content string) Message {
