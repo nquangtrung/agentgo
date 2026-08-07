@@ -1,11 +1,11 @@
 package models
 
 type StepPart interface {
-	Part
 	GetStepName() string
 }
 
 type StepStartPart interface {
+	Part
 	StepPart
 }
 
@@ -19,6 +19,7 @@ type StepStartPartImpl struct {
 }
 
 type StepEndPart interface {
+	Part
 	StepPart
 	EndPart
 }
@@ -41,13 +42,6 @@ func NewStepStartPart(context LanguageModelContext, stepName string) StepStartPa
 	}
 }
 
-func ToStepStartPart(part Part) (StepStartPart, bool) {
-	if stepStartPart, ok := part.(StepStartPart); ok {
-		return stepStartPart, true
-	}
-	return nil, false
-}
-
 func NewStepEndPart(context LanguageModelContext, stepName string, usage LanguageModelUsage) StepEndPart {
 	return StepEndPartImpl{
 		StepPartImpl: StepPartImpl{
@@ -56,11 +50,4 @@ func NewStepEndPart(context LanguageModelContext, stepName string, usage Languag
 		},
 		EndPartImpl: NewEndPart(usage, FinishReasonCompleted),
 	}
-}
-
-func ToStepEndPart(part Part) (StepEndPart, bool) {
-	if stepEndPart, ok := part.(StepEndPart); ok {
-		return stepEndPart, true
-	}
-	return nil, false
 }

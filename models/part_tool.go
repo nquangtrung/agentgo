@@ -1,7 +1,6 @@
 package models
 
 type ToolPart interface {
-	Part
 	GetToolName() string
 }
 

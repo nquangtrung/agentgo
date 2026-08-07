@@ -1,8 +1,12 @@
 package models
 
+type ContentPart interface {
+	GetText() string
+}
+
 type TextPart interface {
 	Part
-	GetText() string
+	ContentPart
 }
 
 type TextPartImpl struct {
@@ -19,11 +23,4 @@ func NewTextPart(context LanguageModelContext, text string) TextPart {
 		PartImpl: NewPart(context, PartTypeText),
 		text:     text,
 	}
-}
-
-func ToTextPart(part Part) (TextPart, bool) {
-	if textPart, ok := part.(TextPart); ok {
-		return textPart, true
-	}
-	return nil, false
 }

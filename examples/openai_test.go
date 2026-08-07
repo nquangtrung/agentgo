@@ -85,15 +85,15 @@ func TestStreamTextOpenAI(t *testing.T) {
 	for part := range output.Channel {
 		switch part.GetType() {
 		case models.PartTypeStepStart:
-			if stepStartPart, ok := models.ToStepStartPart(part); ok {
+			if stepStartPart, ok := part.AsStepStartPart(); ok {
 				log.Printf("[step start] - %s\n", stepStartPart.GetStepName())
 			}
 		case models.PartTypeStepEnd:
-			if stepEndPart, ok := models.ToStepEndPart(part); ok {
+			if stepEndPart, ok := part.AsStepEndPart(); ok {
 				log.Printf("[step end] - %s\n", stepEndPart.GetStepName())
 			}
 		case models.PartTypeText:
-			if textPart, ok := models.ToTextPart(part); ok {
+			if textPart, ok := part.AsTextPart(); ok {
 				log.Printf("[text] - %s\n", textPart.GetText())
 			}
 		default:
@@ -124,15 +124,15 @@ func TestStreamTextOpenAIWithInput(t *testing.T) {
 	for part := range output1.Channel {
 		switch part.GetType() {
 		case models.PartTypeStepStart:
-			if stepStartPart, ok := models.ToStepStartPart(part); ok {
+			if stepStartPart, ok := part.AsStepStartPart(); ok {
 				log.Printf("[step start] - %s\n", stepStartPart.GetStepName())
 			}
 		case models.PartTypeStepEnd:
-			if stepEndPart, ok := models.ToStepEndPart(part); ok {
+			if stepEndPart, ok := part.AsStepEndPart(); ok {
 				log.Printf("[step end] - %s\n", stepEndPart.GetStepName())
 			}
 		case models.PartTypeText:
-			if textPart, ok := models.ToTextPart(part); ok {
+			if textPart, ok := part.AsTextPart(); ok {
 				log.Printf("[text] - %s\n", textPart.GetText())
 				text1 += textPart.GetText()
 			}
@@ -157,15 +157,15 @@ func TestStreamTextOpenAIWithInput(t *testing.T) {
 	for part := range output2.Channel {
 		switch part.GetType() {
 		case models.PartTypeStepStart:
-			if stepStartPart, ok := models.ToStepStartPart(part); ok {
+			if stepStartPart, ok := part.AsStepStartPart(); ok {
 				log.Printf("[step start] - %s\n", stepStartPart.GetStepName())
 			}
 		case models.PartTypeStepEnd:
-			if stepEndPart, ok := models.ToStepEndPart(part); ok {
+			if stepEndPart, ok := part.AsStepEndPart(); ok {
 				log.Printf("[step end] - %s\n", stepEndPart.GetStepName())
 			}
 		case models.PartTypeText:
-			if textPart, ok := models.ToTextPart(part); ok {
+			if textPart, ok := part.AsTextPart(); ok {
 				log.Printf("[text] - %s\n", textPart.GetText())
 				text2 += textPart.GetText()
 			}
