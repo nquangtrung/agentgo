@@ -19,6 +19,7 @@ type AgentProviderStreamTextParams struct {
 	AgentProviderPromptMessageParams
 }
 
+//go:generate mockgen -destination=../mocks/mock_agent_provider.go -package=mocks trontria.com/agentgo/providers AgentProvider
 type AgentProvider interface {
 	GetContext() models.LanguageModelContext
 	GenerateText(params AgentProviderGenerateTextParams) (models.LanguageModelOutput, error)

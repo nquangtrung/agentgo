@@ -8,7 +8,7 @@ type ToolResultPart interface {
 	Part
 	ToolPart
 	EndPart
-	GetResult() map[string]interface{}
+	GetResult() map[string]any
 	GetUsage() LanguageModelUsage
 }
 
@@ -16,7 +16,7 @@ type ToolErrorPart interface {
 	Part
 	ToolPart
 	EndPart
-	GetError() map[string]interface{}
+	GetError() map[string]any
 }
 
 type ToolPartImpl struct {
@@ -35,54 +35,63 @@ type ToolStartPart interface {
 
 type ToolStartPartImpl struct {
 	ToolPartImpl
-	data map[string]interface{}
+	data map[string]any
 }
 
 type ToolResultPartImpl struct {
 	ToolPartImpl
 	EndPartImpl
-	data map[string]interface{}
+	data map[string]any
 }
 
-func (t ToolResultPartImpl) GetResult() map[string]interface{} {
+func (t ToolResultPartImpl) GetResult() map[string]any {
 	return t.data
 }
 
 type ToolErrorPartImpl struct {
 	ToolPartImpl
 	EndPartImpl
-	error map[string]interface{}
+	error map[string]any
 }
 
-func (t ToolErrorPartImpl) GetError() map[string]interface{} {
+func (t ToolErrorPartImpl) GetError() map[string]any {
 	return t.error
 }
 
 func NewToolStartPart(context LanguageModelContext, toolName string) ToolStartPart {
-	return ToolStartPartImpl{
+	return &ToolStartPartImpl{
 		ToolPartImpl: ToolPartImpl{
-			PartImpl: NewPart(context, PartTypeToolStart),
+			PartImpl: PartImpl{
+				partType: PartTypeToolStart,
+				context:  context,
+			},
 			toolName: toolName,
 		},
 	}
 }
 
-func NewToolResultPart(context LanguageModelContext, toolName string, result map[string]interface{}, usage LanguageModelUsage) ToolResultPart {
-	return ToolResultPartImpl{
+func NewToolResultPart(context LanguageModelContext, toolName string, result map[string]any, usage LanguageModelUsage) ToolResultPart {
+	return &ToolResultPartImpl{
 		EndPartImpl: NewEndPart(usage, FinishReasonCompleted),
 		ToolPartImpl: ToolPartImpl{
-			PartImpl: NewPart(context, PartTypeToolResult),
+			PartImpl: PartImpl{
+				partType: PartTypeToolResult,
+				context:  context,
+			},
 			toolName: toolName,
 		},
 		data: result,
 	}
 }
 
-func NewToolErrorPart(context LanguageModelContext, toolName string, errorData map[string]interface{}) ToolErrorPart {
-	return ToolErrorPartImpl{
+func NewToolErrorPart(context LanguageModelContext, toolName string, errorData map[string]any) ToolErrorPart {
+	return &ToolErrorPartImpl{
 		EndPartImpl: NewEndPart(LanguageModelUsage{}, FinishReasonFailed),
 		ToolPartImpl: ToolPartImpl{
-			PartImpl: NewPart(context, PartTypeToolError),
+			PartImpl: PartImpl{
+				partType: PartTypeToolError,
+				context:  context,
+			},
 			toolName: toolName,
 		},
 		error: errorData,

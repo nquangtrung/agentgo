@@ -1,19 +1,20 @@
 package models
 
 type ToolExecuteParams struct {
-	Params map[string]interface{}
+	Params map[string]any
 }
 
 type ToolExecuteOutput struct {
-	Result map[string]interface{}
-	Error  map[string]interface{}
+	Result map[string]any
+	Error  map[string]any
 }
 
 type ToolCall struct {
 	ToolName string
-	Params   map[string]interface{}
+	Params   map[string]any
 }
 
+//go:generate mockgen -destination=../mocks/mock_tool.go -package=mocks trontria.com/agentgo/models Tool
 type Tool interface {
 	GetName() string
 	GetDescription() string
@@ -23,9 +24,9 @@ type Tool interface {
 type ToolParams struct {
 	Name         string
 	Description  string
-	Parameters   map[string]interface{}
+	Parameters   map[string]any
 	Fn           func(params ToolExecuteParams) (ToolExecuteOutput, error)
-	OutputSchema map[string]interface{}
+	OutputSchema map[string]any
 	Strict       bool
 }
 

@@ -1,5 +1,7 @@
 package models
 
+import "unsafe"
+
 type PartType string
 
 const (
@@ -24,6 +26,7 @@ const (
 	FinishReasonTimeout   FinishReason = "timeout"
 )
 
+//go:generate mockgen -destination=../mocks/mock_as_part.go -package=mocks trontria.com/agentgo/models AsPart
 type AsPart interface {
 	AsTextPart() (TextPart, bool)
 	AsStepStartPart() (StepStartPart, bool)
@@ -33,6 +36,7 @@ type AsPart interface {
 	AsToolErrorPart() (ToolErrorPart, bool)
 }
 
+//go:generate mockgen -destination=../mocks/mock_part.go -package=mocks trontria.com/agentgo/models Part
 type Part interface {
 	GetContext() LanguageModelContext
 	GetType() PartType
@@ -58,44 +62,68 @@ func (p PartImpl) GetContext() LanguageModelContext {
 	return p.context
 }
 
-func (p PartImpl) AsToolStartPart() (ToolPart, bool) {
-	if toolStartPart, ok := interface{}(p).(ToolPart); ok {
-		return toolStartPart, true
+func (p *PartImpl) AsToolStartPart() (ToolPart, bool) {
+	if p.partType == PartTypeToolStart {
+		// Use unsafe pointer to reconstruct the full concrete type
+		fullPtr := (*ToolStartPartImpl)(unsafe.Pointer(p))
+		if toolStartPart, ok := any(fullPtr).(ToolPart); ok {
+			return toolStartPart, true
+		}
 	}
 	return nil, false
 }
 
-func (p PartImpl) AsToolResultPart() (ToolResultPart, bool) {
-	if toolResultPart, ok := interface{}(p).(ToolResultPart); ok {
-		return toolResultPart, true
+func (p *PartImpl) AsToolResultPart() (ToolResultPart, bool) {
+	if p.partType == PartTypeToolResult {
+		// Use unsafe pointer to reconstruct the full concrete type
+		fullPtr := (*ToolResultPartImpl)(unsafe.Pointer(p))
+		if toolResultPart, ok := any(fullPtr).(ToolResultPart); ok {
+			return toolResultPart, true
+		}
 	}
 	return nil, false
 }
 
-func (p PartImpl) AsToolErrorPart() (ToolErrorPart, bool) {
-	if toolErrorPart, ok := interface{}(p).(ToolErrorPart); ok {
-		return toolErrorPart, true
+func (p *PartImpl) AsToolErrorPart() (ToolErrorPart, bool) {
+	if p.partType == PartTypeToolError {
+		// Use unsafe pointer to reconstruct the full concrete type
+		fullPtr := (*ToolErrorPartImpl)(unsafe.Pointer(p))
+		if toolErrorPart, ok := any(fullPtr).(ToolErrorPart); ok {
+			return toolErrorPart, true
+		}
 	}
 	return nil, false
 }
 
-func (p PartImpl) AsTextPart() (TextPart, bool) {
-	if textPart, ok := interface{}(p).(TextPart); ok {
-		return textPart, true
+func (p *PartImpl) AsTextPart() (TextPart, bool) {
+	if p.partType == PartTypeText {
+		// Use unsafe pointer to reconstruct the full concrete type
+		fullPtr := (*TextPartImpl)(unsafe.Pointer(p))
+		if textPart, ok := any(fullPtr).(TextPart); ok {
+			return textPart, true
+		}
 	}
 	return nil, false
 }
 
-func (p PartImpl) AsStepStartPart() (StepStartPart, bool) {
-	if stepStartPart, ok := interface{}(p).(StepStartPart); ok {
-		return stepStartPart, true
+func (p *PartImpl) AsStepStartPart() (StepStartPart, bool) {
+	if p.partType == PartTypeStepStart {
+		// Use unsafe pointer to reconstruct the full concrete type
+		fullPtr := (*StepStartPartImpl)(unsafe.Pointer(p))
+		if stepStartPart, ok := any(fullPtr).(StepStartPart); ok {
+			return stepStartPart, true
+		}
 	}
 	return nil, false
 }
 
-func (p PartImpl) AsStepEndPart() (StepEndPart, bool) {
-	if stepEndPart, ok := interface{}(p).(StepEndPart); ok {
-		return stepEndPart, true
+func (p *PartImpl) AsStepEndPart() (StepEndPart, bool) {
+	if p.partType == PartTypeStepEnd {
+		// Use unsafe pointer to reconstruct the full concrete type
+		fullPtr := (*StepEndPartImpl)(unsafe.Pointer(p))
+		if stepEndPart, ok := any(fullPtr).(StepEndPart); ok {
+			return stepEndPart, true
+		}
 	}
 	return nil, false
 }
@@ -107,6 +135,7 @@ func NewPart(context LanguageModelContext, partType PartType) PartImpl {
 	}
 }
 
+//go:generate mockgen -destination=../mocks/mock_end_part.go -package=mocks trontria.com/agentgo/models EndPart
 type EndPart interface {
 	GetUsage() LanguageModelUsage
 	GetFinishReason() FinishReason

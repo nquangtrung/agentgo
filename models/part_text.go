@@ -19,8 +19,11 @@ func (t TextPartImpl) GetText() string {
 }
 
 func NewTextPart(context LanguageModelContext, text string) TextPart {
-	return TextPartImpl{
-		PartImpl: NewPart(context, PartTypeText),
-		text:     text,
+	return &TextPartImpl{
+		PartImpl: PartImpl{
+			partType: PartTypeText,
+			context:  context,
+		},
+		text: text,
 	}
 }

@@ -34,18 +34,24 @@ func (s StepPartImpl) GetStepName() string {
 }
 
 func NewStepStartPart(context LanguageModelContext, stepName string) StepStartPart {
-	return StepStartPartImpl{
+	return &StepStartPartImpl{
 		StepPartImpl: StepPartImpl{
-			PartImpl: NewPart(context, PartTypeStepStart),
+			PartImpl: PartImpl{
+				partType: PartTypeStepStart,
+				context:  context,
+			},
 			stepName: stepName,
 		},
 	}
 }
 
 func NewStepEndPart(context LanguageModelContext, stepName string, usage LanguageModelUsage) StepEndPart {
-	return StepEndPartImpl{
+	return &StepEndPartImpl{
 		StepPartImpl: StepPartImpl{
-			PartImpl: NewPart(context, PartTypeStepEnd),
+			PartImpl: PartImpl{
+				partType: PartTypeStepEnd,
+				context:  context,
+			},
 			stepName: stepName,
 		},
 		EndPartImpl: NewEndPart(usage, FinishReasonCompleted),

@@ -2,3 +2,5 @@
 
 examples/experiments_test.go
 examples/playground.go
+
+builds/*
