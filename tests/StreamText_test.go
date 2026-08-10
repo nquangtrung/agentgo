@@ -1,6 +1,7 @@
 package tests
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -52,6 +53,9 @@ func TestStreamText(t *testing.T) {
 		}
 		t.Log(channel)
 		channel <- models.NewStepStartPart(context, "step start")
+		for i := range 3 {
+			channel <- models.NewTextPart(context, fmt.Sprintf("text %d", i))
+		}
 		channel <- models.NewStepEndPart(context, "step start", models.LanguageModelUsage{
 			OutputTokens:    123,
 			InputTokens:     245,
@@ -63,6 +67,8 @@ func TestStreamText(t *testing.T) {
 	if output == (models.LanguageModelStreamOutput{}) {
 		panic("stream output is nil")
 	}
+
+	var texts []string = []string{}
 	for part := range output.Channel {
 		t.Logf("Part: %s", part.GetType())
 		switch part.GetType() {
@@ -72,13 +78,22 @@ func TestStreamText(t *testing.T) {
 				assert.True(t, ok, "should be able to convert to step start")
 				assert.NotNil(t, p, "should be able to access converted step")
 			}
+		case models.PartTypeText:
+			{
+				p, ok := part.AsTextPart()
+				assert.True(t, ok, "should be able to convert to text")
+				texts = append(texts, p.GetText())
+			}
 		case models.PartTypeStepEnd:
 			{
 				p, ok := part.AsStepEndPart()
 				assert.True(t, ok, "should be able to convert to step end")
 				assert.NotNil(t, p.GetUsage(), "should contain usage")
-				// assert.Equal(t, p.GetUsage().InputTokens, 245, "input token should be correct")
+				assert.Equal(t, p.GetUsage().InputTokens, 245, "input token should be correct")
 			}
 		}
 	}
+	assert.ElementsMatch(
+		t, texts, []string{"text 0", "text 1", "text 2"}, "should receive correct deltas",
+	)
 }
