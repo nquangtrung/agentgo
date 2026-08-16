@@ -47,7 +47,7 @@ func GenerateText(params Params) (models.LanguageModelOutput, error) {
 }
 
 func canProceedToNextStep(context models.ExecutionContext, params Params) bool {
-	return context.GetStepIndex() < params.MaxToolSteps
+	return context.StepIndex() < params.MaxToolSteps
 }
 
 func StreamText(params Params) models.LanguageModelStreamOutput {

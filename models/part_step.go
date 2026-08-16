@@ -1,21 +1,23 @@
 package models
 
 type StepPart interface {
-	GetStepName() string
+	StepName() string
 }
 
 type StepStartPart interface {
 	Part
 	StepPart
+	StartPart
 }
 
 type StepPartImpl struct {
-	PartImpl
+	BasePart
 	stepName string
 }
 
-type StepStartPartImpl struct {
+type BaseStepStartPart struct {
 	StepPartImpl
+	StartPartImpl
 }
 
 type StepEndPart interface {
@@ -24,19 +26,19 @@ type StepEndPart interface {
 	EndPart
 }
 
-type StepEndPartImpl struct {
+type BaseStepEndPart struct {
 	StepPartImpl
 	EndPartImpl
 }
 
-func (s StepPartImpl) GetStepName() string {
+func (s StepPartImpl) StepName() string {
 	return s.stepName
 }
 
-func NewStepStartPart(context LanguageModelContext, stepName string) StepStartPart {
-	return &StepStartPartImpl{
+func NewStepStartPart(context LanguageModelContext, stepName string) *BaseStepStartPart {
+	return &BaseStepStartPart{
 		StepPartImpl: StepPartImpl{
-			PartImpl: PartImpl{
+			BasePart: BasePart{
 				partType: PartTypeStepStart,
 				context:  context,
 			},
@@ -45,10 +47,10 @@ func NewStepStartPart(context LanguageModelContext, stepName string) StepStartPa
 	}
 }
 
-func NewStepEndPart(context LanguageModelContext, stepName string, usage LanguageModelUsage) StepEndPart {
-	return &StepEndPartImpl{
+func NewStepEndPart(context LanguageModelContext, stepName string, usage LanguageModelUsage) *BaseStepEndPart {
+	return &BaseStepEndPart{
 		StepPartImpl: StepPartImpl{
-			PartImpl: PartImpl{
+			BasePart: BasePart{
 				partType: PartTypeStepEnd,
 				context:  context,
 			},

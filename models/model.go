@@ -53,32 +53,32 @@ func NewLanguageModelContext(modelName string) LanguageModelContext {
 }
 
 type ExecutionContext interface {
-	GetModelName() string
-	GetStepName() string
-	GetStepIndex() int
+	ModelName() string
+	StepName() string
+	StepIndex() int
 	NextStep(stepName string) ExecutionContext
 }
-type ExecutionContextImpl struct {
+type BaseExecutionContext struct {
 	LanguageModelContext LanguageModelContext
 
 	stepName  string
 	stepIndex int
 }
 
-func (e ExecutionContextImpl) GetModelName() string {
+func (e BaseExecutionContext) ModelName() string {
 	return e.LanguageModelContext.ModelName
 }
 
-func (e ExecutionContextImpl) GetStepName() string {
+func (e BaseExecutionContext) StepName() string {
 	return e.stepName
 }
 
-func (e ExecutionContextImpl) GetStepIndex() int {
+func (e BaseExecutionContext) StepIndex() int {
 	return e.stepIndex
 }
 
-func (e ExecutionContextImpl) NextStep(stepName string) ExecutionContext {
-	return ExecutionContextImpl{
+func (e BaseExecutionContext) NextStep(stepName string) ExecutionContext {
+	return BaseExecutionContext{
 		LanguageModelContext: e.LanguageModelContext,
 		stepName:             stepName,
 		stepIndex:            e.stepIndex + 1,
@@ -86,7 +86,7 @@ func (e ExecutionContextImpl) NextStep(stepName string) ExecutionContext {
 }
 
 func ExecutionContextFromLanguageModelContext(context LanguageModelContext) ExecutionContext {
-	return ExecutionContextImpl{
+	return BaseExecutionContext{
 		LanguageModelContext: context,
 		stepName:             "",
 		stepIndex:            0,

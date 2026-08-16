@@ -13,54 +13,54 @@ const (
 )
 
 type Message interface {
-	GetType() MessageRole
-	GetContent() MessageContentImpl
+	Type() MessageRole
+	Content() BaseMessageContent
 }
 type MessageContent interface {
-	GetContent() MessageContentImpl
+	Content() BaseMessageContent
 }
 
-type MessageImpl struct {
+type BaseMessage struct {
 	messageRole MessageRole
-	content     MessageContentImpl
+	content     BaseMessageContent
 }
 
-type MessageContentImpl struct {
+type BaseMessageContent struct {
 	text string
 }
 
-func (mc MessageContentImpl) GetText() string {
+func (mc BaseMessageContent) Text() string {
 	return mc.text
 }
 
-func (m MessageImpl) GetType() MessageRole {
+func (m BaseMessage) Type() MessageRole {
 	return m.messageRole
 }
 
-func (m MessageImpl) GetContent() MessageContentImpl {
+func (m BaseMessage) Content() BaseMessageContent {
 	return m.content
 }
 
-func (m MessageImpl) GetContentText() string {
-	return m.content.GetText()
+func (m BaseMessage) ContentText() string {
+	return m.content.Text()
 }
 
-func NewStringMessage(messageRole MessageRole, content string) Message {
-	return &MessageImpl{
+func NewStringMessage(messageRole MessageRole, content string) *BaseMessage {
+	return &BaseMessage{
 		messageRole: messageRole,
-		content:     MessageContentImpl{text: content},
+		content:     BaseMessageContent{text: content},
 	}
 }
 
-func NewHumanStringMessage(content string) Message {
+func NewHumanStringMessage(content string) *BaseMessage {
 	return NewStringMessage(MessageRoleHuman, content)
 }
 
-func NewAssistantStringMessage(content string) Message {
+func NewAssistantStringMessage(content string) *BaseMessage {
 	return NewStringMessage(MessageRoleAssistant, content)
 }
 
-func NewMessageFromToolResult(output ToolExecuteOutput) Message {
+func NewMessageFromToolResult(output ToolExecuteOutput) *BaseMessage {
 	if output.Error != nil {
 		stringError, _ := json.Marshal(output.Error)
 		return NewAssistantStringMessage("Tool execution error: " + string(stringError))
@@ -70,6 +70,6 @@ func NewMessageFromToolResult(output ToolExecuteOutput) Message {
 	}
 }
 
-func NewSystemStringMessage(content string) Message {
+func NewSystemStringMessage(content string) *BaseMessage {
 	return NewStringMessage(MessageRoleSystem, content)
 }

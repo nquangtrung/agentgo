@@ -28,18 +28,18 @@ func (p OpenAIProvider) GetInputFromParams(params AgentProviderPromptMessagePara
 
 func (p OpenAIProvider) ConvertMessageObjectToInput(messages []models.Message) responses.ResponseNewParamsInputUnion {
 	var inputItems []responses.ResponseInputItemUnionParam = utils.Map(messages, func(message models.Message) responses.ResponseInputItemUnionParam {
-		switch message.GetType() {
+		switch message.Type() {
 		case models.MessageRoleSystem:
 			return responses.ResponseInputItemParamOfMessage(
 				responses.ResponseInputMessageContentListParam{
-					responses.ResponseInputContentParamOfInputText(message.GetContent().GetText()),
+					responses.ResponseInputContentParamOfInputText(message.Content().Text()),
 				},
 				responses.EasyInputMessageRoleSystem,
 			)
 		case models.MessageRoleHuman:
 			return responses.ResponseInputItemParamOfMessage(
 				responses.ResponseInputMessageContentListParam{
-					responses.ResponseInputContentParamOfInputText(message.GetContent().GetText()),
+					responses.ResponseInputContentParamOfInputText(message.Content().Text()),
 				},
 				responses.EasyInputMessageRoleUser,
 			)
@@ -47,7 +47,7 @@ func (p OpenAIProvider) ConvertMessageObjectToInput(messages []models.Message) r
 			return responses.ResponseInputItemParamOfOutputMessage(
 				[]responses.ResponseOutputMessageContentUnionParam{
 					{OfOutputText: &responses.ResponseOutputTextParam{
-						Text: message.GetContent().GetText(),
+						Text: message.Content().Text(),
 						// Annotations: []responses.ResponseOutputTextAnnotationUnionParam{},
 					}},
 				},
@@ -57,7 +57,7 @@ func (p OpenAIProvider) ConvertMessageObjectToInput(messages []models.Message) r
 		default:
 			return responses.ResponseInputItemParamOfMessage(
 				responses.ResponseInputMessageContentListParam{
-					responses.ResponseInputContentParamOfInputText(message.GetContent().GetText()),
+					responses.ResponseInputContentParamOfInputText(message.Content().Text()),
 				},
 				responses.EasyInputMessageRoleUser,
 			)

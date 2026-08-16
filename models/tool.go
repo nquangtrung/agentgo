@@ -16,28 +16,28 @@ type ToolCall struct {
 
 //go:generate mockgen -destination=../mocks/mock_tool.go -package=mocks trontria.com/agentgo/models Tool
 type Tool interface {
-	GetName() string
-	GetDescription() string
+	Name() string
+	Description() string
 	Execute(params ToolExecuteParams) (ToolExecuteOutput, error)
 }
 
-type ToolParams struct {
-	Name         string
-	Description  string
-	Parameters   map[string]any
-	Fn           func(params ToolExecuteParams) (ToolExecuteOutput, error)
-	OutputSchema map[string]any
-	Strict       bool
+type BaseTool struct {
+	name         string
+	description  string
+	parameters   map[string]any
+	fn           func(params ToolExecuteParams) (ToolExecuteOutput, error)
+	outputSchema map[string]any
+	strict       bool
 }
 
-func (t ToolParams) GetName() string {
-	return t.Name
+func (t BaseTool) Name() string {
+	return t.name
 }
 
-func (t ToolParams) GetDescription() string {
-	return t.Description
+func (t BaseTool) Description() string {
+	return t.description
 }
 
-func (t ToolParams) Execute(params ToolExecuteParams) (ToolExecuteOutput, error) {
-	return t.Fn(params)
+func (t BaseTool) Execute(params ToolExecuteParams) (ToolExecuteOutput, error) {
+	return t.fn(params)
 }

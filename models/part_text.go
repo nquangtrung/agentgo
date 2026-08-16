@@ -1,7 +1,7 @@
 package models
 
 type ContentPart interface {
-	GetText() string
+	Text() string
 }
 
 type TextPart interface {
@@ -9,18 +9,18 @@ type TextPart interface {
 	ContentPart
 }
 
-type TextPartImpl struct {
-	PartImpl
+type BaseTextPart struct {
+	BasePart
 	text string
 }
 
-func (t TextPartImpl) GetText() string {
+func (t BaseTextPart) Text() string {
 	return t.text
 }
 
-func NewTextPart(context LanguageModelContext, text string) TextPart {
-	return &TextPartImpl{
-		PartImpl: PartImpl{
+func NewTextPart(context LanguageModelContext, text string) *BaseTextPart {
+	return &BaseTextPart{
+		BasePart: BasePart{
 			partType: PartTypeText,
 			context:  context,
 		},

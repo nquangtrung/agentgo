@@ -36,7 +36,7 @@ func TestStreamText(t *testing.T) {
 					return false
 				}
 
-				if p.Messages[0].GetContent().GetText() != params.Prompt {
+				if p.Messages[0].Content().Text() != params.Prompt {
 					return false
 				}
 
@@ -70,26 +70,19 @@ func TestStreamText(t *testing.T) {
 
 	var texts []string = []string{}
 	for part := range output.Channel {
-		t.Logf("Part: %s", part.GetType())
-		switch part.GetType() {
-		case models.PartTypeStepStart:
+		switch p := part.(type) {
+		case models.StepStartPart:
 			{
-				p, ok := part.AsStepStartPart()
-				assert.True(t, ok, "should be able to convert to step start")
 				assert.NotNil(t, p, "should be able to access converted step")
 			}
-		case models.PartTypeText:
+		case models.TextPart:
 			{
-				p, ok := part.AsTextPart()
-				assert.True(t, ok, "should be able to convert to text")
-				texts = append(texts, p.GetText())
+				texts = append(texts, p.Text())
 			}
-		case models.PartTypeStepEnd:
+		case models.StepEndPart:
 			{
-				p, ok := part.AsStepEndPart()
-				assert.True(t, ok, "should be able to convert to step end")
-				assert.NotNil(t, p.GetUsage(), "should contain usage")
-				assert.Equal(t, p.GetUsage().InputTokens, 245, "input token should be correct")
+				assert.NotNil(t, p.Usage(), "should contain usage")
+				assert.Equal(t, p.Usage().InputTokens, 245, "input token should be correct")
 			}
 		}
 	}

@@ -34,7 +34,7 @@ func TestGenerateText(t *testing.T) {
 				return false
 			}
 
-			if p.Messages[0].GetContent().GetText() != params.Prompt {
+			if p.Messages[0].Content().Text() != params.Prompt {
 				return false
 			}
 

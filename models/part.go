@@ -1,6 +1,6 @@
 package models
 
-import "unsafe"
+import "time"
 
 type PartType string
 
@@ -26,137 +26,58 @@ const (
 	FinishReasonTimeout   FinishReason = "timeout"
 )
 
-//go:generate mockgen -destination=../mocks/mock_as_part.go -package=mocks trontria.com/agentgo/models AsPart
-type AsPart interface {
-	AsTextPart() (TextPart, bool)
-	AsStepStartPart() (StepStartPart, bool)
-	AsStepEndPart() (StepEndPart, bool)
-	AsToolStartPart() (ToolPart, bool)
-	AsToolResultPart() (ToolResultPart, bool)
-	AsToolErrorPart() (ToolErrorPart, bool)
-}
-
 //go:generate mockgen -destination=../mocks/mock_part.go -package=mocks trontria.com/agentgo/models Part
 type Part interface {
-	GetContext() LanguageModelContext
-	GetType() PartType
-	GetModelName() string
-
-	AsPart
+	Context() LanguageModelContext
+	Type() PartType
+	ModelName() string
+	isPart()
 }
 
-type PartImpl struct {
+type BasePart struct {
 	partType PartType
 	context  LanguageModelContext
 }
 
-func (p PartImpl) GetType() PartType {
-	return p.partType
-}
+func (p BasePart) Type() PartType                { return p.partType }
+func (p BasePart) ModelName() string             { return p.context.ModelName }
+func (p BasePart) Context() LanguageModelContext { return p.context }
+func (p BasePart) isPart()                       {}
 
-func (p PartImpl) GetModelName() string {
-	return p.context.ModelName
-}
-
-func (p PartImpl) GetContext() LanguageModelContext {
-	return p.context
-}
-
-func (p *PartImpl) AsToolStartPart() (ToolPart, bool) {
-	if p.partType == PartTypeToolStart {
-		// Use unsafe pointer to reconstruct the full concrete type
-		fullPtr := (*ToolStartPartImpl)(unsafe.Pointer(p))
-		if toolStartPart, ok := any(fullPtr).(ToolPart); ok {
-			return toolStartPart, true
-		}
-	}
-	return nil, false
-}
-
-func (p *PartImpl) AsToolResultPart() (ToolResultPart, bool) {
-	if p.partType == PartTypeToolResult {
-		// Use unsafe pointer to reconstruct the full concrete type
-		fullPtr := (*ToolResultPartImpl)(unsafe.Pointer(p))
-		if toolResultPart, ok := any(fullPtr).(ToolResultPart); ok {
-			return toolResultPart, true
-		}
-	}
-	return nil, false
-}
-
-func (p *PartImpl) AsToolErrorPart() (ToolErrorPart, bool) {
-	if p.partType == PartTypeToolError {
-		// Use unsafe pointer to reconstruct the full concrete type
-		fullPtr := (*ToolErrorPartImpl)(unsafe.Pointer(p))
-		if toolErrorPart, ok := any(fullPtr).(ToolErrorPart); ok {
-			return toolErrorPart, true
-		}
-	}
-	return nil, false
-}
-
-func (p *PartImpl) AsTextPart() (TextPart, bool) {
-	if p.partType == PartTypeText {
-		// Use unsafe pointer to reconstruct the full concrete type
-		fullPtr := (*TextPartImpl)(unsafe.Pointer(p))
-		if textPart, ok := any(fullPtr).(TextPart); ok {
-			return textPart, true
-		}
-	}
-	return nil, false
-}
-
-func (p *PartImpl) AsStepStartPart() (StepStartPart, bool) {
-	if p.partType == PartTypeStepStart {
-		// Use unsafe pointer to reconstruct the full concrete type
-		fullPtr := (*StepStartPartImpl)(unsafe.Pointer(p))
-		if stepStartPart, ok := any(fullPtr).(StepStartPart); ok {
-			return stepStartPart, true
-		}
-	}
-	return nil, false
-}
-
-func (p *PartImpl) AsStepEndPart() (StepEndPart, bool) {
-	if p.partType == PartTypeStepEnd {
-		// Use unsafe pointer to reconstruct the full concrete type
-		fullPtr := (*StepEndPartImpl)(unsafe.Pointer(p))
-		if stepEndPart, ok := any(fullPtr).(StepEndPart); ok {
-			return stepEndPart, true
-		}
-	}
-	return nil, false
-}
-
-func NewPart(context LanguageModelContext, partType PartType) PartImpl {
-	return PartImpl{
+func NewPart(context LanguageModelContext, partType PartType) BasePart {
+	return BasePart{
 		partType: partType,
 		context:  context,
 	}
 }
 
+//go:generate mockgen -destination=../mocks/mock_start_part.go -package=mocks trontria.com/agentgo/models StartPart
+type StartPart interface {
+	At() time.Time
+}
+type StartPartImpl struct {
+	at time.Time
+}
+
+func (s *StartPartImpl) At() time.Time { return s.at }
+
 //go:generate mockgen -destination=../mocks/mock_end_part.go -package=mocks trontria.com/agentgo/models EndPart
 type EndPart interface {
-	GetUsage() LanguageModelUsage
-	GetFinishReason() FinishReason
+	Usage() LanguageModelUsage
+	FinishReason() FinishReason
 }
 
 type EndPartImpl struct {
-	Usage        LanguageModelUsage `json:"usage,omitempty"`
-	FinishReason FinishReason       `json:"finish_reason,omitempty"`
+	usage        LanguageModelUsage
+	finishReason FinishReason
 }
 
-func (p EndPartImpl) GetUsage() LanguageModelUsage {
-	return p.Usage
-}
-
-func (p EndPartImpl) GetFinishReason() FinishReason {
-	return p.FinishReason
-}
+func (p EndPartImpl) Usage() LanguageModelUsage  { return p.usage }
+func (p EndPartImpl) FinishReason() FinishReason { return p.finishReason }
 
 func NewEndPart(usage LanguageModelUsage, finishReason FinishReason) EndPartImpl {
 	return EndPartImpl{
-		Usage:        usage,
-		FinishReason: finishReason,
+		usage:        usage,
+		finishReason: finishReason,
 	}
 }

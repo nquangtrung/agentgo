@@ -1,30 +1,30 @@
 package models
 
 type ToolPart interface {
-	GetToolName() string
+	ToolName() string
 }
 
 type ToolResultPart interface {
 	Part
 	ToolPart
 	EndPart
-	GetResult() map[string]any
-	GetUsage() LanguageModelUsage
+	Result() map[string]any
+	Usage() LanguageModelUsage
 }
 
 type ToolErrorPart interface {
 	Part
 	ToolPart
 	EndPart
-	GetError() map[string]any
+	Error() map[string]any
 }
 
-type ToolPartImpl struct {
-	PartImpl
+type BaseToolPart struct {
+	BasePart
 	toolName string
 }
 
-func (t ToolPartImpl) GetToolName() string {
+func (t BaseToolPart) ToolName() string {
 	return t.toolName
 }
 
@@ -33,35 +33,35 @@ type ToolStartPart interface {
 	ToolPart
 }
 
-type ToolStartPartImpl struct {
-	ToolPartImpl
+type BaseToolStartPart struct {
+	BaseToolPart
 	data map[string]any
 }
 
-type ToolResultPartImpl struct {
-	ToolPartImpl
+type BaseToolResultPart struct {
+	BaseToolPart
 	EndPartImpl
 	data map[string]any
 }
 
-func (t ToolResultPartImpl) GetResult() map[string]any {
+func (t BaseToolResultPart) Result() map[string]any {
 	return t.data
 }
 
-type ToolErrorPartImpl struct {
-	ToolPartImpl
+type BaseToolErrorPart struct {
+	BaseToolPart
 	EndPartImpl
 	error map[string]any
 }
 
-func (t ToolErrorPartImpl) GetError() map[string]any {
+func (t BaseToolErrorPart) Error() map[string]any {
 	return t.error
 }
 
-func NewToolStartPart(context LanguageModelContext, toolName string) ToolStartPart {
-	return &ToolStartPartImpl{
-		ToolPartImpl: ToolPartImpl{
-			PartImpl: PartImpl{
+func NewToolStartPart(context LanguageModelContext, toolName string) *BaseToolStartPart {
+	return &BaseToolStartPart{
+		BaseToolPart: BaseToolPart{
+			BasePart: BasePart{
 				partType: PartTypeToolStart,
 				context:  context,
 			},
@@ -70,11 +70,11 @@ func NewToolStartPart(context LanguageModelContext, toolName string) ToolStartPa
 	}
 }
 
-func NewToolResultPart(context LanguageModelContext, toolName string, result map[string]any, usage LanguageModelUsage) ToolResultPart {
-	return &ToolResultPartImpl{
+func NewToolResultPart(context LanguageModelContext, toolName string, result map[string]any, usage LanguageModelUsage) *BaseToolResultPart {
+	return &BaseToolResultPart{
 		EndPartImpl: NewEndPart(usage, FinishReasonCompleted),
-		ToolPartImpl: ToolPartImpl{
-			PartImpl: PartImpl{
+		BaseToolPart: BaseToolPart{
+			BasePart: BasePart{
 				partType: PartTypeToolResult,
 				context:  context,
 			},
@@ -84,11 +84,11 @@ func NewToolResultPart(context LanguageModelContext, toolName string, result map
 	}
 }
 
-func NewToolErrorPart(context LanguageModelContext, toolName string, errorData map[string]any) ToolErrorPart {
-	return &ToolErrorPartImpl{
+func NewToolErrorPart(context LanguageModelContext, toolName string, errorData map[string]any) *BaseToolErrorPart {
+	return &BaseToolErrorPart{
 		EndPartImpl: NewEndPart(LanguageModelUsage{}, FinishReasonFailed),
-		ToolPartImpl: ToolPartImpl{
-			PartImpl: PartImpl{
+		BaseToolPart: BaseToolPart{
+			BasePart: BasePart{
 				partType: PartTypeToolError,
 				context:  context,
 			},

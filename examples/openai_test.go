@@ -83,21 +83,15 @@ func TestStreamTextOpenAI(t *testing.T) {
 		panic("stream output is nil")
 	}
 	for part := range output.Channel {
-		switch part.GetType() {
-		case models.PartTypeStepStart:
-			if stepStartPart, ok := part.AsStepStartPart(); ok {
-				log.Printf("[step start] - %s\n", stepStartPart.GetStepName())
-			}
-		case models.PartTypeStepEnd:
-			if stepEndPart, ok := part.AsStepEndPart(); ok {
-				log.Printf("[step end] - %s\n", stepEndPart.GetStepName())
-			}
-		case models.PartTypeText:
-			if textPart, ok := part.AsTextPart(); ok {
-				log.Printf("[text] - %s\n", textPart.GetText())
-			}
+		switch p := part.(type) {
+		case models.StepStartPart:
+			log.Printf("[step start] - %s\n", p.StepName())
+		case models.StepEndPart:
+			log.Printf("[step end] - %s\n", p.StepName())
+		case models.TextPart:
+			log.Printf("[text] - %s\n", p.Text())
 		default:
-			log.Printf("[unknown] - %s\n", part.GetType())
+			log.Printf("[unknown] - %s\n", part.Type())
 		}
 	}
 }
@@ -122,23 +116,17 @@ func TestStreamTextOpenAIWithInput(t *testing.T) {
 		panic("stream output is nil")
 	}
 	for part := range output1.Channel {
-		switch part.GetType() {
-		case models.PartTypeStepStart:
-			if stepStartPart, ok := part.AsStepStartPart(); ok {
-				log.Printf("[step start] - %s\n", stepStartPart.GetStepName())
-			}
-		case models.PartTypeStepEnd:
-			if stepEndPart, ok := part.AsStepEndPart(); ok {
-				log.Printf("[step end] - %s\n", stepEndPart.GetStepName())
-			}
-		case models.PartTypeText:
-			if textPart, ok := part.AsTextPart(); ok {
-				log.Printf("[text] - %s\n", textPart.GetText())
-				text1 += textPart.GetText()
-			}
+		switch p := part.(type) {
+		case models.StepStartPart:
+			log.Printf("[step start] - %s\n", p.StepName())
+		case models.StepEndPart:
+			log.Printf("[step end] - %s\n", p.StepName())
+		case models.TextPart:
+			log.Printf("[text] - %s\n", p.Text())
 		default:
-			log.Printf("[unknown] - %s\n", part.GetType())
+			log.Printf("[unknown] - %s\n", part.Type())
 		}
+
 	}
 
 	messages = append(
@@ -155,22 +143,15 @@ func TestStreamTextOpenAIWithInput(t *testing.T) {
 		panic("stream output is nil")
 	}
 	for part := range output2.Channel {
-		switch part.GetType() {
-		case models.PartTypeStepStart:
-			if stepStartPart, ok := part.AsStepStartPart(); ok {
-				log.Printf("[step start] - %s\n", stepStartPart.GetStepName())
-			}
-		case models.PartTypeStepEnd:
-			if stepEndPart, ok := part.AsStepEndPart(); ok {
-				log.Printf("[step end] - %s\n", stepEndPart.GetStepName())
-			}
-		case models.PartTypeText:
-			if textPart, ok := part.AsTextPart(); ok {
-				log.Printf("[text] - %s\n", textPart.GetText())
-				text2 += textPart.GetText()
-			}
+		switch p := part.(type) {
+		case models.StepStartPart:
+			log.Printf("[step start] - %s\n", p.StepName())
+		case models.StepEndPart:
+			log.Printf("[step end] - %s\n", p.StepName())
+		case models.TextPart:
+			log.Printf("[text] - %s\n", p.Text())
 		default:
-			log.Printf("[unknown] - %s\n", part.GetType())
+			log.Printf("[unknown] - %s\n", part.Type())
 		}
 	}
 
