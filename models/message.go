@@ -45,22 +45,22 @@ func (m BaseMessage) ContentText() string {
 	return m.content.Text()
 }
 
-func NewStringMessage(messageRole MessageRole, content string) *BaseMessage {
-	return &BaseMessage{
+func NewStringMessage(messageRole MessageRole, content string) BaseMessage {
+	return BaseMessage{
 		messageRole: messageRole,
 		content:     BaseMessageContent{text: content},
 	}
 }
 
-func NewHumanStringMessage(content string) *BaseMessage {
+func NewHumanStringMessage(content string) BaseMessage {
 	return NewStringMessage(MessageRoleHuman, content)
 }
 
-func NewAssistantStringMessage(content string) *BaseMessage {
+func NewAssistantStringMessage(content string) BaseMessage {
 	return NewStringMessage(MessageRoleAssistant, content)
 }
 
-func NewMessageFromToolResult(output ToolExecuteOutput) *BaseMessage {
+func NewMessageFromToolResult(output ToolExecuteOutput) BaseMessage {
 	if output.Error != nil {
 		stringError, _ := json.Marshal(output.Error)
 		return NewAssistantStringMessage("Tool execution error: " + string(stringError))
@@ -70,6 +70,6 @@ func NewMessageFromToolResult(output ToolExecuteOutput) *BaseMessage {
 	}
 }
 
-func NewSystemStringMessage(content string) *BaseMessage {
+func NewSystemStringMessage(content string) BaseMessage {
 	return NewStringMessage(MessageRoleSystem, content)
 }

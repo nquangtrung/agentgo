@@ -25,13 +25,13 @@ func TestStreamText(t *testing.T) {
 		Prompt:   prompt,
 		Provider: mockProvider,
 	}
-	mockProvider.EXPECT().GetContext().Return(models.LanguageModelContext{
+	mockProvider.EXPECT().Context().Return(models.LanguageModelContext{
 		ModelName: modelName,
 	})
 
 	mockProvider.EXPECT().StreamText(
 		gomock.Cond(
-			func(p providers.AgentProviderStreamTextParams) bool {
+			func(p providers.AgentProviderPromptMessageParams) bool {
 				if len(p.Messages) != 1 {
 					return false
 				}
@@ -47,7 +47,7 @@ func TestStreamText(t *testing.T) {
 				return true
 			},
 		),
-	).Do(func(params providers.AgentProviderStreamTextParams, channel chan models.Part) {
+	).Do(func(params providers.AgentProviderPromptMessageParams, channel chan models.Part) {
 		context := models.LanguageModelContext{
 			ModelName: modelName,
 		}

@@ -1,5 +1,9 @@
 package models
 
+import (
+	"sync"
+)
+
 type LanguageModelUsage struct {
 	OutputTokens    int
 	InputTokens     int
@@ -20,6 +24,7 @@ type LanguageModelOutput struct {
 	Text      string
 	Usage     LanguageModelUsage
 	ModelName string
+	Context   *ExecutionContext
 }
 
 func NewLanguageModelOutput(text string, usage LanguageModelUsage, modelName string) LanguageModelOutput {
@@ -52,43 +57,65 @@ func NewLanguageModelContext(modelName string) LanguageModelContext {
 	}
 }
 
-type ExecutionContext interface {
-	ModelName() string
-	StepName() string
-	StepIndex() int
-	NextStep(stepName string) ExecutionContext
+type Step struct {
+	Name       string
+	ToolCalled *ToolCall
+	ToolResult *ToolExecuteOutput
 }
-type BaseExecutionContext struct {
-	LanguageModelContext LanguageModelContext
+type ExecutionContext struct {
+	LanguageModelContext
 
-	stepName  string
-	stepIndex int
+	stepLocker sync.Mutex
+	steps      []Step
 }
 
-func (e BaseExecutionContext) ModelName() string {
+func (e *ExecutionContext) ModelName() string {
 	return e.LanguageModelContext.ModelName
 }
 
-func (e BaseExecutionContext) StepName() string {
-	return e.stepName
-}
+func (e *ExecutionContext) AddStep(stepName string, toolCalled *ToolCall) {
+	e.stepLocker.Lock()
+	defer e.stepLocker.Unlock()
 
-func (e BaseExecutionContext) StepIndex() int {
-	return e.stepIndex
-}
-
-func (e BaseExecutionContext) NextStep(stepName string) ExecutionContext {
-	return BaseExecutionContext{
-		LanguageModelContext: e.LanguageModelContext,
-		stepName:             stepName,
-		stepIndex:            e.stepIndex + 1,
+	step := Step{
+		Name:       stepName,
+		ToolCalled: toolCalled,
 	}
+	e.steps = append(e.steps, step)
+}
+func (e *ExecutionContext) Steps() []Step {
+	e.stepLocker.Lock()
+	defer e.stepLocker.Unlock()
+
+	return e.steps
+}
+func (e *ExecutionContext) LastStep() *Step {
+	e.stepLocker.Lock()
+	defer e.stepLocker.Unlock()
+
+	if len(e.steps) == 0 {
+		return nil
+	}
+	return &e.steps[len(e.steps)-1]
+}
+func (e *ExecutionContext) UpdateLastStepResult(result *ToolExecuteOutput) {
+	e.stepLocker.Lock()
+	defer e.stepLocker.Unlock()
+
+	if len(e.steps) == 0 {
+		return
+	}
+	e.steps[len(e.steps)-1].ToolResult = result
+}
+func (e *ExecutionContext) UpdateLastStepError(err error) {
+	e.UpdateLastStepResult(&ToolExecuteOutput{
+		Error: err,
+	})
 }
 
-func ExecutionContextFromLanguageModelContext(context LanguageModelContext) ExecutionContext {
-	return BaseExecutionContext{
+func NewExecutionContextFromLanguageModelContext(context LanguageModelContext) ExecutionContext {
+	return ExecutionContext{
 		LanguageModelContext: context,
-		stepName:             "",
-		stepIndex:            0,
+		steps:                []Step{},
 	}
 }

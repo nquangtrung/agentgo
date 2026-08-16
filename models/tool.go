@@ -6,7 +6,8 @@ type ToolExecuteParams struct {
 
 type ToolExecuteOutput struct {
 	Result map[string]any
-	Error  map[string]any
+	Error  error
+	Usage  LanguageModelUsage
 }
 
 type ToolCall struct {
@@ -18,14 +19,14 @@ type ToolCall struct {
 type Tool interface {
 	Name() string
 	Description() string
-	Execute(params ToolExecuteParams) (ToolExecuteOutput, error)
+	Execute(params ToolExecuteParams) ToolExecuteOutput
 }
 
 type BaseTool struct {
 	name         string
 	description  string
 	parameters   map[string]any
-	fn           func(params ToolExecuteParams) (ToolExecuteOutput, error)
+	fn           func(params ToolExecuteParams) ToolExecuteOutput
 	outputSchema map[string]any
 	strict       bool
 }
@@ -38,6 +39,6 @@ func (t BaseTool) Description() string {
 	return t.description
 }
 
-func (t BaseTool) Execute(params ToolExecuteParams) (ToolExecuteOutput, error) {
+func (t BaseTool) Execute(params ToolExecuteParams) ToolExecuteOutput {
 	return t.fn(params)
 }

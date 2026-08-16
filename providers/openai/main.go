@@ -1,4 +1,4 @@
-package providers
+package openai
 
 import (
 	"context"
@@ -9,16 +9,17 @@ import (
 	"github.com/openai/openai-go/v3/responses"
 
 	"trontria.com/agentgo/models"
+	"trontria.com/agentgo/providers"
 	"trontria.com/agentgo/utils"
 )
 
 type OpenAIProvider struct {
-	AgentProviderImpl
+	providers.BaseAgentProvider
 
 	APIKey string
 }
 
-func (p OpenAIProvider) GetInputFromParams(params AgentProviderPromptMessageParams) responses.ResponseNewParamsInputUnion {
+func (p OpenAIProvider) GetInputFromParams(params providers.AgentProviderPromptMessageParams) responses.ResponseNewParamsInputUnion {
 	if len(params.Messages) == 0 {
 		panic("no messages provided to GetInputFromParams")
 	}
@@ -67,14 +68,14 @@ func (p OpenAIProvider) ConvertMessageObjectToInput(messages []models.Message) r
 	return responses.ResponseNewParamsInputUnion{OfInputItemList: inputItems}
 }
 
-func (p OpenAIProvider) GenerateText(params AgentProviderGenerateTextParams) (models.LanguageModelOutput, error) {
+func (p OpenAIProvider) GenerateText(params providers.AgentProviderPromptMessageParams) (models.LanguageModelOutput, error) {
 	client := openai.NewClient(
 		option.WithAPIKey(p.APIKey),
 	)
 
 	resp, err := client.Responses.New(context.TODO(), responses.ResponseNewParams{
-		Model: p.AgentProviderImpl.Context.ModelName,
-		Input: p.GetInputFromParams(params.AgentProviderPromptMessageParams),
+		Model: p.BaseAgentProvider.Context().ModelName,
+		Input: p.GetInputFromParams(params),
 	})
 	if err != nil {
 		return models.LanguageModelOutput{}, err
@@ -88,29 +89,29 @@ func (p OpenAIProvider) GenerateText(params AgentProviderGenerateTextParams) (mo
 			CachedTokens:    int(resp.Usage.InputTokensDetails.CachedTokens) + int(resp.Usage.InputTokensDetails.CacheWriteTokens),
 			ReasoningTokens: int(resp.Usage.OutputTokensDetails.ReasoningTokens),
 		},
-		ModelName: p.AgentProviderImpl.Context.ModelName,
+		ModelName: p.BaseAgentProvider.Context().ModelName,
 	}, nil
 }
 
-func (p OpenAIProvider) StreamText(params AgentProviderStreamTextParams, channel chan models.Part) {
+func (p OpenAIProvider) StreamText(params providers.AgentProviderPromptMessageParams, channel chan models.Part) {
 	client := openai.NewClient(
 		option.WithAPIKey(p.APIKey),
 	)
 	stream := client.Responses.NewStreaming(context.Background(), responses.ResponseNewParams{
-		Model: p.AgentProviderImpl.Context.ModelName,
-		Input: p.GetInputFromParams(params.AgentProviderPromptMessageParams),
+		Model: p.BaseAgentProvider.Context().ModelName,
+		Input: p.GetInputFromParams(params),
 	})
 
-	channel <- models.NewStepStartPart(p.GetContext(), "streaming started")
+	channel <- models.NewStepStartPart(p.Context(), "streaming started")
 
 	for stream.Next() {
 		chunk := stream.Current()
 		log.Println("Received chunk:", chunk.Type)
 		switch chunk.Type {
 		case "response.output_text.delta":
-			channel <- models.NewTextPart(p.GetContext(), string(chunk.Delta))
+			channel <- models.NewTextPart(p.Context(), string(chunk.Delta))
 		case "response.completed":
-			channel <- models.NewStepEndPart(p.GetContext(), "stream completed", models.NewLanguageModelUsage(
+			channel <- models.NewStepEndPart(p.Context(), "stream completed", models.NewLanguageModelUsage(
 				int(chunk.Response.Usage.OutputTokens),
 				int(chunk.Response.Usage.InputTokens),
 				int(chunk.Response.Usage.InputTokensDetails.CachedTokens)+int(chunk.Response.Usage.InputTokensDetails.CacheWriteTokens),
@@ -120,15 +121,15 @@ func (p OpenAIProvider) StreamText(params AgentProviderStreamTextParams, channel
 	}
 }
 
-func (p OpenAIProvider) ResolveToolCalls(params AgentProviderPromptMessageParams, toolParams []models.Tool) ([]models.ToolCall, error) {
-	return []models.ToolCall{}, nil
+func (p OpenAIProvider) ResolveToolCall(params providers.AgentProviderPromptMessageParams, toolParams []models.Tool) *models.ToolCall {
+	return nil
 }
 
 func NewOpenAIProvider(apiKey, modelName string) OpenAIProvider {
 	return OpenAIProvider{
 		APIKey: apiKey,
-		AgentProviderImpl: AgentProviderImpl{
-			Context: models.NewLanguageModelContext(modelName),
-		},
+		BaseAgentProvider: providers.NewBaseAgentProvider(
+			models.LanguageModelContext{ModelName: modelName},
+		),
 	}
 }

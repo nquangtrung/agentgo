@@ -24,11 +24,11 @@ func TestGenerateText(t *testing.T) {
 		Prompt:   prompt,
 		Provider: mockProvider,
 	}
-	mockProvider.EXPECT().GetContext().AnyTimes().Return(models.LanguageModelContext{
+	mockProvider.EXPECT().Context().AnyTimes().Return(models.LanguageModelContext{
 		ModelName: modelName,
 	})
 	mockProvider.EXPECT().GenerateText(gomock.Cond(
-		func(p providers.AgentProviderGenerateTextParams) bool {
+		func(p providers.AgentProviderPromptMessageParams) bool {
 			// assert.Equal(t, len(p.Messages), 1, "should")
 			if len(p.Messages) != 1 {
 				return false
