@@ -23,12 +23,14 @@ type Tool interface {
 }
 
 type BaseTool struct {
-	name         string
-	description  string
-	parameters   map[string]any
-	fn           func(params ToolExecuteParams) ToolExecuteOutput
+	name        string
+	description string
+	strict      bool
+
+	fn func(params ToolExecuteParams) ToolExecuteOutput
+
+	inputSchema  map[string]any
 	outputSchema map[string]any
-	strict       bool
 }
 
 func (t BaseTool) Name() string {
@@ -41,4 +43,23 @@ func (t BaseTool) Description() string {
 
 func (t BaseTool) Execute(params ToolExecuteParams) ToolExecuteOutput {
 	return t.fn(params)
+}
+
+type NewToolParams struct {
+	Name        string
+	Description string
+	Fn          func(params ToolExecuteParams) ToolExecuteOutput
+
+	InputSchema  map[string]any
+	OutputSchema map[string]any
+}
+
+func NewTool(params NewToolParams) BaseTool {
+	return BaseTool{
+		name:         params.Name,
+		description:  params.Description,
+		fn:           params.Fn,
+		inputSchema:  params.InputSchema,
+		outputSchema: params.OutputSchema,
+	}
 }

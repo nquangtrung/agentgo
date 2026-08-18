@@ -40,13 +40,26 @@ func (m *MockTool) EXPECT() *MockToolMockRecorder {
 	return m.recorder
 }
 
+// Description mocks base method.
+func (m *MockTool) Description() string {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Description")
+	ret0, _ := ret[0].(string)
+	return ret0
+}
+
+// Description indicates an expected call of Description.
+func (mr *MockToolMockRecorder) Description() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Description", reflect.TypeOf((*MockTool)(nil).Description))
+}
+
 // Execute mocks base method.
-func (m *MockTool) Execute(params models.ToolExecuteParams) (models.ToolExecuteOutput, error) {
+func (m *MockTool) Execute(params models.ToolExecuteParams) models.ToolExecuteOutput {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Execute", params)
 	ret0, _ := ret[0].(models.ToolExecuteOutput)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	return ret0
 }
 
 // Execute indicates an expected call of Execute.
@@ -55,30 +68,16 @@ func (mr *MockToolMockRecorder) Execute(params any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Execute", reflect.TypeOf((*MockTool)(nil).Execute), params)
 }
 
-// GetDescription mocks base method.
-func (m *MockTool) GetDescription() string {
+// Name mocks base method.
+func (m *MockTool) Name() string {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetDescription")
+	ret := m.ctrl.Call(m, "Name")
 	ret0, _ := ret[0].(string)
 	return ret0
 }
 
-// GetDescription indicates an expected call of GetDescription.
-func (mr *MockToolMockRecorder) GetDescription() *gomock.Call {
+// Name indicates an expected call of Name.
+func (mr *MockToolMockRecorder) Name() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDescription", reflect.TypeOf((*MockTool)(nil).GetDescription))
-}
-
-// GetName mocks base method.
-func (m *MockTool) GetName() string {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetName")
-	ret0, _ := ret[0].(string)
-	return ret0
-}
-
-// GetName indicates an expected call of GetName.
-func (mr *MockToolMockRecorder) GetName() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetName", reflect.TypeOf((*MockTool)(nil).GetName))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Name", reflect.TypeOf((*MockTool)(nil).Name))
 }

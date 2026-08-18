@@ -40,134 +40,56 @@ func (m *MockPart) EXPECT() *MockPartMockRecorder {
 	return m.recorder
 }
 
-// AsStepEndPart mocks base method.
-func (m *MockPart) AsStepEndPart() (models.StepEndPart, bool) {
+// Context mocks base method.
+func (m *MockPart) Context() models.LanguageModelContext {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "AsStepEndPart")
-	ret0, _ := ret[0].(models.StepEndPart)
-	ret1, _ := ret[1].(bool)
-	return ret0, ret1
-}
-
-// AsStepEndPart indicates an expected call of AsStepEndPart.
-func (mr *MockPartMockRecorder) AsStepEndPart() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AsStepEndPart", reflect.TypeOf((*MockPart)(nil).AsStepEndPart))
-}
-
-// AsStepStartPart mocks base method.
-func (m *MockPart) AsStepStartPart() (models.StepStartPart, bool) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "AsStepStartPart")
-	ret0, _ := ret[0].(models.StepStartPart)
-	ret1, _ := ret[1].(bool)
-	return ret0, ret1
-}
-
-// AsStepStartPart indicates an expected call of AsStepStartPart.
-func (mr *MockPartMockRecorder) AsStepStartPart() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AsStepStartPart", reflect.TypeOf((*MockPart)(nil).AsStepStartPart))
-}
-
-// AsTextPart mocks base method.
-func (m *MockPart) AsTextPart() (models.TextPart, bool) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "AsTextPart")
-	ret0, _ := ret[0].(models.TextPart)
-	ret1, _ := ret[1].(bool)
-	return ret0, ret1
-}
-
-// AsTextPart indicates an expected call of AsTextPart.
-func (mr *MockPartMockRecorder) AsTextPart() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AsTextPart", reflect.TypeOf((*MockPart)(nil).AsTextPart))
-}
-
-// AsToolErrorPart mocks base method.
-func (m *MockPart) AsToolErrorPart() (models.ToolErrorPart, bool) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "AsToolErrorPart")
-	ret0, _ := ret[0].(models.ToolErrorPart)
-	ret1, _ := ret[1].(bool)
-	return ret0, ret1
-}
-
-// AsToolErrorPart indicates an expected call of AsToolErrorPart.
-func (mr *MockPartMockRecorder) AsToolErrorPart() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AsToolErrorPart", reflect.TypeOf((*MockPart)(nil).AsToolErrorPart))
-}
-
-// AsToolResultPart mocks base method.
-func (m *MockPart) AsToolResultPart() (models.ToolResultPart, bool) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "AsToolResultPart")
-	ret0, _ := ret[0].(models.ToolResultPart)
-	ret1, _ := ret[1].(bool)
-	return ret0, ret1
-}
-
-// AsToolResultPart indicates an expected call of AsToolResultPart.
-func (mr *MockPartMockRecorder) AsToolResultPart() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AsToolResultPart", reflect.TypeOf((*MockPart)(nil).AsToolResultPart))
-}
-
-// AsToolStartPart mocks base method.
-func (m *MockPart) AsToolStartPart() (models.ToolPart, bool) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "AsToolStartPart")
-	ret0, _ := ret[0].(models.ToolPart)
-	ret1, _ := ret[1].(bool)
-	return ret0, ret1
-}
-
-// AsToolStartPart indicates an expected call of AsToolStartPart.
-func (mr *MockPartMockRecorder) AsToolStartPart() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AsToolStartPart", reflect.TypeOf((*MockPart)(nil).AsToolStartPart))
-}
-
-// GetContext mocks base method.
-func (m *MockPart) GetContext() models.LanguageModelContext {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetContext")
+	ret := m.ctrl.Call(m, "Context")
 	ret0, _ := ret[0].(models.LanguageModelContext)
 	return ret0
 }
 
-// GetContext indicates an expected call of GetContext.
-func (mr *MockPartMockRecorder) GetContext() *gomock.Call {
+// Context indicates an expected call of Context.
+func (mr *MockPartMockRecorder) Context() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetContext", reflect.TypeOf((*MockPart)(nil).GetContext))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Context", reflect.TypeOf((*MockPart)(nil).Context))
 }
 
-// GetModelName mocks base method.
-func (m *MockPart) GetModelName() string {
+// ModelName mocks base method.
+func (m *MockPart) ModelName() string {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetModelName")
+	ret := m.ctrl.Call(m, "ModelName")
 	ret0, _ := ret[0].(string)
 	return ret0
 }
 
-// GetModelName indicates an expected call of GetModelName.
-func (mr *MockPartMockRecorder) GetModelName() *gomock.Call {
+// ModelName indicates an expected call of ModelName.
+func (mr *MockPartMockRecorder) ModelName() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetModelName", reflect.TypeOf((*MockPart)(nil).GetModelName))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ModelName", reflect.TypeOf((*MockPart)(nil).ModelName))
 }
 
-// GetType mocks base method.
-func (m *MockPart) GetType() models.PartType {
+// Type mocks base method.
+func (m *MockPart) Type() models.PartType {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetType")
+	ret := m.ctrl.Call(m, "Type")
 	ret0, _ := ret[0].(models.PartType)
 	return ret0
 }
 
-// GetType indicates an expected call of GetType.
-func (mr *MockPartMockRecorder) GetType() *gomock.Call {
+// Type indicates an expected call of Type.
+func (mr *MockPartMockRecorder) Type() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetType", reflect.TypeOf((*MockPart)(nil).GetType))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Type", reflect.TypeOf((*MockPart)(nil).Type))
+}
+
+// isPart mocks base method.
+func (m *MockPart) isPart() {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "isPart")
+}
+
+// isPart indicates an expected call of isPart.
+func (mr *MockPartMockRecorder) isPart() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "isPart", reflect.TypeOf((*MockPart)(nil).isPart))
 }

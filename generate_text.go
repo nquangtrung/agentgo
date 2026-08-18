@@ -6,7 +6,6 @@ import (
 
 	"trontria.com/agentgo/models"
 	"trontria.com/agentgo/providers"
-	"trontria.com/agentgo/utils"
 )
 
 func canProceedToNextStep(context *models.ExecutionContext, params Params) bool {
@@ -32,13 +31,13 @@ func doLoop(provider providers.AgentProvider, params Params) (models.LanguageMod
 			break
 		}
 
+		log.Printf("Resolving tool call")
 		toolCall := provider.ResolveToolCall(
 			providers.AgentProviderPromptMessageParams{
 				Messages: messages,
 			},
 			params.Tools,
 		)
-		log.Printf("Resolved tool %s", utils.Ternary(toolCall == nil, toolCall.ToolName, "nil"))
 
 		if toolCall == nil {
 			log.Printf("No tool call was resolved, breaking the loop.")
@@ -54,11 +53,11 @@ func doLoop(provider providers.AgentProvider, params Params) (models.LanguageMod
 
 		context.AddStep(fmt.Sprintf("tool call [%s]", toolCall.ToolName), toolCall)
 		tool, err := resolveToolFromToolCall(*toolCall, params.Tools)
-		log.Printf("Resolved tool %s", utils.Ternary(tool == nil, "nil", tool.Name()))
 		if err != nil {
 			context.UpdateLastStepError(err)
 			continue
 		}
+		log.Printf("Resolved tool [%s]", tool.Name())
 		toolResult := tool.Execute(models.ToolExecuteParams{
 			Params: toolCall.Params,
 		})
@@ -77,7 +76,7 @@ func GenerateText(params Params) (models.LanguageModelOutput, error) {
 	provider := mustResolveProviderFromParams(params)
 	messages := resolveMessages(params)
 
-	if len(params.EndConditions) == 0 {
+	if len(params.EndConditions) == 0 || len(params.Tools) == 0 {
 		// If no end conditions are provided, for safety, we will default to a max steps end condition of 1.
 		return provider.GenerateText(providers.AgentProviderPromptMessageParams{
 			Messages: messages,

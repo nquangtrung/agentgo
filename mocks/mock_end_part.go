@@ -40,30 +40,30 @@ func (m *MockEndPart) EXPECT() *MockEndPartMockRecorder {
 	return m.recorder
 }
 
-// GetFinishReason mocks base method.
-func (m *MockEndPart) GetFinishReason() models.FinishReason {
+// FinishReason mocks base method.
+func (m *MockEndPart) FinishReason() models.FinishReason {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetFinishReason")
+	ret := m.ctrl.Call(m, "FinishReason")
 	ret0, _ := ret[0].(models.FinishReason)
 	return ret0
 }
 
-// GetFinishReason indicates an expected call of GetFinishReason.
-func (mr *MockEndPartMockRecorder) GetFinishReason() *gomock.Call {
+// FinishReason indicates an expected call of FinishReason.
+func (mr *MockEndPartMockRecorder) FinishReason() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFinishReason", reflect.TypeOf((*MockEndPart)(nil).GetFinishReason))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FinishReason", reflect.TypeOf((*MockEndPart)(nil).FinishReason))
 }
 
-// GetUsage mocks base method.
-func (m *MockEndPart) GetUsage() models.LanguageModelUsage {
+// Usage mocks base method.
+func (m *MockEndPart) Usage() models.LanguageModelUsage {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetUsage")
+	ret := m.ctrl.Call(m, "Usage")
 	ret0, _ := ret[0].(models.LanguageModelUsage)
 	return ret0
 }
 
-// GetUsage indicates an expected call of GetUsage.
-func (mr *MockEndPartMockRecorder) GetUsage() *gomock.Call {
+// Usage indicates an expected call of Usage.
+func (mr *MockEndPartMockRecorder) Usage() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUsage", reflect.TypeOf((*MockEndPart)(nil).GetUsage))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Usage", reflect.TypeOf((*MockEndPart)(nil).Usage))
 }
