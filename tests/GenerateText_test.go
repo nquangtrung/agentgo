@@ -10,6 +10,7 @@ import (
 	"trontria.com/agentgo/mocks"
 	"trontria.com/agentgo/models"
 	"trontria.com/agentgo/providers"
+	"trontria.com/agentgo/utils"
 )
 
 func TestGenerateText(t *testing.T) {
@@ -88,7 +89,19 @@ func TestGenerateTextWithTool(t *testing.T) {
 				Name: "mock_tool",
 				Fn: func(params models.ToolExecuteParams) models.ToolExecuteOutput {
 					log.Printf("Tool called with params: %v", params)
-					return models.ToolExecuteOutput{}
+					return models.ToolExecuteOutput{
+						Result: map[string]any{
+							"key1": "value1",
+							"key2": "value2",
+						},
+						Usage: models.LanguageModelUsage{
+							OutputTokens:    100,
+							InputTokens:     200,
+							CachedTokens:    20,
+							ReasoningTokens: 0,
+						},
+					}
+
 				},
 			}),
 		},
@@ -142,8 +155,11 @@ func TestGenerateTextWithTool(t *testing.T) {
 
 	assert.Equal(t, modelName, output.ModelName, "should have correct model name")
 	assert.Equal(t, result, output.Text, "should have correct output")
-	assert.Equal(t, output.Usage.InputTokens, 245, "should have correct input tokens")
-	assert.Equal(t, output.Usage.OutputTokens, 123, "should have correct output tokens")
-	assert.Equal(t, output.Usage.CachedTokens, 21, "should have correct cached token")
-	assert.Equal(t, output.Usage.ReasoningTokens, 12, "should have correct reasoning token")
+	assert.Equal(t, 245+200, output.Usage.InputTokens, "should have correct input tokens")
+	assert.Equal(t, 123+100, output.Usage.OutputTokens, "should have correct output tokens")
+	assert.Equal(t, 21+20, output.Usage.CachedTokens, "should have correct cached token")
+	assert.Equal(t, 12+0, output.Usage.ReasoningTokens, "should have correct reasoning token")
+	assert.Equal(t, 2, len(output.Context.Steps()), "should have correct number of steps")
+	assert.Equal(t, "tool call [mock_tool]", utils.Must(output.Context.Step(0)).Name, "should have correct first step name")
+	assert.Equal(t, map[string]any{"key1": "value1", "key2": "value2"}, utils.Must(output.Context.Step(0)).ToolResult.Result, "should have correct result in first step")
 }
