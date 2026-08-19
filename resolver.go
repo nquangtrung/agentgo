@@ -77,8 +77,9 @@ func resolveTextOutputAsToolExecuteOutput(textOutput models.LanguageModelOutput,
 
 func resolveExecutionContextAsTextOutput(context *models.ExecutionContext) models.LanguageModelOutput {
 	return models.LanguageModelOutput{
-		Text:    context.LastStep().ToolResult.Result["text"].(string),
-		Usage:   context.LastStep().ToolResult.Usage,
-		Context: context,
+		Text:      context.LastStep().ToolResult.Result["text"].(string),
+		Usage:     context.LastStep().ToolResult.Usage,
+		ModelName: context.ModelName(),
+		Context:   context,
 	}
 }

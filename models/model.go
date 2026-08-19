@@ -113,6 +113,7 @@ func (e *ExecutionContext) UpdateLastStepError(err error) {
 	})
 }
 
+//go:generate mockgen -source=model.go -destination=../tests/mocks/mock_context.go -package=mocks
 func NewExecutionContextFromLanguageModelContext(context LanguageModelContext) ExecutionContext {
 	return ExecutionContext{
 		LanguageModelContext: context,

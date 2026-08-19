@@ -93,18 +93,25 @@ func TestGenerateTextWithTool(t *testing.T) {
 			}),
 		},
 	}
+
+	mockResolveToolCallReturn := func(returned *models.ToolCall) *gomock.Call {
+		return mockProvider.EXPECT().ResolveToolCall(gomock.Any(), gomock.Any()).Return(returned)
+	}
 	gomock.InOrder(
-		mockProvider.EXPECT().ResolveToolCall(gomock.Any(), gomock.Any()).Return(&models.ToolCall{
+		mockResolveToolCallReturn(&models.ToolCall{
 			ToolName: "mock_tool",
+			Params: map[string]any{
+				"param1": "value1",
+				"param2": "value2",
+			},
 		}),
-		mockProvider.EXPECT().ResolveToolCall(gomock.Any(), gomock.Any()).Return(nil),
+		mockResolveToolCallReturn(nil),
 	)
 	mockProvider.EXPECT().Context().AnyTimes().Return(models.LanguageModelContext{
 		ModelName: modelName,
 	})
 	mockProvider.EXPECT().GenerateText(gomock.Cond(
 		func(p providers.AgentProviderPromptMessageParams) bool {
-			// assert.Equal(t, len(p.Messages), 1, "should")
 			if len(p.Messages) != 2 {
 				return false
 			}
@@ -133,8 +140,8 @@ func TestGenerateTextWithTool(t *testing.T) {
 		panic(err)
 	}
 
-	assert.Equal(t, output.ModelName, modelName, "should have correct model name")
-	assert.Equal(t, output.Text, result, "should have correct output")
+	assert.Equal(t, modelName, output.ModelName, "should have correct model name")
+	assert.Equal(t, result, output.Text, "should have correct output")
 	assert.Equal(t, output.Usage.InputTokens, 245, "should have correct input tokens")
 	assert.Equal(t, output.Usage.OutputTokens, 123, "should have correct output tokens")
 	assert.Equal(t, output.Usage.CachedTokens, 21, "should have correct cached token")
