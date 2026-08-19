@@ -122,6 +122,8 @@ func (e *ExecutionContext) UpdateLastStepResult(result *ToolExecuteOutput) {
 	if len(e.steps) == 0 {
 		return
 	}
+
+	result.ToolCall = e.steps[len(e.steps)-1].ToolCalled
 	e.steps[len(e.steps)-1].ToolResult = result
 }
 func (e *ExecutionContext) UpdateLastStepError(err error) {

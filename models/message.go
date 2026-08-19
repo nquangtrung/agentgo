@@ -2,6 +2,9 @@ package models
 
 import (
 	"encoding/json"
+	"fmt"
+
+	"trontria.com/agentgo/utils"
 )
 
 type MessageRole string
@@ -62,11 +65,19 @@ func NewAssistantStringMessage(content string) BaseMessage {
 
 func NewMessageFromToolResult(output ToolExecuteOutput) BaseMessage {
 	if output.Error != nil {
-		stringError, _ := json.Marshal(output.Error)
-		return NewAssistantStringMessage("Tool execution error: " + string(stringError))
+		stringError := utils.Must(json.Marshal(output.Error))
+		return NewAssistantStringMessage(
+			fmt.Sprintf("Tool [%s] execution error: %s",
+				output.ToolCall.ToolName,
+				string(stringError),
+			),
+		)
 	} else {
-		stringResult, _ := json.Marshal(output.Result)
-		return NewAssistantStringMessage("Tool execution result: " + string(stringResult))
+		stringResult := utils.Must(json.Marshal(output.Result))
+		return NewAssistantStringMessage(fmt.Sprintf("Tool [%s] execution result: %s",
+			output.ToolCall.ToolName,
+			string(stringResult),
+		))
 	}
 }
 

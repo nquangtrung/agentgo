@@ -5,9 +5,10 @@ type ToolExecuteParams struct {
 }
 
 type ToolExecuteOutput struct {
-	Result map[string]any
-	Error  error
-	Usage  LanguageModelUsage
+	Result   map[string]any
+	Error    error
+	Usage    LanguageModelUsage
+	ToolCall *ToolCall
 }
 
 type ToolCall struct {
