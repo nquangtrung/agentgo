@@ -10,6 +10,14 @@ func (e *UnsupportedModelError) Error() string {
 	return fmt.Sprintf("unsupported model: %s", e.ModelName)
 }
 
+type ExecutionContextError struct {
+	Message string
+}
+
+func (e *ExecutionContextError) Error() string {
+	return fmt.Sprintf("execution context error: %s", e.Message)
+}
+
 type ToolExecutionError struct {
 	ToolName string
 	Err      error

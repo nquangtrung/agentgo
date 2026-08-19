@@ -107,7 +107,7 @@ func TestGenerateTextWithTool(t *testing.T) {
 		}),
 		mockResolveToolCallReturn(nil),
 	)
-	mockProvider.EXPECT().Context().AnyTimes().Return(models.LanguageModelContext{
+	mockProvider.EXPECT().Context().MinTimes(1).Return(models.LanguageModelContext{
 		ModelName: modelName,
 	})
 	mockProvider.EXPECT().GenerateText(gomock.Cond(

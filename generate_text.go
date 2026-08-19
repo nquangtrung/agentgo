@@ -20,9 +20,10 @@ func canProceedToNextStep(context *models.ExecutionContext, params Params) bool 
 
 func doLoop(provider providers.AgentProvider, params Params) (models.LanguageModelOutput, error) {
 	context := models.NewExecutionContextFromLanguageModelContext(
-		models.NewLanguageModelContext(params.ModelName),
+		provider.Context(),
 	)
 
+	log.Printf("Starting loop with context %v", context.ModelName())
 	messages := resolveMessages(params)
 	for {
 		canContinue := canProceedToNextStep(&context, params)
@@ -69,7 +70,7 @@ func doLoop(provider providers.AgentProvider, params Params) (models.LanguageMod
 		log.Printf("Adding tool result to messages: %v", toolResult)
 		messages = append(messages, models.NewMessageFromToolResult(toolResult))
 	}
-	return resolveExecutionContextAsTextOutput(&context), nil
+	return resolveExecutionContextAsTextOutput(&context)
 }
 
 func GenerateText(params Params) (models.LanguageModelOutput, error) {

@@ -1,6 +1,7 @@
 package models
 
 import (
+	"fmt"
 	"sync"
 )
 
@@ -88,6 +89,22 @@ func (e *ExecutionContext) Steps() []Step {
 	defer e.stepLocker.Unlock()
 
 	return e.steps
+}
+func (e *ExecutionContext) StepCount() int {
+	e.stepLocker.Lock()
+	defer e.stepLocker.Unlock()
+
+	return len(e.steps)
+}
+
+func (e *ExecutionContext) Step(index int) (*Step, error) {
+	e.stepLocker.Lock()
+	defer e.stepLocker.Unlock()
+
+	if index < 0 || index >= len(e.steps) {
+		return nil, fmt.Errorf("step index out of range")
+	}
+	return &e.steps[index], nil
 }
 func (e *ExecutionContext) LastStep() *Step {
 	e.stepLocker.Lock()

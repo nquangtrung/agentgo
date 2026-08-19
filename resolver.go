@@ -75,11 +75,32 @@ func resolveTextOutputAsToolExecuteOutput(textOutput models.LanguageModelOutput,
 	}
 }
 
-func resolveExecutionContextAsTextOutput(context *models.ExecutionContext) models.LanguageModelOutput {
+func resolveExecutionContextAsTextOutput(context *models.ExecutionContext) (models.LanguageModelOutput, error) {
+	if context.LastStep() == nil {
+		return models.LanguageModelOutput{}, &models.ExecutionContextError{
+			Message: "no steps in execution context",
+		}
+	}
+	lastOutput, ok := context.LastStep().ToolResult.Result["text"].(string)
+	text := utils.Ternary(ok, lastOutput, "")
+
+	usage := utils.Reduce(
+		context.Steps(),
+		func(acc models.LanguageModelUsage, step models.Step) models.LanguageModelUsage {
+			return models.LanguageModelUsage{
+				InputTokens:     acc.InputTokens + step.ToolResult.Usage.InputTokens,
+				OutputTokens:    acc.OutputTokens + step.ToolResult.Usage.OutputTokens,
+				CachedTokens:    acc.CachedTokens + step.ToolResult.Usage.CachedTokens,
+				ReasoningTokens: acc.ReasoningTokens + step.ToolResult.Usage.ReasoningTokens,
+			}
+		},
+		models.LanguageModelUsage{},
+	)
+
 	return models.LanguageModelOutput{
-		Text:      context.LastStep().ToolResult.Result["text"].(string),
-		Usage:     context.LastStep().ToolResult.Usage,
+		Text:      text,
+		Usage:     usage,
 		ModelName: context.ModelName(),
 		Context:   context,
-	}
+	}, nil
 }
