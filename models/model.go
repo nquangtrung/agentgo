@@ -6,13 +6,13 @@ import (
 )
 
 type LanguageModelUsage struct {
-	OutputTokens    int
-	InputTokens     int
-	CachedTokens    int
-	ReasoningTokens int
+	OutputTokens    int64
+	InputTokens     int64
+	CachedTokens    int64
+	ReasoningTokens int64
 }
 
-func NewLanguageModelUsage(outputTokens, inputTokens, cachedTokens, reasoningTokens int) LanguageModelUsage {
+func NewLanguageModelUsage(outputTokens, inputTokens, cachedTokens, reasoningTokens int64) LanguageModelUsage {
 	return LanguageModelUsage{
 		OutputTokens:    outputTokens,
 		InputTokens:     inputTokens,

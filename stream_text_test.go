@@ -1,4 +1,4 @@
-package tests
+package agentgo
 
 import (
 	"fmt"
@@ -6,7 +6,6 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
-	"trontria.com/agentgo"
 	"trontria.com/agentgo/mocks"
 	"trontria.com/agentgo/models"
 	"trontria.com/agentgo/providers"
@@ -21,7 +20,7 @@ func TestStreamText(t *testing.T) {
 	// result := "This is a test"
 
 	mockProvider := mocks.NewMockAgentProvider(ctrl)
-	params := agentgo.Params{
+	params := Params{
 		Prompt:   prompt,
 		Provider: mockProvider,
 	}
@@ -63,7 +62,7 @@ func TestStreamText(t *testing.T) {
 			ReasoningTokens: 12,
 		})
 	})
-	output := agentgo.StreamText(params)
+	output := StreamText(params)
 	if output == (models.LanguageModelStreamOutput{}) {
 		panic("stream output is nil")
 	}
