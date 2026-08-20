@@ -121,7 +121,7 @@ func TestGenerateTextWithTool(t *testing.T) {
 			return false
 		}
 
-		if p.Messages[0].Content().Text() != params.Prompt {
+		if p.Messages[0].Content().Text() != prompt {
 			return false
 		}
 
@@ -189,5 +189,5 @@ func TestGenerateTextWithTool(t *testing.T) {
 	assert.Equal(t, 12+0, output.Usage.ReasoningTokens, "should have correct reasoning token")
 	assert.Equal(t, 2, len(output.Context.Steps()), "should have correct number of steps")
 	assert.Equal(t, "tool call [mock_tool]", utils.Must(output.Context.Step(0)).Name, "should have correct first step name")
-	assert.Equal(t, map[string]any{"key1": "value1", "key2": "value2"}, utils.Must(output.Context.Step(0)).ToolResult.Result, "should have correct result in first step")
+	assert.Equal(t, toolResult, utils.Must(output.Context.Step(0)).ToolResult.Result, "should have correct result in first step")
 }
