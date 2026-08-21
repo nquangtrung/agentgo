@@ -66,7 +66,7 @@ func doLoop(provider providers.AgentProvider, params Params) (models.LanguageMod
 			}
 			log.Printf("Resolved tool [%s]", tool.Name())
 			toolResult := tool.Execute(models.ToolExecuteParams{
-				Params: toolCall.Params,
+				Input: toolCall.Params,
 			})
 			log.Printf("Executed tool %s with result: %v", tool.Name(), toolResult)
 			context.UpdateLastStepResult(

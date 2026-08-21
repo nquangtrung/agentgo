@@ -1,11 +1,11 @@
 package models
 
 type ToolExecuteParams struct {
-	Params map[string]any
+	Input map[string]any
 }
 
 type ToolExecuteOutput struct {
-	Result   map[string]any
+	Output   map[string]any
 	Error    error
 	Usage    LanguageModelUsage
 	ToolCall *ToolCall
@@ -30,16 +30,11 @@ type BaseTool struct {
 
 	fn func(params ToolExecuteParams) ToolExecuteOutput
 
-	inputSchema  map[string]any
-	outputSchema map[string]any
+	inputSchema map[string]any
 }
 
 func (t BaseTool) InputSchema() map[string]any {
 	return t.inputSchema
-}
-
-func (t BaseTool) OutputSchema() map[string]any {
-	return t.outputSchema
 }
 
 func (t BaseTool) Name() string {
@@ -59,16 +54,14 @@ type NewToolParams struct {
 	Description string
 	Fn          func(params ToolExecuteParams) ToolExecuteOutput
 
-	InputSchema  map[string]any
-	OutputSchema map[string]any
+	InputSchema map[string]any
 }
 
 func NewTool(params NewToolParams) BaseTool {
 	return BaseTool{
-		name:         params.Name,
-		description:  params.Description,
-		fn:           params.Fn,
-		inputSchema:  params.InputSchema,
-		outputSchema: params.OutputSchema,
+		name:        params.Name,
+		description: params.Description,
+		fn:          params.Fn,
+		inputSchema: params.InputSchema,
 	}
 }

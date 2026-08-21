@@ -66,7 +66,7 @@ func TestResolveToolCall(t *testing.T) {
 	mockTool := models.NewTool(models.NewToolParams{
 		Name: "mock-tool-1",
 		Fn: func(p models.ToolExecuteParams) models.ToolExecuteOutput {
-			return models.ToolExecuteOutput{Result: map[string]any{"key1": "result1"}}
+			return models.ToolExecuteOutput{Output: map[string]any{"key1": "result1"}}
 		},
 	})
 

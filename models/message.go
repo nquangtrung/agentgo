@@ -73,7 +73,7 @@ func NewMessageFromToolResult(output ToolExecuteOutput) BaseMessage {
 			),
 		)
 	} else {
-		stringResult := utils.Must(json.Marshal(output.Result))
+		stringResult := utils.Must(json.Marshal(output.Output))
 		return NewAssistantStringMessage(fmt.Sprintf("Tool [%s] execution result: %s",
 			output.ToolCall.ToolName,
 			string(stringResult),

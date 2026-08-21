@@ -61,13 +61,13 @@ func resolveToolFromToolCall(toolCall models.ToolCall, tools []models.BaseTool) 
 func resolveTextOutputAsToolExecuteOutput(textOutput models.LanguageModelOutput, err error) models.ToolExecuteOutput {
 	if err != nil {
 		return models.ToolExecuteOutput{
-			Result: nil,
+			Output: nil,
 			Error:  err,
 			Usage:  textOutput.Usage,
 		}
 	}
 	return models.ToolExecuteOutput{
-		Result: map[string]any{
+		Output: map[string]any{
 			"text": textOutput.Text,
 		},
 		Error: nil,
@@ -81,7 +81,7 @@ func resolveExecutionContextAsTextOutput(context *models.ExecutionContext) (mode
 			Message: "no steps in execution context",
 		}
 	}
-	lastOutput, ok := context.LastStep().ToolResult.Result["text"].(string)
+	lastOutput, ok := context.LastStep().ToolResult.Output["text"].(string)
 	text := utils.Ternary(ok, lastOutput, "")
 
 	usage := utils.Reduce(

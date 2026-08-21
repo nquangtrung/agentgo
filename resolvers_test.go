@@ -27,7 +27,7 @@ func TestResolveExecutionContextAsTextOutput(t *testing.T) {
 		},
 	)
 	execCtx.UpdateLastStepResult(&models.ToolExecuteOutput{
-		Result: map[string]any{
+		Output: map[string]any{
 			"key1": "value1",
 		},
 		Usage: models.LanguageModelUsage{
@@ -47,7 +47,7 @@ func TestResolveExecutionContextAsTextOutput(t *testing.T) {
 		},
 	)
 	execCtx.UpdateLastStepResult(&models.ToolExecuteOutput{
-		Result: map[string]any{
+		Output: map[string]any{
 			"key2": "value2",
 		},
 		Usage: models.LanguageModelUsage{
@@ -68,14 +68,14 @@ func TestResolveExecutionContextAsTextOutput(t *testing.T) {
 		},
 	)
 	execCtx.UpdateLastStepResult(&models.ToolExecuteOutput{
-		Result: map[string]any{
+		Output: map[string]any{
 			"key3": "value3",
 		},
 	})
 
 	execCtx.AddStep("text-step: final-output", nil)
 	execCtx.UpdateLastStepResult(&models.ToolExecuteOutput{
-		Result: map[string]any{
+		Output: map[string]any{
 			"text": "final-output",
 		},
 		Usage: models.LanguageModelUsage{
@@ -104,7 +104,7 @@ func TestResolveExecutionContextAsTextOutput(t *testing.T) {
 	assert.Equal(t, "tool-step: mock_tool_1", utils.Must(output.Context.Step(0)).Name, "expected first step name to match")
 	assert.Equal(t, "tool-step: mock_tool_2", utils.Must(output.Context.Step(1)).Name, "expected second step name to match")
 	assert.Equal(t, "tool-step: mock_tool_3", utils.Must(output.Context.Step(2)).Name, "expected third step name to match")
-	assert.Equal(t, map[string]any{"key1": "value1"}, utils.Must(output.Context.Step(0)).ToolResult.Result, "expected first step tool name to match")
-	assert.Equal(t, map[string]any{"key2": "value2"}, utils.Must(output.Context.Step(1)).ToolResult.Result, "expected first step tool name to match")
-	assert.Equal(t, map[string]any{"key3": "value3"}, utils.Must(output.Context.Step(2)).ToolResult.Result, "expected first step tool name to match")
+	assert.Equal(t, map[string]any{"key1": "value1"}, utils.Must(output.Context.Step(0)).ToolResult.Output, "expected first step tool name to match")
+	assert.Equal(t, map[string]any{"key2": "value2"}, utils.Must(output.Context.Step(1)).ToolResult.Output, "expected first step tool name to match")
+	assert.Equal(t, map[string]any{"key3": "value3"}, utils.Must(output.Context.Step(2)).ToolResult.Output, "expected first step tool name to match")
 }

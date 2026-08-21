@@ -93,9 +93,9 @@ func TestGenerateTextWithTool(t *testing.T) {
 			Name: "mock_tool",
 			Fn: func(params models.ToolExecuteParams) models.ToolExecuteOutput {
 				log.Printf("Tool called with params: %v", params)
-				assert.Equal(t, toolParams, params.Params, "should be called with correct tool params")
+				assert.Equal(t, toolParams, params.Input, "should be called with correct tool params")
 				return models.ToolExecuteOutput{
-					Result: toolResult,
+					Output: toolResult,
 					Usage: models.LanguageModelUsage{
 						OutputTokens:    100,
 						InputTokens:     200,
@@ -190,5 +190,5 @@ func TestGenerateTextWithTool(t *testing.T) {
 	assert.Equal(t, int64(12+0), output.Usage.ReasoningTokens, "should have correct reasoning token")
 	assert.Equal(t, 2, len(output.Context.Steps()), "should have correct number of steps")
 	assert.Equal(t, "tool call [mock_tool]", utils.Must(output.Context.Step(0)).Name, "should have correct first step name")
-	assert.Equal(t, toolResult, utils.Must(output.Context.Step(0)).ToolResult.Result, "should have correct result in first step")
+	assert.Equal(t, toolResult, utils.Must(output.Context.Step(0)).ToolResult.Output, "should have correct result in first step")
 }
