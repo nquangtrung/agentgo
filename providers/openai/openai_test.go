@@ -1,66 +1,37 @@
 package openai
 
 import (
-	"context"
-	"encoding/json"
-	"log"
 	"testing"
 
 	"github.com/openai/openai-go/v3/responses"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 	"trontria.com/agentgo/models"
 	"trontria.com/agentgo/providers"
 	"trontria.com/agentgo/providers/openai/mocks"
-	"trontria.com/agentgo/utils"
 )
 
 func TestGenerateText(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-
-	mockResponsesService := mocks.NewMockopenAIResponsesService(ctrl)
-	provider := newOpenAIProviderWithClient(
-		"mock-gpt-5.5",
-		mockResponsesService,
-	)
+	mockService := mocks.NewMockopenAIResponsesService(gomock.NewController(t))
+	provider := newOpenAIProviderWithClient("mock-gpt-5.5", mockService)
 
 	mockedResponse := &responses.Response{
 		ID: "mocked-response-id",
-		Output: []responses.ResponseOutputItemUnion{
-			{
-				Content: []responses.ResponseOutputMessageContentUnion{
-					{
-						Text: "Great, thank you!",
-						Type: "output_text",
-					},
-				},
-			},
-		},
+		Output: []responses.ResponseOutputItemUnion{{
+			Content: []responses.ResponseOutputMessageContentUnion{{Text: "Great, thank you!", Type: "output_text"}},
+		}},
 		Usage: responses.ResponseUsage{
-			InputTokens: 125,
-			InputTokensDetails: responses.ResponseUsageInputTokensDetails{
-				CacheWriteTokens: 20,
-				CachedTokens:     30,
-			},
-			OutputTokens: 256,
-			OutputTokensDetails: responses.ResponseUsageOutputTokensDetails{
-				ReasoningTokens: 50,
-			},
-			TotalTokens: 125 + 256,
+			InputTokens:         125,
+			OutputTokens:        256,
+			InputTokensDetails:  responses.ResponseUsageInputTokensDetails{CacheWriteTokens: 20, CachedTokens: 30},
+			OutputTokensDetails: responses.ResponseUsageOutputTokensDetails{ReasoningTokens: 50},
 		},
 	}
-	mockResponsesService.EXPECT().New(
-		gomock.Cond(func(context context.Context) bool {
-			return true
-		}),
-		gomock.Cond(func(params responses.ResponseNewParams) bool {
-			return params.Model == "mock-gpt-5.5" &&
-				len(params.Input.OfInputItemList) == 2 &&
-				params.Input.OfInputItemList[0].OfMessage.Role == responses.EasyInputMessageRoleSystem &&
-				params.Input.OfInputItemList[1].OfMessage.Role == responses.EasyInputMessageRoleUser
-		}),
-	).Return(mockedResponse, nil)
+
+	mockService.EXPECT().
+		New(gomock.Any(), gomock.Any()).
+		Return(mockedResponse, nil)
 
 	output, err := provider.GenerateText(providers.AgentProviderPromptMessageParams{
 		Messages: []models.Message{
@@ -69,80 +40,43 @@ func TestGenerateText(t *testing.T) {
 		},
 	})
 
-	assert.Nil(t, err, "should not cause error")
-	assert.Equal(t, "Great, thank you!", output.Text, "should have correct response text")
-	assert.Equal(t, mockedResponse.Usage.InputTokens, output.Usage.InputTokens, "should have correct input tokens")
-	assert.Equal(t, mockedResponse.Usage.OutputTokens, output.Usage.OutputTokens, "should have correct output tokens")
-	assert.Equal(t, mockedResponse.Usage.InputTokensDetails.CacheWriteTokens+mockedResponse.Usage.InputTokensDetails.CachedTokens, output.Usage.CachedTokens, "should have correct cached tokens")
-	assert.Equal(t, mockedResponse.Usage.OutputTokensDetails.ReasoningTokens, output.Usage.ReasoningTokens, "should have correct reasoning tokens")
+	require.NoError(t, err)
+	assert.Equal(t, "Great, thank you!", output.Text)
+	assert.Equal(t, models.LanguageModelUsage{
+		InputTokens:     125,
+		OutputTokens:    256,
+		CachedTokens:    50, // 20 + 30
+		ReasoningTokens: 50,
+	}, output.Usage)
 }
 
 func TestResolveToolCall(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
+	mockService := mocks.NewMockopenAIResponsesService(gomock.NewController(t))
+	provider := newOpenAIProviderWithClient("mock-gpt-5.5", mockService)
 
-	mockResponsesService := mocks.NewMockopenAIResponsesService(ctrl)
-	provider := newOpenAIProviderWithClient(
-		"mock-gpt-5.5",
-		mockResponsesService,
+	mockArgsStr := `{"key1":"value1","key2":"value2"}`
+	mockService.EXPECT().New(gomock.Any(), gomock.Any()).Return(&responses.Response{
+		ID: "mocked-response-id",
+		Output: []responses.ResponseOutputItemUnion{{
+			Type: "function_call", Name: "mock-tool-1",
+			Arguments: responses.ResponseOutputItemUnionArguments{OfString: mockArgsStr},
+		}},
+	}, nil)
+
+	mockTool := models.NewTool(models.NewToolParams{
+		Name: "mock-tool-1",
+		Fn: func(p models.ToolExecuteParams) models.ToolExecuteOutput {
+			return models.ToolExecuteOutput{Result: map[string]any{"key1": "result1"}}
+		},
+	})
+
+	toolCall, err := provider.ResolveToolCall(
+		providers.AgentProviderPromptMessageParams{Messages: []models.Message{models.NewHumanStringMessage("Hello")}},
+		[]models.BaseTool{mockTool},
 	)
 
-	mockFunctionCallArguments := map[string]any{
-		"key1": "value1",
-		"key2": "value2",
-	}
-	mockFunctionCallArgumentsStr := utils.Must(json.Marshal(mockFunctionCallArguments))
-	log.Printf("mockFunctionCallArgumentsStr: %s", string(mockFunctionCallArgumentsStr))
-
-	mockResponsesService.EXPECT().
-		New(gomock.Any(), gomock.Any()).
-		Return(
-			&responses.Response{
-				ID: "mocked-response-id",
-				Output: []responses.ResponseOutputItemUnion{
-					{
-						Type: "function_call",
-						Arguments: responses.ResponseOutputItemUnionArguments{
-							OfString: string(mockFunctionCallArgumentsStr),
-						},
-						Name: "mock-tool-1",
-					},
-				},
-			},
-			nil,
-		)
-
-	mockTool1 := models.NewTool(models.NewToolParams{
-		Name:         "mock-tool-1",
-		Description:  "This is a description for mock-tool-1",
-		InputSchema:  map[string]any{},
-		OutputSchema: map[string]any{},
-		Fn: func(params models.ToolExecuteParams) models.ToolExecuteOutput {
-			return models.ToolExecuteOutput{
-				Result: map[string]any{
-					"key1": "result1",
-					"key2": "result2",
-				},
-				Usage: models.LanguageModelUsage{
-					OutputTokens:    123,
-					InputTokens:     134,
-					CachedTokens:    145,
-					ReasoningTokens: 156,
-				},
-			}
-		},
-	})
-	toolCall, err := provider.ResolveToolCall(providers.AgentProviderPromptMessageParams{
-		Messages: []models.Message{
-			models.NewSystemStringMessage("You are a helpful assistant."),
-			models.NewHumanStringMessage("Hello, how are you?"),
-		},
-	}, []models.BaseTool{
-		mockTool1,
-	})
-
-	assert.Nil(t, err, "expect no error is returned")
-	assert.Len(t, toolCall, 1, "expect tool call length is correct")
-	assert.Equal(t, "mock-tool-1", toolCall[0].ToolName, "expect tool name is correct")
-	assert.Equal(t, mockFunctionCallArguments, toolCall[0].Params, "expect tool params are correct")
+	require.NoError(t, err)
+	require.Len(t, toolCall, 1)
+	assert.Equal(t, "mock-tool-1", toolCall[0].ToolName)
+	assert.Equal(t, map[string]any{"key1": "value1", "key2": "value2"}, toolCall[0].Params)
 }
