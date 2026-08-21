@@ -64,15 +64,6 @@ func convertMessageObjectToInput(messages []models.Message) responses.ResponseNe
 
 func convertToolParamsToInput(tools []models.BaseTool) []responses.ToolUnionParam {
 	return utils.Map(tools, func(tool models.BaseTool) responses.ToolUnionParam {
-		// parameters := map[string]any{
-		// 	"type": "object",
-		// 	"properties": map[string]any{
-		// 		"location": map[string]any{"type": "string", "description": "Return the temperature for this location."},
-		// 	},
-		// 	"required":             []string{"location"},
-		// 	"additionalProperties": false,
-		// }
-
 		openAiTool := responses.ToolParamOfFunction(tool.Name(), tool.InputSchema(), true)
 		openAiTool.OfFunction.Description = openai.String(tool.Description())
 		return openAiTool
@@ -92,12 +83,22 @@ func convertOutputToToolCalls(response *responses.Response) []models.ToolCall {
 			call := outputItem.AsFunctionCall()
 			params := make(map[string]any)
 			json.Unmarshal(
-				[]byte(utils.Ternary(call.Arguments != "", call.Arguments, outputItem.Arguments.OfString)),
+				[]byte(
+					utils.Ternary(
+						call.Arguments != "",
+						call.Arguments,
+						outputItem.Arguments.OfString,
+					),
+				),
 				&params,
 			)
 			return models.ToolCall{
-				ToolName: utils.Ternary(call.Name != "", call.Name, outputItem.Name),
-				Params:   params,
+				ToolName: utils.Ternary(
+					call.Name != "",
+					call.Name,
+					outputItem.Name,
+				),
+				Params: params,
 			}
 		},
 	)

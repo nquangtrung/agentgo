@@ -9,7 +9,7 @@ import (
 	"trontria.com/agentgo/providers"
 )
 
-func TestGetInputFromParams(t *testing.T) {
+func TestConvertInputFromParams(t *testing.T) {
 	messages := []models.Message{
 		models.NewSystemStringMessage("You are a helpful assistant."),
 		models.NewHumanStringMessage("Hello, how are you?"),
