@@ -71,11 +71,12 @@ func (mr *MockAgentProviderMockRecorder) GenerateText(params any) *gomock.Call {
 }
 
 // ResolveToolCall mocks base method.
-func (m *MockAgentProvider) ResolveToolCall(params providers.AgentProviderPromptMessageParams, toolParams []models.Tool) *models.ToolCall {
+func (m *MockAgentProvider) ResolveToolCall(params providers.AgentProviderPromptMessageParams, toolParams []models.BaseTool) ([]models.ToolCall, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ResolveToolCall", params, toolParams)
-	ret0, _ := ret[0].(*models.ToolCall)
-	return ret0
+	ret0, _ := ret[0].([]models.ToolCall)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // ResolveToolCall indicates an expected call of ResolveToolCall.

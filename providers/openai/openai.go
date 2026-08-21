@@ -10,7 +10,6 @@ import (
 
 	"trontria.com/agentgo/models"
 	"trontria.com/agentgo/providers"
-	"trontria.com/agentgo/utils"
 )
 
 type OpenAIProvider struct {
@@ -18,62 +17,10 @@ type OpenAIProvider struct {
 	response openAIResponsesService
 }
 
-func (p OpenAIProvider) GetInputFromParams(params providers.AgentProviderPromptMessageParams) responses.ResponseNewParamsInputUnion {
-	if len(params.Messages) == 0 {
-		panic("no messages provided to GetInputFromParams")
-	}
-
-	return p.ConvertMessageObjectToInput(params.Messages)
-}
-
-func (p OpenAIProvider) ConvertMessageObjectToInput(messages []models.Message) responses.ResponseNewParamsInputUnion {
-	var inputItems []responses.ResponseInputItemUnionParam = utils.Map(
-		messages,
-		func(message models.Message) responses.ResponseInputItemUnionParam {
-			switch message.Type() {
-			case models.MessageRoleSystem:
-				return responses.ResponseInputItemParamOfMessage(
-					responses.ResponseInputMessageContentListParam{
-						responses.ResponseInputContentParamOfInputText(message.Content().Text()),
-					},
-					responses.EasyInputMessageRoleSystem,
-				)
-			case models.MessageRoleHuman:
-				return responses.ResponseInputItemParamOfMessage(
-					responses.ResponseInputMessageContentListParam{
-						responses.ResponseInputContentParamOfInputText(message.Content().Text()),
-					},
-					responses.EasyInputMessageRoleUser,
-				)
-			case models.MessageRoleAssistant:
-				return responses.ResponseInputItemParamOfOutputMessage(
-					[]responses.ResponseOutputMessageContentUnionParam{
-						{OfOutputText: &responses.ResponseOutputTextParam{
-							Text: message.Content().Text(),
-							// Annotations: []responses.ResponseOutputTextAnnotationUnionParam{},
-						}},
-					},
-					"",
-					responses.ResponseOutputMessageStatusCompleted,
-				)
-			default:
-				return responses.ResponseInputItemParamOfMessage(
-					responses.ResponseInputMessageContentListParam{
-						responses.ResponseInputContentParamOfInputText(message.Content().Text()),
-					},
-					responses.EasyInputMessageRoleUser,
-				)
-			}
-		},
-	)
-
-	return responses.ResponseNewParamsInputUnion{OfInputItemList: inputItems}
-}
-
 func (p OpenAIProvider) GenerateText(params providers.AgentProviderPromptMessageParams) (models.LanguageModelOutput, error) {
 	resp, err := p.response.New(context.Background(), responses.ResponseNewParams{
 		Model: p.BaseAgentProvider.Context().ModelName,
-		Input: p.GetInputFromParams(params),
+		Input: convertInputFromParams(params),
 	})
 	if err != nil {
 		return models.LanguageModelOutput{}, err
@@ -94,7 +41,7 @@ func (p OpenAIProvider) GenerateText(params providers.AgentProviderPromptMessage
 func (p OpenAIProvider) StreamText(params providers.AgentProviderPromptMessageParams, channel chan models.Part) {
 	stream := p.response.NewStreaming(context.Background(), responses.ResponseNewParams{
 		Model: p.BaseAgentProvider.Context().ModelName,
-		Input: p.GetInputFromParams(params),
+		Input: convertInputFromParams(params),
 	})
 
 	channel <- models.NewStepStartPart(p.Context(), "streaming started")
@@ -116,8 +63,20 @@ func (p OpenAIProvider) StreamText(params providers.AgentProviderPromptMessagePa
 	}
 }
 
-func (p OpenAIProvider) ResolveToolCall(params providers.AgentProviderPromptMessageParams, toolParams []models.Tool) *models.ToolCall {
-	return nil
+func (p OpenAIProvider) ResolveToolCall(params providers.AgentProviderPromptMessageParams, toolParams []models.BaseTool) ([]models.ToolCall, error) {
+	response, err := p.response.New(context.Background(), responses.ResponseNewParams{
+		Model: p.BaseAgentProvider.Context().ModelName,
+		Input: convertInputFromParams(params),
+		Tools: convertToolParamsToInput(toolParams),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	log.Printf("Response ID: %s", response.ID)
+	toolCalls := convertOutputToToolCalls(response)
+
+	return toolCalls, nil
 }
 
 func NewOpenAIProvider(apiKey, modelName string) OpenAIProvider {

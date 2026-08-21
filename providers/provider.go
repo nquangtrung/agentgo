@@ -13,7 +13,7 @@ type AgentProvider interface {
 	Context() models.LanguageModelContext
 	GenerateText(params AgentProviderPromptMessageParams) (models.LanguageModelOutput, error)
 	StreamText(params AgentProviderPromptMessageParams, channel chan models.Part)
-	ResolveToolCall(params AgentProviderPromptMessageParams, toolParams []models.Tool) *models.ToolCall
+	ResolveToolCall(params AgentProviderPromptMessageParams, toolParams []models.BaseTool) ([]models.ToolCall, error)
 }
 
 type BaseAgentProvider struct {

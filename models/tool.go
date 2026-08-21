@@ -34,6 +34,14 @@ type BaseTool struct {
 	outputSchema map[string]any
 }
 
+func (t BaseTool) InputSchema() map[string]any {
+	return t.inputSchema
+}
+
+func (t BaseTool) OutputSchema() map[string]any {
+	return t.outputSchema
+}
+
 func (t BaseTool) Name() string {
 	return t.name
 }

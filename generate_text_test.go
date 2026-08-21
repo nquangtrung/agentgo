@@ -64,10 +64,10 @@ func TestGenerateText(t *testing.T) {
 
 	assert.Equal(t, output.ModelName, modelName, "should have correct model name")
 	assert.Equal(t, output.Text, result, "should have correct output")
-	assert.Equal(t, output.Usage.InputTokens, 245, "should have correct input tokens")
-	assert.Equal(t, output.Usage.OutputTokens, 123, "should have correct output tokens")
-	assert.Equal(t, output.Usage.CachedTokens, 21, "should have correct cached token")
-	assert.Equal(t, output.Usage.ReasoningTokens, 12, "should have correct reasoning token")
+	assert.Equal(t, int64(245), output.Usage.InputTokens, "should have correct input tokens")
+	assert.Equal(t, int64(123), output.Usage.OutputTokens, "should have correct output tokens")
+	assert.Equal(t, int64(21), output.Usage.CachedTokens, "should have correct cached token")
+	assert.Equal(t, int64(12), output.Usage.ReasoningTokens, "should have correct reasoning token")
 }
 
 func TestGenerateTextWithTool(t *testing.T) {
@@ -88,7 +88,7 @@ func TestGenerateTextWithTool(t *testing.T) {
 		"key2": "value2",
 	}
 	jsonedToolResult := utils.Must(json.Marshal(toolResult))
-	tools := []models.Tool{
+	tools := []models.BaseTool{
 		models.NewTool(models.NewToolParams{
 			Name: "mock_tool",
 			Fn: func(params models.ToolExecuteParams) models.ToolExecuteOutput {
@@ -135,9 +135,9 @@ func TestGenerateTextWithTool(t *testing.T) {
 	mockResolveToolCallReturn := func(
 		paramsMatcher gomock.Matcher,
 		toolParamsMatcher gomock.Matcher,
-		returned *models.ToolCall,
+		returned []models.ToolCall,
 	) *gomock.Call {
-		return mockProvider.EXPECT().ResolveToolCall(paramsMatcher, toolParamsMatcher).Return(returned)
+		return mockProvider.EXPECT().ResolveToolCall(paramsMatcher, toolParamsMatcher).Return(returned, nil)
 	}
 	gomock.InOrder(
 		mockResolveToolCallReturn(
@@ -149,9 +149,11 @@ func TestGenerateTextWithTool(t *testing.T) {
 				return p.Messages[0].Content().Text() == params.Prompt
 			}),
 			gomock.Eq(tools),
-			&models.ToolCall{
-				ToolName: "mock_tool",
-				Params:   toolParams,
+			[]models.ToolCall{
+				{
+					ToolName: "mock_tool",
+					Params:   toolParams,
+				},
 			}),
 		mockResolveToolCallReturn(
 			gomock.Cond(checkResolveToolCall),
@@ -182,10 +184,10 @@ func TestGenerateTextWithTool(t *testing.T) {
 
 	assert.Equal(t, modelName, output.ModelName, "should have correct model name")
 	assert.Equal(t, result, output.Text, "should have correct output")
-	assert.Equal(t, 245+200, output.Usage.InputTokens, "should have correct input tokens")
-	assert.Equal(t, 123+100, output.Usage.OutputTokens, "should have correct output tokens")
-	assert.Equal(t, 21+20, output.Usage.CachedTokens, "should have correct cached token")
-	assert.Equal(t, 12+0, output.Usage.ReasoningTokens, "should have correct reasoning token")
+	assert.Equal(t, int64(245+200), output.Usage.InputTokens, "should have correct input tokens")
+	assert.Equal(t, int64(123+100), output.Usage.OutputTokens, "should have correct output tokens")
+	assert.Equal(t, int64(21+20), output.Usage.CachedTokens, "should have correct cached token")
+	assert.Equal(t, int64(12+0), output.Usage.ReasoningTokens, "should have correct reasoning token")
 	assert.Equal(t, 2, len(output.Context.Steps()), "should have correct number of steps")
 	assert.Equal(t, "tool call [mock_tool]", utils.Must(output.Context.Step(0)).Name, "should have correct first step name")
 	assert.Equal(t, toolResult, utils.Must(output.Context.Step(0)).ToolResult.Result, "should have correct result in first step")

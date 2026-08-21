@@ -81,7 +81,7 @@ func TestStreamText(t *testing.T) {
 		case models.StepEndPart:
 			{
 				assert.NotNil(t, p.Usage(), "should contain usage")
-				assert.Equal(t, p.Usage().InputTokens, 245, "input token should be correct")
+				assert.Equal(t, int64(245), p.Usage().InputTokens, "input token should be correct")
 			}
 		}
 	}

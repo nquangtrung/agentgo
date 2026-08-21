@@ -2,6 +2,8 @@ package openai
 
 import (
 	"context"
+	"encoding/json"
+	"log"
 	"testing"
 
 	"github.com/openai/openai-go/v3/responses"
@@ -10,62 +12,8 @@ import (
 	"trontria.com/agentgo/models"
 	"trontria.com/agentgo/providers"
 	"trontria.com/agentgo/providers/openai/mocks"
+	"trontria.com/agentgo/utils"
 )
-
-func TestConvertMessageObjectToInput(t *testing.T) {
-	messages := []models.Message{
-		models.NewSystemStringMessage("You are a helpful assistant."),
-		models.NewHumanStringMessage("Hello, how are you?"),
-		models.NewAssistantStringMessage("I'm doing well, thank you! How can I assist you today?"),
-	}
-
-	provider := NewOpenAIProvider("mock-api-key", "mock-gpt-5.5")
-
-	input := provider.ConvertMessageObjectToInput(messages)
-
-	assert.Equal(t, 3, len(input.OfInputItemList), "should have 3 input items")
-
-	systemInput := input.OfInputItemList[0].OfMessage
-	assert.Equal(t, responses.EasyInputMessageRoleSystem, systemInput.Role)
-	assert.Equal(t, "You are a helpful assistant.", systemInput.Content.OfInputItemContentList[0].OfInputText.Text)
-
-	humanInput := input.OfInputItemList[1].OfMessage
-	assert.Equal(t, responses.EasyInputMessageRoleUser, humanInput.Role)
-	assert.Equal(t, "Hello, how are you?", humanInput.Content.OfInputItemContentList[0].OfInputText.Text)
-
-	assistantInput := input.OfInputItemList[2].OfOutputMessage
-	assert.Equal(t, responses.ResponseOutputMessageStatusCompleted, assistantInput.Status)
-	assert.Equal(t, "I'm doing well, thank you! How can I assist you today?", assistantInput.Content[0].OfOutputText.Text)
-}
-
-func TestGetInputFromParams(t *testing.T) {
-	messages := []models.Message{
-		models.NewSystemStringMessage("You are a helpful assistant."),
-		models.NewHumanStringMessage("Hello, how are you?"),
-		models.NewAssistantStringMessage("I'm doing well, thank you! How can I assist you today?"),
-	}
-
-	provider := NewOpenAIProvider("mock-api-key", "mock-gpt-5.5")
-	params := providers.AgentProviderPromptMessageParams{
-		Messages: messages,
-	}
-
-	input := provider.GetInputFromParams(params)
-
-	assert.Equal(t, 3, len(input.OfInputItemList), "should have 3 input items")
-
-	systemInput := input.OfInputItemList[0].OfMessage
-	assert.Equal(t, responses.EasyInputMessageRoleSystem, systemInput.Role)
-	assert.Equal(t, "You are a helpful assistant.", systemInput.Content.OfInputItemContentList[0].OfInputText.Text)
-
-	humanInput := input.OfInputItemList[1].OfMessage
-	assert.Equal(t, responses.EasyInputMessageRoleUser, humanInput.Role)
-	assert.Equal(t, "Hello, how are you?", humanInput.Content.OfInputItemContentList[0].OfInputText.Text)
-
-	assistantInput := input.OfInputItemList[2].OfOutputMessage
-	assert.Equal(t, responses.ResponseOutputMessageStatusCompleted, assistantInput.Status)
-	assert.Equal(t, "I'm doing well, thank you! How can I assist you today?", assistantInput.Content[0].OfOutputText.Text)
-}
 
 func TestGenerateText(t *testing.T) {
 	ctrl := gomock.NewController(t)
@@ -127,4 +75,74 @@ func TestGenerateText(t *testing.T) {
 	assert.Equal(t, mockedResponse.Usage.OutputTokens, output.Usage.OutputTokens, "should have correct output tokens")
 	assert.Equal(t, mockedResponse.Usage.InputTokensDetails.CacheWriteTokens+mockedResponse.Usage.InputTokensDetails.CachedTokens, output.Usage.CachedTokens, "should have correct cached tokens")
 	assert.Equal(t, mockedResponse.Usage.OutputTokensDetails.ReasoningTokens, output.Usage.ReasoningTokens, "should have correct reasoning tokens")
+}
+
+func TestResolveToolCall(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockResponsesService := mocks.NewMockopenAIResponsesService(ctrl)
+	provider := newOpenAIProviderWithClient(
+		"mock-gpt-5.5",
+		mockResponsesService,
+	)
+
+	mockFunctionCallArguments := map[string]any{
+		"key1": "value1",
+		"key2": "value2",
+	}
+	mockFunctionCallArgumentsStr := utils.Must(json.Marshal(mockFunctionCallArguments))
+	log.Printf("mockFunctionCallArgumentsStr: %s", string(mockFunctionCallArgumentsStr))
+
+	mockResponsesService.EXPECT().
+		New(gomock.Any(), gomock.Any()).
+		Return(
+			&responses.Response{
+				ID: "mocked-response-id",
+				Output: []responses.ResponseOutputItemUnion{
+					{
+						Type: "function_call",
+						Arguments: responses.ResponseOutputItemUnionArguments{
+							OfString: string(mockFunctionCallArgumentsStr),
+						},
+						Name: "mock-tool-1",
+					},
+				},
+			},
+			nil,
+		)
+
+	mockTool1 := models.NewTool(models.NewToolParams{
+		Name:         "mock-tool-1",
+		Description:  "This is a description for mock-tool-1",
+		InputSchema:  map[string]any{},
+		OutputSchema: map[string]any{},
+		Fn: func(params models.ToolExecuteParams) models.ToolExecuteOutput {
+			return models.ToolExecuteOutput{
+				Result: map[string]any{
+					"key1": "result1",
+					"key2": "result2",
+				},
+				Usage: models.LanguageModelUsage{
+					OutputTokens:    123,
+					InputTokens:     134,
+					CachedTokens:    145,
+					ReasoningTokens: 156,
+				},
+			}
+		},
+	})
+	toolCall, err := provider.ResolveToolCall(providers.AgentProviderPromptMessageParams{
+		Messages: []models.Message{
+			models.NewSystemStringMessage("You are a helpful assistant."),
+			models.NewHumanStringMessage("Hello, how are you?"),
+		},
+	}, []models.BaseTool{
+		mockTool1,
+	})
+
+	assert.Nil(t, err, "expect no error is returned")
+	assert.Len(t, toolCall, 1, "expect tool call length is correct")
+	assert.Equal(t, "mock-tool-1", toolCall[0].ToolName, "expect tool name is correct")
+	assert.Equal(t, mockFunctionCallArguments, toolCall[0].Params, "expect tool params are correct")
 }

@@ -14,7 +14,7 @@ type Params struct {
 	Prompt        string
 	ModelName     string
 	Messages      []models.Message
-	Tools         []models.Tool
+	Tools         []models.BaseTool
 	EndConditions []EndCondition
 }
 

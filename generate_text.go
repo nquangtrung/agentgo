@@ -33,14 +33,19 @@ func doLoop(provider providers.AgentProvider, params Params) (models.LanguageMod
 		}
 
 		log.Printf("Resolving tool call")
-		toolCall := provider.ResolveToolCall(
+		toolCalls, err := provider.ResolveToolCall(
 			providers.AgentProviderPromptMessageParams{
 				Messages: messages,
 			},
 			params.Tools,
 		)
+		if err != nil {
+			log.Printf("Error resolving tool call: %v", err)
+			context.UpdateLastStepError(err)
+			continue
+		}
 
-		if toolCall == nil {
+		if len(toolCalls) == 0 {
 			log.Printf("No tool call was resolved, breaking the loop.")
 			// No tool call was resolved, so we will break the loop and return the final output.
 			context.AddStep("text", nil)
@@ -52,23 +57,25 @@ func doLoop(provider providers.AgentProvider, params Params) (models.LanguageMod
 			break
 		}
 
-		context.AddStep(fmt.Sprintf("tool call [%s]", toolCall.ToolName), toolCall)
-		tool, err := resolveToolFromToolCall(*toolCall, params.Tools)
-		if err != nil {
-			context.UpdateLastStepError(err)
-			continue
-		}
-		log.Printf("Resolved tool [%s]", tool.Name())
-		toolResult := tool.Execute(models.ToolExecuteParams{
-			Params: toolCall.Params,
-		})
-		log.Printf("Executed tool %s with result: %v", tool.Name(), toolResult)
-		context.UpdateLastStepResult(
-			&toolResult,
-		)
+		for _, toolCall := range toolCalls {
+			context.AddStep(fmt.Sprintf("tool call [%s]", toolCall.ToolName), &toolCall)
+			tool, err := resolveToolFromToolCall(toolCall, params.Tools)
+			if err != nil {
+				context.UpdateLastStepError(err)
+				continue
+			}
+			log.Printf("Resolved tool [%s]", tool.Name())
+			toolResult := tool.Execute(models.ToolExecuteParams{
+				Params: toolCall.Params,
+			})
+			log.Printf("Executed tool %s with result: %v", tool.Name(), toolResult)
+			context.UpdateLastStepResult(
+				&toolResult,
+			)
 
-		log.Printf("Adding tool result to messages: %v", toolResult)
-		messages = append(messages, models.NewMessageFromToolResult(toolResult))
+			log.Printf("Adding tool result to messages: %v", toolResult)
+			messages = append(messages, models.NewMessageFromToolResult(toolResult))
+		}
 	}
 	return resolveExecutionContextAsTextOutput(&context)
 }

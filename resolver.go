@@ -49,7 +49,7 @@ func mustResolveProviderFromParams(params Params) providers.AgentProvider {
 	return utils.Must(resolveProviderFromParams(params))
 }
 
-func resolveToolFromToolCall(toolCall models.ToolCall, tools []models.Tool) (models.Tool, error) {
+func resolveToolFromToolCall(toolCall models.ToolCall, tools []models.BaseTool) (models.Tool, error) {
 	for _, tool := range tools {
 		if tool.Name() == toolCall.ToolName {
 			return tool, nil
