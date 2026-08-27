@@ -59,3 +59,34 @@ func NewStepEndPart(context LanguageModelContext, stepName string, usage Languag
 		EndPartImpl: NewEndPart(usage, FinishReasonCompleted),
 	}
 }
+
+type StepErrorPart interface {
+	Part
+	StepPart
+	EndPart
+	Error() error
+}
+
+type BaseStepErrorPart struct {
+	StepPartImpl
+	EndPartImpl
+	error error
+}
+
+func (s BaseStepErrorPart) Error() error {
+	return s.error
+}
+
+func NewStepErrorPart(context LanguageModelContext, stepName string, usage LanguageModelUsage, err error) *BaseStepErrorPart {
+	return &BaseStepErrorPart{
+		StepPartImpl: StepPartImpl{
+			BasePart: BasePart{
+				partType: PartTypeStepError,
+				context:  context,
+			},
+			stepName: stepName,
+		},
+		EndPartImpl: NewEndPart(usage, FinishReasonFailed),
+		error:       err,
+	}
+}

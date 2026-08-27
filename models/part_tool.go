@@ -16,7 +16,7 @@ type ToolErrorPart interface {
 	Part
 	ToolPart
 	EndPart
-	Error() map[string]any
+	Error() error
 }
 
 type BaseToolPart struct {
@@ -51,10 +51,10 @@ func (t BaseToolResultPart) Result() map[string]any {
 type BaseToolErrorPart struct {
 	BaseToolPart
 	EndPartImpl
-	error map[string]any
+	error error
 }
 
-func (t BaseToolErrorPart) Error() map[string]any {
+func (t BaseToolErrorPart) Error() error {
 	return t.error
 }
 
@@ -84,9 +84,9 @@ func NewToolResultPart(context LanguageModelContext, toolName string, result Too
 	}
 }
 
-func NewToolErrorPart(context LanguageModelContext, toolName string, errorData map[string]any) *BaseToolErrorPart {
+func NewToolErrorPart(context LanguageModelContext, toolName string, usage LanguageModelUsage, error error) *BaseToolErrorPart {
 	return &BaseToolErrorPart{
-		EndPartImpl: NewEndPart(LanguageModelUsage{}, FinishReasonFailed),
+		EndPartImpl: NewEndPart(usage, FinishReasonFailed),
 		BaseToolPart: BaseToolPart{
 			BasePart: BasePart{
 				partType: PartTypeToolError,
@@ -94,6 +94,6 @@ func NewToolErrorPart(context LanguageModelContext, toolName string, errorData m
 			},
 			toolName: toolName,
 		},
-		error: errorData,
+		error: error,
 	}
 }

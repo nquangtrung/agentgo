@@ -15,6 +15,7 @@ const (
 
 	PartTypeStepStart PartType = "step_start"
 	PartTypeStepEnd   PartType = "step_end"
+	PartTypeStepError PartType = "step_error"
 )
 
 type FinishReason string
