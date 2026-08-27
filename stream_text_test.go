@@ -25,7 +25,7 @@ func TestStreamText(t *testing.T) {
 		Prompt:   prompt,
 		Provider: mockProvider,
 	}
-	mockProvider.EXPECT().Context().Return(models.LanguageModelContext{
+	mockProvider.EXPECT().Context().AnyTimes().Return(models.LanguageModelContext{
 		ModelName: modelName,
 	})
 
@@ -33,22 +33,21 @@ func TestStreamText(t *testing.T) {
 		gomock.Any(),
 		gomock.Cond(
 			func(p providers.AgentProviderPromptMessageParams) bool {
-				if len(p.Messages) != 1 {
+				switch {
+				case len(p.Messages) != 1:
 					return false
-				}
-
-				if p.Messages[0].Content().Text() != params.Prompt {
+				case p.Messages[0].Content().Text() != params.Prompt:
 					return false
+				default:
+					return true
 				}
-
-				return true
 			}),
 		gomock.Cond(
 			func(channel chan models.Part) bool {
 				return true
 			},
 		),
-	).Do(func(params providers.AgentProviderPromptMessageParams, channel chan models.Part) {
+	).Do(func(ctx context.Context, params providers.AgentProviderPromptMessageParams, channel chan models.Part) {
 		context := models.LanguageModelContext{
 			ModelName: modelName,
 		}
@@ -65,29 +64,22 @@ func TestStreamText(t *testing.T) {
 		})
 	})
 	output := StreamText(ctx, params)
-	if output == (models.LanguageModelStreamOutput{}) {
-		panic("stream output is nil")
-	}
+	assert.NotNil(t, output.Channel, "Output channel should not be nil")
+	assert.Equal(t, modelName, output.ModelName, "Output model name should be correct")
 
 	var texts []string = []string{}
 	for part := range output.Channel {
 		switch p := part.(type) {
 		case models.StepStartPart:
-			{
-				assert.NotNil(t, p, "should be able to access converted step")
-			}
+			assert.NotNil(t, p, "should be able to access converted step")
 		case models.TextPart:
-			{
-				texts = append(texts, p.Text())
-			}
+			texts = append(texts, p.Text())
 		case models.StepEndPart:
-			{
-				assert.NotNil(t, p.Usage(), "should contain usage")
-				assert.Equal(t, int64(245), p.Usage().InputTokens, "input token should be correct")
-			}
+			assert.NotNil(t, p.Usage(), "should contain usage")
+			assert.Equal(t, int64(245), p.Usage().InputTokens, "input token should be correct")
 		}
 	}
 	assert.ElementsMatch(
-		t, texts, []string{"text 0", "text 1", "text 2"}, "should receive correct deltas",
+		t, []string{"text 0", "text 1", "text 2"}, texts, "should receive correct deltas",
 	)
 }

@@ -19,8 +19,9 @@ func canProceedToNextStep(context *models.ExecutionContext, params Params) bool 
 	return true
 }
 
-func doLoop(ctx context.Context, provider providers.AgentProvider, params Params) (models.LanguageModelOutput, error) {
+func doLoop(ctx context.Context, params Params) (models.LanguageModelOutput, error) {
 	execContext := ctx.Value(models.ExecutionContextKey).(*models.ExecutionContext)
+	provider := ctx.Value(models.ProviderContextKey).(providers.AgentProvider)
 
 	log.Printf("Starting loop with context %v", execContext.ModelName())
 	messages := resolveMessages(params)
@@ -96,5 +97,5 @@ func GenerateText(ctx context.Context, params Params) (models.LanguageModelOutpu
 		})
 	}
 
-	return doLoop(ctx, provider, params)
+	return doLoop(ctx, params)
 }

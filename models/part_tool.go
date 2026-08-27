@@ -70,9 +70,9 @@ func NewToolStartPart(context LanguageModelContext, toolName string) *BaseToolSt
 	}
 }
 
-func NewToolResultPart(context LanguageModelContext, toolName string, result map[string]any, usage LanguageModelUsage) *BaseToolResultPart {
+func NewToolResultPart(context LanguageModelContext, toolName string, result ToolExecuteOutput) *BaseToolResultPart {
 	return &BaseToolResultPart{
-		EndPartImpl: NewEndPart(usage, FinishReasonCompleted),
+		EndPartImpl: NewEndPart(result.Usage, FinishReasonCompleted),
 		BaseToolPart: BaseToolPart{
 			BasePart: BasePart{
 				partType: PartTypeToolResult,
@@ -80,7 +80,7 @@ func NewToolResultPart(context LanguageModelContext, toolName string, result map
 			},
 			toolName: toolName,
 		},
-		data: result,
+		data: result.Output,
 	}
 }
 

@@ -70,7 +70,10 @@ func TestToolResultPart(t *testing.T) {
 	}
 	result := map[string]any{"result": "success", "data": 42}
 
-	var part Part = NewToolResultPart(context, "search_tool", result, usage)
+	var part Part = NewToolResultPart(context, "search_tool", ToolExecuteOutput{
+		Output: result,
+		Usage:  usage,
+	})
 
 	// Test AsToolResultPart conversion
 	p, ok := part.(ToolResultPart)
