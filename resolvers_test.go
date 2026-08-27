@@ -14,7 +14,7 @@ func TestResolveExecutionContextAsTextOutput(t *testing.T) {
 	}
 	execCtx := models.NewExecutionContextFromLanguageModelContext(ctx)
 
-	_, err := resolveExecutionContextAsTextOutput(&execCtx)
+	_, err := resolveExecutionContextAsTextOutput(execCtx)
 	assert.Error(t, err, "expected error when resolving execution context as text output")
 
 	execCtx.AddStep("tool-step: mock_tool_1",
@@ -86,7 +86,7 @@ func TestResolveExecutionContextAsTextOutput(t *testing.T) {
 		},
 	})
 
-	output, err := resolveExecutionContextAsTextOutput(&execCtx)
+	output, err := resolveExecutionContextAsTextOutput(execCtx)
 	assert.NoError(t, err, "expected no error when resolving execution context with steps as text output")
 	assert.Equal(t, "test-model", output.ModelName, "expected model name to match")
 	assert.Equal(t, "final-output", output.Text, "expected last output to match")

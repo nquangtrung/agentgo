@@ -1,6 +1,7 @@
 package openai
 
 import (
+	"context"
 	"testing"
 
 	"github.com/openai/openai-go/v3/responses"
@@ -15,6 +16,7 @@ import (
 func TestGenerateText(t *testing.T) {
 	mockService := mocks.NewMockopenAIResponsesService(gomock.NewController(t))
 	provider := newOpenAIProviderWithClient("mock-gpt-5.5", mockService)
+	ctx := context.Background()
 
 	mockedResponse := &responses.Response{
 		ID: "mocked-response-id",
@@ -33,12 +35,14 @@ func TestGenerateText(t *testing.T) {
 		New(gomock.Any(), gomock.Any()).
 		Return(mockedResponse, nil)
 
-	output, err := provider.GenerateText(providers.AgentProviderPromptMessageParams{
-		Messages: []models.Message{
-			models.NewSystemStringMessage("You are a helpful assistant."),
-			models.NewHumanStringMessage("Hello, how are you?"),
-		},
-	})
+	output, err := provider.GenerateText(
+		ctx,
+		providers.AgentProviderPromptMessageParams{
+			Messages: []models.Message{
+				models.NewSystemStringMessage("You are a helpful assistant."),
+				models.NewHumanStringMessage("Hello, how are you?"),
+			},
+		})
 
 	require.NoError(t, err)
 	assert.Equal(t, "Great, thank you!", output.Text)
@@ -53,6 +57,7 @@ func TestGenerateText(t *testing.T) {
 func TestResolveToolCall(t *testing.T) {
 	mockService := mocks.NewMockopenAIResponsesService(gomock.NewController(t))
 	provider := newOpenAIProviderWithClient("mock-gpt-5.5", mockService)
+	ctx := context.Background()
 
 	mockArgsStr := `{"key1":"value1","key2":"value2"}`
 	mockService.EXPECT().New(gomock.Any(), gomock.Any()).Return(&responses.Response{
@@ -71,6 +76,7 @@ func TestResolveToolCall(t *testing.T) {
 	})
 
 	toolCall, err := provider.ResolveToolCall(
+		ctx,
 		providers.AgentProviderPromptMessageParams{Messages: []models.Message{models.NewHumanStringMessage("Hello")}},
 		[]models.BaseTool{mockTool},
 	)

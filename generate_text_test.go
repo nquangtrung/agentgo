@@ -1,6 +1,7 @@
 package agentgo
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -21,6 +22,7 @@ func TestGenerateText(t *testing.T) {
 	prompt := "Say this is a test"
 	modelName := "mocked-llm-3.6-flash"
 	result := "This is a test"
+	ctx := context.Background()
 
 	mockProvider := mocks.NewMockAgentProvider(ctrl)
 	params := Params{
@@ -30,19 +32,21 @@ func TestGenerateText(t *testing.T) {
 	mockProvider.EXPECT().Context().AnyTimes().Return(models.LanguageModelContext{
 		ModelName: modelName,
 	})
-	mockProvider.EXPECT().GenerateText(gomock.Cond(
-		func(p providers.AgentProviderPromptMessageParams) bool {
-			// assert.Equal(t, len(p.Messages), 1, "should")
-			if len(p.Messages) != 1 {
-				return false
-			}
+	mockProvider.EXPECT().GenerateText(
+		gomock.Any(),
+		gomock.Cond(
+			func(p providers.AgentProviderPromptMessageParams) bool {
+				// assert.Equal(t, len(p.Messages), 1, "should")
+				if len(p.Messages) != 1 {
+					return false
+				}
 
-			if p.Messages[0].Content().Text() != params.Prompt {
-				return false
-			}
+				if p.Messages[0].Content().Text() != params.Prompt {
+					return false
+				}
 
-			return true
-		}),
+				return true
+			}),
 	).Return(
 		models.LanguageModelOutput{
 			Text: result,
@@ -57,7 +61,7 @@ func TestGenerateText(t *testing.T) {
 		nil,
 	)
 
-	output, err := GenerateText(params)
+	output, err := GenerateText(ctx, params)
 	if err != nil {
 		panic(err)
 	}
@@ -78,6 +82,7 @@ func TestGenerateTextWithTool(t *testing.T) {
 	prompt := "Say this is a test"
 	modelName := "mocked-llm-3.6-flash"
 	result := "This is a test"
+	ctx := context.Background()
 
 	toolParams := map[string]any{
 		"param1": "value1",
@@ -137,7 +142,7 @@ func TestGenerateTextWithTool(t *testing.T) {
 		toolParamsMatcher gomock.Matcher,
 		returned []models.ToolCall,
 	) *gomock.Call {
-		return mockProvider.EXPECT().ResolveToolCall(paramsMatcher, toolParamsMatcher).Return(returned, nil)
+		return mockProvider.EXPECT().ResolveToolCall(gomock.Any(), paramsMatcher, toolParamsMatcher).Return(returned, nil)
 	}
 	gomock.InOrder(
 		mockResolveToolCallReturn(
@@ -164,7 +169,10 @@ func TestGenerateTextWithTool(t *testing.T) {
 	mockProvider.EXPECT().Context().MinTimes(1).Return(models.LanguageModelContext{
 		ModelName: modelName,
 	})
-	mockProvider.EXPECT().GenerateText(gomock.Cond(checkResolveToolCall)).Return(
+	mockProvider.EXPECT().GenerateText(
+		gomock.Any(),
+		gomock.Cond(checkResolveToolCall),
+	).Return(
 		models.LanguageModelOutput{
 			Text: result,
 			Usage: models.LanguageModelUsage{
@@ -177,7 +185,7 @@ func TestGenerateTextWithTool(t *testing.T) {
 		},
 		nil,
 	)
-	output, err := GenerateText(params)
+	output, err := GenerateText(ctx, params)
 	if err != nil {
 		panic(err)
 	}

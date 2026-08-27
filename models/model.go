@@ -70,6 +70,13 @@ type ExecutionContext struct {
 	steps      []Step
 }
 
+type ContextKey string
+
+const (
+	ExecutionContextKey ContextKey = "execution_context"
+	ProviderContextKey  ContextKey = "provider_context"
+)
+
 func (e *ExecutionContext) ModelName() string {
 	return e.LanguageModelContext.ModelName
 }
@@ -133,8 +140,8 @@ func (e *ExecutionContext) UpdateLastStepError(err error) {
 }
 
 //go:generate mockgen -source=model.go -destination=../tests/mocks/mock_context.go -package=mocks
-func NewExecutionContextFromLanguageModelContext(context LanguageModelContext) ExecutionContext {
-	return ExecutionContext{
+func NewExecutionContextFromLanguageModelContext(context LanguageModelContext) *ExecutionContext {
+	return &ExecutionContext{
 		LanguageModelContext: context,
 		steps:                []Step{},
 	}

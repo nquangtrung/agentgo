@@ -1,6 +1,8 @@
 package providers
 
 import (
+	"context"
+
 	"trontria.com/agentgo/models"
 )
 
@@ -11,9 +13,9 @@ type AgentProviderPromptMessageParams struct {
 //go:generate mockgen -destination=../mocks/mock_agent_provider.go -package=mocks trontria.com/agentgo/providers AgentProvider
 type AgentProvider interface {
 	Context() models.LanguageModelContext
-	GenerateText(params AgentProviderPromptMessageParams) (models.LanguageModelOutput, error)
-	StreamText(params AgentProviderPromptMessageParams, channel chan models.Part)
-	ResolveToolCall(params AgentProviderPromptMessageParams, toolParams []models.BaseTool) ([]models.ToolCall, error)
+	GenerateText(ctx context.Context, params AgentProviderPromptMessageParams) (models.LanguageModelOutput, error)
+	StreamText(ctx context.Context, params AgentProviderPromptMessageParams, channel chan models.Part)
+	ResolveToolCall(ctx context.Context, params AgentProviderPromptMessageParams, toolParams []models.BaseTool) ([]models.ToolCall, error)
 }
 
 type BaseAgentProvider struct {

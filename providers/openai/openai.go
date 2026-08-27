@@ -17,8 +17,8 @@ type OpenAIProvider struct {
 	response openAIResponsesService
 }
 
-func (p OpenAIProvider) GenerateText(params providers.AgentProviderPromptMessageParams) (models.LanguageModelOutput, error) {
-	resp, err := p.response.New(context.Background(), responses.ResponseNewParams{
+func (p OpenAIProvider) GenerateText(ctx context.Context, params providers.AgentProviderPromptMessageParams) (models.LanguageModelOutput, error) {
+	resp, err := p.response.New(ctx, responses.ResponseNewParams{
 		Model: p.BaseAgentProvider.Context().ModelName,
 		Input: convertInputFromParams(params),
 	})
@@ -38,8 +38,8 @@ func (p OpenAIProvider) GenerateText(params providers.AgentProviderPromptMessage
 	}, nil
 }
 
-func (p OpenAIProvider) StreamText(params providers.AgentProviderPromptMessageParams, channel chan models.Part) {
-	stream := p.response.NewStreaming(context.Background(), responses.ResponseNewParams{
+func (p OpenAIProvider) StreamText(ctx context.Context, params providers.AgentProviderPromptMessageParams, channel chan models.Part) {
+	stream := p.response.NewStreaming(ctx, responses.ResponseNewParams{
 		Model: p.BaseAgentProvider.Context().ModelName,
 		Input: convertInputFromParams(params),
 	})
@@ -63,8 +63,8 @@ func (p OpenAIProvider) StreamText(params providers.AgentProviderPromptMessagePa
 	}
 }
 
-func (p OpenAIProvider) ResolveToolCall(params providers.AgentProviderPromptMessageParams, toolParams []models.BaseTool) ([]models.ToolCall, error) {
-	response, err := p.response.New(context.Background(), responses.ResponseNewParams{
+func (p OpenAIProvider) ResolveToolCall(ctx context.Context, params providers.AgentProviderPromptMessageParams, toolParams []models.BaseTool) ([]models.ToolCall, error) {
+	response, err := p.response.New(ctx, responses.ResponseNewParams{
 		Model: p.BaseAgentProvider.Context().ModelName,
 		Input: convertInputFromParams(params),
 		Tools: convertToolParamsToInput(toolParams),

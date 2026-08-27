@@ -10,6 +10,7 @@
 package mocks
 
 import (
+	context "context"
 	reflect "reflect"
 
 	gomock "go.uber.org/mock/gomock"
@@ -56,43 +57,43 @@ func (mr *MockAgentProviderMockRecorder) Context() *gomock.Call {
 }
 
 // GenerateText mocks base method.
-func (m *MockAgentProvider) GenerateText(params providers.AgentProviderPromptMessageParams) (models.LanguageModelOutput, error) {
+func (m *MockAgentProvider) GenerateText(ctx context.Context, params providers.AgentProviderPromptMessageParams) (models.LanguageModelOutput, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GenerateText", params)
+	ret := m.ctrl.Call(m, "GenerateText", ctx, params)
 	ret0, _ := ret[0].(models.LanguageModelOutput)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GenerateText indicates an expected call of GenerateText.
-func (mr *MockAgentProviderMockRecorder) GenerateText(params any) *gomock.Call {
+func (mr *MockAgentProviderMockRecorder) GenerateText(ctx, params any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GenerateText", reflect.TypeOf((*MockAgentProvider)(nil).GenerateText), params)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GenerateText", reflect.TypeOf((*MockAgentProvider)(nil).GenerateText), ctx, params)
 }
 
 // ResolveToolCall mocks base method.
-func (m *MockAgentProvider) ResolveToolCall(params providers.AgentProviderPromptMessageParams, toolParams []models.BaseTool) ([]models.ToolCall, error) {
+func (m *MockAgentProvider) ResolveToolCall(ctx context.Context, params providers.AgentProviderPromptMessageParams, toolParams []models.BaseTool) ([]models.ToolCall, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ResolveToolCall", params, toolParams)
+	ret := m.ctrl.Call(m, "ResolveToolCall", ctx, params, toolParams)
 	ret0, _ := ret[0].([]models.ToolCall)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // ResolveToolCall indicates an expected call of ResolveToolCall.
-func (mr *MockAgentProviderMockRecorder) ResolveToolCall(params, toolParams any) *gomock.Call {
+func (mr *MockAgentProviderMockRecorder) ResolveToolCall(ctx, params, toolParams any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ResolveToolCall", reflect.TypeOf((*MockAgentProvider)(nil).ResolveToolCall), params, toolParams)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ResolveToolCall", reflect.TypeOf((*MockAgentProvider)(nil).ResolveToolCall), ctx, params, toolParams)
 }
 
 // StreamText mocks base method.
-func (m *MockAgentProvider) StreamText(params providers.AgentProviderPromptMessageParams, channel chan models.Part) {
+func (m *MockAgentProvider) StreamText(ctx context.Context, params providers.AgentProviderPromptMessageParams, channel chan models.Part) {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "StreamText", params, channel)
+	m.ctrl.Call(m, "StreamText", ctx, params, channel)
 }
 
 // StreamText indicates an expected call of StreamText.
-func (mr *MockAgentProviderMockRecorder) StreamText(params, channel any) *gomock.Call {
+func (mr *MockAgentProviderMockRecorder) StreamText(ctx, params, channel any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StreamText", reflect.TypeOf((*MockAgentProvider)(nil).StreamText), params, channel)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StreamText", reflect.TypeOf((*MockAgentProvider)(nil).StreamText), ctx, params, channel)
 }

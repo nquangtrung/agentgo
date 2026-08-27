@@ -1,6 +1,7 @@
 package agentgo
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -17,7 +18,7 @@ func TestStreamText(t *testing.T) {
 
 	prompt := "Say this is a test"
 	modelName := "mocked-llm-3.6-flash"
-	// result := "This is a test"
+	ctx := context.Background()
 
 	mockProvider := mocks.NewMockAgentProvider(ctrl)
 	params := Params{
@@ -29,6 +30,7 @@ func TestStreamText(t *testing.T) {
 	})
 
 	mockProvider.EXPECT().StreamText(
+		gomock.Any(),
 		gomock.Cond(
 			func(p providers.AgentProviderPromptMessageParams) bool {
 				if len(p.Messages) != 1 {
@@ -62,7 +64,7 @@ func TestStreamText(t *testing.T) {
 			ReasoningTokens: 12,
 		})
 	})
-	output := StreamText(params)
+	output := StreamText(ctx, params)
 	if output == (models.LanguageModelStreamOutput{}) {
 		panic("stream output is nil")
 	}

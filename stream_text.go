@@ -1,11 +1,13 @@
 package agentgo
 
 import (
+	"context"
+
 	"trontria.com/agentgo/models"
 	"trontria.com/agentgo/providers"
 )
 
-func StreamText(params Params) models.LanguageModelStreamOutput {
+func StreamText(ctx context.Context, params Params) models.LanguageModelStreamOutput {
 	provider := mustResolveProviderFromParams(params)
 	messages := resolveMessages(params)
 
@@ -48,9 +50,13 @@ func StreamText(params Params) models.LanguageModelStreamOutput {
 		// 	})
 		// }
 
-		provider.StreamText(providers.AgentProviderPromptMessageParams{
-			Messages: messages,
-		}, channel)
+		provider.StreamText(
+			ctx,
+			providers.AgentProviderPromptMessageParams{
+				Messages: messages,
+			},
+			channel,
+		)
 	}()
 
 	return models.NewLanguageModelStreamOutput(channel, params.Provider.Context().ModelName)

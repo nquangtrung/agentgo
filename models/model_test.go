@@ -19,9 +19,9 @@ func TestNewExecutionContextFromLanguageModelContext(t *testing.T) {
 	assert.Equal(t, "step1", execCtx.LastStep().Name, "expected step name to be 'step1'")
 
 	execCtx.UpdateLastStepResult(&ToolExecuteOutput{
-		Result: map[string]any{"key": "value"},
+		Output: map[string]any{"key": "value"},
 	})
-	assert.Equal(t, "value", execCtx.LastStep().ToolResult.Result["key"], "expected last step result to have key 'value'")
+	assert.Equal(t, "value", execCtx.LastStep().ToolResult.Output["key"], "expected last step output to have key 'value'")
 
 	execCtx.AddStep("step2", &ToolCall{
 		ToolName: "test-tool",

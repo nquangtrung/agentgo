@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"log"
 
 	"trontria.com/agentgo"
@@ -12,9 +13,10 @@ import (
 
 func TestGenerateTextWithToolOpenAI(t *testing.T) {
 	utils.LoadEnv("../.env")
-	output, err := agentgo.GenerateText(agentgo.Params{
+	ctx := context.Background()
+	output, err := agentgo.GenerateText(ctx, agentgo.Params{
 		ModelName: "gpt-5-mini",
-		Prompt:    "Say this is a test",
+		Prompt:    "Hello, can you tell me the temperature in New York?",
 		EndConditions: []agentgo.EndCondition{
 			agentgo.NewMaxStepsEndCondition(5),
 		},
