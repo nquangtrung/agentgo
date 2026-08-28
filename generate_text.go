@@ -28,9 +28,7 @@ func doLoop(ctx context.Context, params Params) (models.LanguageModelOutput, err
 	accumulator := func(acc *models.ExecutionContext, item *models.ToolExecuteOutput) {
 		accumulateToolCallResult(acc, item, messages)
 	}
-	runner := utils.Runner[*models.ToolExecuteOutput, models.ExecutionContext]{
-		Accumulator: accumulator,
-	}
+	runner := utils.NewRunner(nil, accumulator)
 
 	ctx = context.WithValue(ctx, models.RunnerContextKey, &runner)
 	loop := func(iteration int, execCtx *models.ExecutionContext) (*models.ToolExecuteOutput, bool, error) {

@@ -94,3 +94,10 @@ func (r *Runner[T, A]) Loop(
 		}
 	}
 }
+
+func NewRunner[T any, A any](channel chan RunnerEvent[T, A], accumulator Accumulator[T, A]) *Runner[T, A] {
+	return &Runner[T, A]{
+		EventChannel: channel,
+		Accumulator:  accumulator,
+	}
+}
