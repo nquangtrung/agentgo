@@ -91,6 +91,20 @@ func (e *ExecutionContext) AddStep(stepName string, toolCalled *ToolCall) {
 	}
 	e.steps = append(e.steps, step)
 }
+
+func (e *ExecutionContext) AddStepWithResult(stepName string, toolResult *ToolExecuteOutput) {
+	e.stepLocker.Lock()
+	defer e.stepLocker.Unlock()
+
+	step := Step{
+		Name:       stepName,
+		ToolCalled: toolResult.ToolCall,
+		ToolResult: toolResult,
+	}
+
+	e.steps = append(e.steps, step)
+}
+
 func (e *ExecutionContext) Steps() []Step {
 	e.stepLocker.Lock()
 	defer e.stepLocker.Unlock()

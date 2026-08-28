@@ -1,5 +1,11 @@
 package utils
 
+func Each[T any](input []T, action func(T)) {
+	for _, v := range input {
+		action(v)
+	}
+}
+
 func Filter[T any](input []T, predicate func(T) bool) []T {
 	result := make([]T, 0)
 	for _, v := range input {

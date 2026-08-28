@@ -36,16 +36,16 @@ func TestGenerateText(t *testing.T) {
 		gomock.Any(),
 		gomock.Cond(
 			func(p providers.AgentProviderPromptMessageParams) bool {
-				// assert.Equal(t, len(p.Messages), 1, "should")
-				if len(p.Messages) != 1 {
+				switch {
+				case len(p.Messages) != 1:
+					log.Printf("Expected 1 message, got %d", len(p.Messages))
 					return false
-				}
-
-				if p.Messages[0].Content().Text() != params.Prompt {
+				case p.Messages[0].Content().Text() != params.Prompt:
+					log.Printf("Expected prompt '%s', got '%s'", params.Prompt, p.Messages[0].Content().Text())
 					return false
+				default:
+					return true
 				}
-
-				return true
 			}),
 	).Return(
 		models.LanguageModelOutput{
@@ -121,20 +121,19 @@ func TestGenerateTextWithTool(t *testing.T) {
 	}
 
 	checkResolveToolCall := func(p providers.AgentProviderPromptMessageParams) bool {
-		if len(p.Messages) != 2 {
+		switch {
+		case len(p.Messages) != 2:
+			log.Printf("Expected at least 2 message, got %d", len(p.Messages))
 			return false
-		}
-
-		if p.Messages[0].Content().Text() != prompt {
+		case p.Messages[0].Content().Text() != prompt:
+			log.Printf("Expected first message to be prompt '%s', got '%s'", prompt, p.Messages[0].Content().Text())
 			return false
-		}
-
-		expectedToolCallMessage := fmt.Sprintf("Tool [%s] execution result: %s", tools[0].Name(), jsonedToolResult)
-		if p.Messages[1].Content().Text() != expectedToolCallMessage {
+		case p.Messages[1].Content().Text() != fmt.Sprintf("Tool [%s] execution result: %s", tools[0].Name(), jsonedToolResult):
+			log.Printf("Expected second message to be tool result, got '%s'", p.Messages[1].Content().Text())
 			return false
+		default:
+			return true
 		}
-
-		return true
 	}
 
 	mockResolveToolCallReturn := func(
@@ -147,11 +146,16 @@ func TestGenerateTextWithTool(t *testing.T) {
 	gomock.InOrder(
 		mockResolveToolCallReturn(
 			gomock.Cond(func(p providers.AgentProviderPromptMessageParams) bool {
-				if len(p.Messages) != 1 {
+				switch {
+				case len(p.Messages) != 1:
+					log.Printf("Expected 1 message, got %d", len(p.Messages))
 					return false
+				case p.Messages[0].Content().Text() != params.Prompt:
+					log.Printf("Expected prompt '%s', got '%s'", params.Prompt, p.Messages[0].Content().Text())
+					return false
+				default:
+					return true
 				}
-
-				return p.Messages[0].Content().Text() == params.Prompt
 			}),
 			gomock.Eq(tools),
 			[]models.ToolCall{
@@ -197,6 +201,6 @@ func TestGenerateTextWithTool(t *testing.T) {
 	assert.Equal(t, int64(21+20), output.Usage.CachedTokens, "should have correct cached token")
 	assert.Equal(t, int64(12+0), output.Usage.ReasoningTokens, "should have correct reasoning token")
 	assert.Equal(t, 2, len(output.Context.Steps()), "should have correct number of steps")
-	assert.Equal(t, "tool call [mock_tool]", utils.Must(output.Context.Step(0)).Name, "should have correct first step name")
+	assert.Equal(t, "mock_tool", utils.Must(output.Context.Step(0)).Name, "should have correct first step name")
 	assert.Equal(t, toolResult, utils.Must(output.Context.Step(0)).ToolResult.Output, "should have correct result in first step")
 }

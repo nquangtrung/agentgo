@@ -2,11 +2,11 @@ package agentgo
 
 import (
 	"context"
-	"fmt"
 	"log"
 
 	"trontria.com/agentgo/models"
 	"trontria.com/agentgo/providers"
+	"trontria.com/agentgo/utils"
 )
 
 func canProceedToNextStep(context *models.ExecutionContext, params Params) bool {
@@ -22,62 +22,68 @@ func canProceedToNextStep(context *models.ExecutionContext, params Params) bool 
 func doLoop(ctx context.Context, params Params) (models.LanguageModelOutput, error) {
 	execContext := ctx.Value(models.ExecutionContextKey).(*models.ExecutionContext)
 	provider := ctx.Value(models.ProviderContextKey).(providers.AgentProvider)
-
-	log.Printf("Starting loop with context %v", execContext.ModelName())
 	messages := resolveMessages(params)
-	for {
-		canContinue := canProceedToNextStep(execContext, params)
-		if !canContinue {
-			log.Printf("End conditions met, breaking the loop.")
-			break
-		}
+	ended := false
 
-		log.Printf("Resolving tool call")
-		toolCalls, err := provider.ResolveToolCall(
-			ctx,
-			providers.AgentProviderPromptMessageParams{
-				Messages: messages,
-			},
-			params.Tools,
-		)
-		if err != nil {
-			log.Printf("Error resolving tool call: %v", err)
-			execContext.UpdateLastStepError(err)
-			continue
+	shouldProceed := func(iteration int, execContext *models.ExecutionContext) bool {
+		return canProceedToNextStep(execContext, params) && !ended
+	}
+	accumulator := func(acc *models.ExecutionContext, item *models.ToolExecuteOutput) {
+		log.Printf("Accumulator called with item: %+v", item)
+		switch {
+		case item == nil:
+			log.Printf("Accumulator received nil item, skipping")
+			return
+		case item.ToolCall != nil:
+			log.Printf("Adding tool call result to execution context: %s", item.ToolCall.ToolName)
+			acc.AddStepWithResult(item.ToolCall.ToolName, item)
+			messages = append(messages, models.NewMessageFromToolResult(*item))
+			return
+		default:
+			log.Printf("Adding text output to execution context: %s", item.Output)
+			acc.AddStepWithResult("text", item)
 		}
+	}
+	runner := utils.Runner[*models.ToolExecuteOutput, models.ExecutionContext]{
+		Accumulator: accumulator,
+	}
 
-		if len(toolCalls) == 0 {
-			log.Printf("No tool call was resolved, breaking the loop.")
-			// No tool call was resolved, so we will break the loop and return the final output.
-			execContext.AddStep("text", nil)
+	loop := func(iteration int, execCtx *models.ExecutionContext) (*models.ToolExecuteOutput, error) {
+		log.Printf("Starting iteration %d", iteration)
+
+		toolCalls, err := provider.ResolveToolCall(ctx, providers.AgentProviderPromptMessageParams{Messages: messages}, params.Tools)
+
+		switch {
+		case err != nil:
+			return nil, err
+		case len(toolCalls) == 0:
+			log.Printf("No tool calls resolved, generating text output for iteration %d", iteration)
 			output := resolveTextOutputAsToolExecuteOutput(
 				provider.GenerateText(ctx, providers.AgentProviderPromptMessageParams{
 					Messages: messages,
-				}))
-			execContext.UpdateLastStepResult(&output)
-			break
-		}
-
-		for _, toolCall := range toolCalls {
-			execContext.AddStep(fmt.Sprintf("tool call [%s]", toolCall.ToolName), &toolCall)
-			tool, err := resolveToolFromToolCall(toolCall, params.Tools)
-			if err != nil {
-				execContext.UpdateLastStepError(err)
-				continue
-			}
-			log.Printf("Resolved tool [%s]", tool.Name())
-			toolResult := tool.Execute(models.ToolExecuteParams{
-				Input: toolCall.Params,
-			})
-			log.Printf("Executed tool %s with result: %v", tool.Name(), toolResult)
-			execContext.UpdateLastStepResult(
-				&toolResult,
+				}),
 			)
+			ended = true
+			return &output, nil
+		default:
+			log.Printf("Resolved %d tool calls, executing them for iteration %d", len(toolCalls), iteration)
+			utils.Each(toolCalls, func(toolCall models.ToolCall) {
+				log.Printf("Executing tool %s", toolCall.ToolName)
+				runner.Execute(
+					"tool",
+					func(iteration int, execCtx *models.ExecutionContext) (*models.ToolExecuteOutput, error) {
+						return executeToolCall(ctx, toolCall, params)
+					},
+					iteration,
+					execCtx,
+				)
+			})
 
-			log.Printf("Adding tool result to messages: %v", toolResult)
-			messages = append(messages, models.NewMessageFromToolResult(toolResult))
+			return nil, nil
 		}
 	}
+
+	runner.Loop("step", shouldProceed, loop, execContext, false)
 
 	return resolveExecutionContextAsTextOutput(execContext)
 }
