@@ -2,7 +2,6 @@ package agentgo
 
 import (
 	"context"
-	"log"
 
 	"trontria.com/agentgo/models"
 	"trontria.com/agentgo/providers"
@@ -21,66 +20,21 @@ func canProceedToNextStep(context *models.ExecutionContext, params Params) bool 
 
 func doLoop(ctx context.Context, params Params) (models.LanguageModelOutput, error) {
 	execContext := ctx.Value(models.ExecutionContextKey).(*models.ExecutionContext)
-	provider := ctx.Value(models.ProviderContextKey).(providers.AgentProvider)
-	messages := resolveMessages(params)
-	ended := false
+	messages := ctx.Value(models.MessagesContextKey).(*[]models.Message)
 
 	shouldProceed := func(iteration int, execContext *models.ExecutionContext) bool {
-		return canProceedToNextStep(execContext, params) && !ended
+		return canProceedToNextStep(execContext, params)
 	}
 	accumulator := func(acc *models.ExecutionContext, item *models.ToolExecuteOutput) {
-		log.Printf("Accumulator called with item: %+v", item)
-		switch {
-		case item == nil:
-			log.Printf("Accumulator received nil item, skipping")
-			return
-		case item.ToolCall != nil:
-			log.Printf("Adding tool call result to execution context: %s", item.ToolCall.ToolName)
-			acc.AddStepWithResult(item.ToolCall.ToolName, item)
-			messages = append(messages, models.NewMessageFromToolResult(*item))
-			return
-		default:
-			log.Printf("Adding text output to execution context: %s", item.Output)
-			acc.AddStepWithResult("text", item)
-		}
+		accumulateToolCallResult(acc, item, messages)
 	}
 	runner := utils.Runner[*models.ToolExecuteOutput, models.ExecutionContext]{
 		Accumulator: accumulator,
 	}
 
-	loop := func(iteration int, execCtx *models.ExecutionContext) (*models.ToolExecuteOutput, error) {
-		log.Printf("Starting iteration %d", iteration)
-
-		toolCalls, err := provider.ResolveToolCall(ctx, providers.AgentProviderPromptMessageParams{Messages: messages}, params.Tools)
-
-		switch {
-		case err != nil:
-			return nil, err
-		case len(toolCalls) == 0:
-			log.Printf("No tool calls resolved, generating text output for iteration %d", iteration)
-			output := resolveTextOutputAsToolExecuteOutput(
-				provider.GenerateText(ctx, providers.AgentProviderPromptMessageParams{
-					Messages: messages,
-				}),
-			)
-			ended = true
-			return &output, nil
-		default:
-			log.Printf("Resolved %d tool calls, executing them for iteration %d", len(toolCalls), iteration)
-			utils.Each(toolCalls, func(toolCall models.ToolCall) {
-				log.Printf("Executing tool %s", toolCall.ToolName)
-				runner.Execute(
-					"tool",
-					func(iteration int, execCtx *models.ExecutionContext) (*models.ToolExecuteOutput, error) {
-						return executeToolCall(ctx, toolCall, params)
-					},
-					iteration,
-					execCtx,
-				)
-			})
-
-			return nil, nil
-		}
+	ctx = context.WithValue(ctx, models.RunnerContextKey, &runner)
+	loop := func(iteration int, execCtx *models.ExecutionContext) (*models.ToolExecuteOutput, bool, error) {
+		return toolLoop(ctx, iteration, params)
 	}
 
 	runner.Loop("step", shouldProceed, loop, execContext, false)
@@ -95,6 +49,7 @@ func GenerateText(ctx context.Context, params Params) (models.LanguageModelOutpu
 
 	ctx = context.WithValue(ctx, models.ExecutionContextKey, execContext)
 	ctx = context.WithValue(ctx, models.ProviderContextKey, provider)
+	ctx = context.WithValue(ctx, models.MessagesContextKey, &messages)
 
 	if len(params.EndConditions) == 0 || len(params.Tools) == 0 {
 		// If no end conditions are provided, for safety, we will default to a max steps end condition of 1.

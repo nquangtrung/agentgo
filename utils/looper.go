@@ -1,10 +1,11 @@
 package utils
 
 import (
+	"log"
 	"time"
 )
 
-type Action[T any, A any] func(iteration int, acc *A) (T, error)
+type Action[T any, A any] func(iteration int, acc *A) (T, bool, error)
 type ShouldContinueFn[T any, A any] func(iteration int, acc *A) bool
 type Accumulator[T any, A any] func(acc *A, item T)
 
@@ -31,7 +32,7 @@ type Runner[T any, A any] struct {
 	Accumulator  Accumulator[T, A]
 }
 
-func (r *Runner[T, A]) Execute(name string, action Action[T, A], iteration int, acc *A) error {
+func (r *Runner[T, A]) executeWithKeepGoing(name string, action Action[T, A], iteration int, acc *A) (bool, error) {
 	if r.EventChannel != nil {
 		r.EventChannel <- RunnerEvent[T, A]{
 			Type:       RunnerEventStart,
@@ -41,7 +42,7 @@ func (r *Runner[T, A]) Execute(name string, action Action[T, A], iteration int, 
 		}
 	}
 
-	result, err := action(iteration, acc)
+	result, keepGoing, err := action(iteration, acc)
 	if err != nil {
 		r.EventChannel <- RunnerEvent[T, A]{
 			Type:       RunnerEventError,
@@ -49,7 +50,7 @@ func (r *Runner[T, A]) Execute(name string, action Action[T, A], iteration int, 
 			Iteration:  iteration,
 			Acc:        acc,
 		}
-		return err
+		return keepGoing, err
 	}
 
 	if r.EventChannel != nil {
@@ -66,7 +67,12 @@ func (r *Runner[T, A]) Execute(name string, action Action[T, A], iteration int, 
 		r.Accumulator(acc, result)
 	}
 
-	return nil
+	return keepGoing, nil
+}
+
+func (r *Runner[T, A]) Execute(name string, action Action[T, A], iteration int, acc *A) error {
+	_, err := r.executeWithKeepGoing(name, action, iteration, acc)
+	return err
 }
 
 func (r *Runner[T, A]) Loop(
@@ -77,8 +83,13 @@ func (r *Runner[T, A]) Loop(
 	breakIfError bool,
 ) {
 	for iteration := 0; shouldContinueFn(iteration, acc); iteration++ {
-		err := r.Execute(name, action, iteration, acc)
+		keepGoing, err := r.executeWithKeepGoing(name, action, iteration, acc)
+		if !keepGoing {
+			log.Printf("Loop %s: breaking loop at iteration %d due to keepGoing=false", name, iteration)
+			break
+		}
 		if err != nil && breakIfError {
+			log.Printf("Loop %s: breaking loop at iteration %d due to error: %v", name, iteration, err)
 			break
 		}
 	}

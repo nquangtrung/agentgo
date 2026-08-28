@@ -75,6 +75,8 @@ type ContextKey string
 const (
 	ExecutionContextKey ContextKey = "execution_context"
 	ProviderContextKey  ContextKey = "provider_context"
+	MessagesContextKey  ContextKey = "messages_context"
+	RunnerContextKey    ContextKey = "runner_context"
 )
 
 func (e *ExecutionContext) ModelName() string {
