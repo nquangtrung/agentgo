@@ -42,10 +42,8 @@ func wrapToolCall(ctx context.Context, toolName string, channel chan models.Part
 	toolResult, err := fn()
 	if err != nil {
 		log.Printf("Error in tool call %s: %v", toolName, err)
-
-		toolErrorPart := models.NewToolErrorPart(provider.Context(), toolName, models.NewLanguageModelUsage(0, 0, 0, 0), err)	)
+		toolErrorPart := models.NewToolErrorPart(provider.Context(), toolName, models.NewLanguageModelUsage(0, 0, 0, 0), err)
 		channel <- toolErrorPart
-
 		return err
 	}
 
