@@ -1,6 +1,7 @@
 package models
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -94,9 +95,9 @@ func TestToolErrorPart(t *testing.T) {
 	context := LanguageModelContext{
 		ModelName: "mocked-llm",
 	}
-	errorData := map[string]any{"error": "tool failed", "code": "ERR_001"}
+	error := errors.New("Mocked error")
 
-	var part Part = NewToolErrorPart(context, "search_tool", errorData)
+	var part Part = NewToolErrorPart(context, "search_tool", NewLanguageModelUsage(0, 0, 0, 0), error)
 
 	// Test AsToolErrorPart conversion
 	p, ok := part.(ToolErrorPart)
@@ -104,7 +105,7 @@ func TestToolErrorPart(t *testing.T) {
 	assert.NotNil(t, p, "should be able to access converted tool error part")
 	assert.Equal(t, p.ToolName(), "search_tool", "should have correct tool name")
 	assert.Equal(t, p.Type(), PartTypeToolError, "should have correct part type")
-	assert.Equal(t, p.Error(), errorData, "should have correct error data")
+	assert.Equal(t, p.Error(), error, "should have correct error data")
 	assert.Equal(t, p.FinishReason(), FinishReasonFailed, "should have failed finish reason")
 
 	// Test that other conversions fail
