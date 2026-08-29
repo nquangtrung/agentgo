@@ -50,7 +50,7 @@ func (s *ToolResolveState) Execute(ctx context.Context, fsmCtx *AgentContext) (S
 
 	if len(toolCalls) == 0 {
 		log.Printf("No tool calls resolved")
-		return &TextGenerationState{}, nil
+		return &PrepareTextGenerationState{}, nil
 	}
 
 	utils.Each(toolCalls, func(toolCall models.ToolCall) {

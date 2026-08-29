@@ -73,11 +73,13 @@ type ExecutionContext struct {
 type ContextKey string
 
 const (
-	ProviderContextKey      ContextKey = "provider_context"
-	RunnerContextKey        ContextKey = "runner_context"
-	MachineContextKey       ContextKey = "machine_context"
-	EndConditionsContextKey ContextKey = "end_conditions_context"
-	ToolsContextKey         ContextKey = "tools_context"
+	ProviderContextKey          ContextKey = "provider_context"
+	RunnerContextKey            ContextKey = "runner_context"
+	MachineContextKey           ContextKey = "machine_context"
+	EndConditionsContextKey     ContextKey = "end_conditions_context"
+	ToolsContextKey             ContextKey = "tools_context"
+	StreamContextKey            ContextKey = "stream_context"
+	StreamPartChannelContextKey ContextKey = "stream_part_channel_context"
 )
 
 func (e *ExecutionContext) ModelName() string {

@@ -18,6 +18,7 @@ func (fsm *FSM[T]) SetState(state State[T]) {
 }
 
 func (fsm *FSM[T]) Run(ctx context.Context, initialState State[T], fsmCtx *T) error {
+	log.Printf("Starting FSM with initial state: %T and context ", initialState)
 	fsm.currentState = initialState
 
 	for fsm.currentState != nil {
@@ -26,6 +27,7 @@ func (fsm *FSM[T]) Run(ctx context.Context, initialState State[T], fsmCtx *T) er
 			return ctx.Err()
 		}
 		nextState, err := fsm.currentState.Execute(ctx, fsmCtx)
+
 		if err != nil {
 			return err
 		}

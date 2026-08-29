@@ -25,7 +25,7 @@ func (s *PredicateState) Execute(ctx context.Context, fsmCtx *AgentContext) (Sta
 
 	switch {
 	case len(endConditions) == 0 || len(tools) == 0:
-		return &TextGenerationState{}, nil
+		return &PrepareTextGenerationState{}, nil
 	case canProceedToNextStep(fsmCtx.ExecutionContext, endConditions):
 		return &ToolResolveState{}, nil
 	default:

@@ -3,26 +3,44 @@ package agentgo
 import (
 	"context"
 
+	"trontria.com/agentgo/fsm"
 	"trontria.com/agentgo/models"
-	"trontria.com/agentgo/providers"
+	"trontria.com/agentgo/utils"
 )
 
 func StreamText(ctx context.Context, params Params) models.LanguageModelStreamOutput {
 	provider := mustResolveProviderFromParams(params)
+	messages := resolveMessages(params)
+	execContext := models.NewExecutionContextFromLanguageModelContext(provider.Context())
+
+	partChannel := make(chan models.Part)
+	eventChannel := make(chan utils.RunnerEvent[*models.ToolExecuteOutput, models.ExecutionContext])
+	accumulator := func(acc *models.ExecutionContext, item *models.ToolExecuteOutput) {
+		accumulateToolCallResult(acc, item, &messages)
+	}
+
+	runner := utils.NewRunner(eventChannel, accumulator)
+	machine := fsm.New[fsm.AgentContext]()
 
 	ctx = context.WithValue(ctx, models.ProviderContextKey, provider)
+	ctx = context.WithValue(ctx, models.RunnerContextKey, runner)
+	ctx = context.WithValue(ctx, models.MachineContextKey, machine)
+	ctx = context.WithValue(ctx, models.EndConditionsContextKey, params.EndConditions)
+	ctx = context.WithValue(ctx, models.ToolsContextKey, params.Tools)
+	ctx = context.WithValue(ctx, models.StreamContextKey, true)
+	ctx = context.WithValue(ctx, models.StreamPartChannelContextKey, partChannel)
 
-	channel := make(chan models.Part)
 	go func() {
-		defer close(channel)
-		if len(params.EndConditions) == 0 || len(params.Tools) == 0 {
-			messages := resolveMessages(params)
-			provider.StreamText(ctx, providers.AgentProviderPromptMessageParams{Messages: messages}, channel)
-			return
+		defer close(partChannel)
+		defer close(eventChannel)
+
+		agentCtx := &fsm.AgentContext{
+			Messages:         &messages,
+			ExecutionContext: execContext,
 		}
 
-		// doStreamLoop(ctx, params, channel)
+		machine.Run(ctx, &fsm.PredicateState{}, agentCtx)
 	}()
 
-	return models.NewLanguageModelStreamOutput(channel, params.Provider.Context().ModelName)
+	return models.NewLanguageModelStreamOutput(partChannel, params.Provider.Context().ModelName)
 }

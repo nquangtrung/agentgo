@@ -27,6 +27,7 @@ func resolveTextOutputAsToolExecuteOutput(textOutput models.LanguageModelOutput,
 		Usage: textOutput.Usage,
 	}
 }
+
 func (s *TextGenerationState) Execute(ctx context.Context, fsmCtx *AgentContext) (State[AgentContext], error) {
 	provider := ctx.Value(models.ProviderContextKey).(providers.AgentProvider)
 	runner := ctx.Value(models.RunnerContextKey).(*utils.Runner[*models.ToolExecuteOutput, models.ExecutionContext])
