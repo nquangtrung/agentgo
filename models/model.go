@@ -73,10 +73,11 @@ type ExecutionContext struct {
 type ContextKey string
 
 const (
-	ExecutionContextKey ContextKey = "execution_context"
-	ProviderContextKey  ContextKey = "provider_context"
-	MessagesContextKey  ContextKey = "messages_context"
-	RunnerContextKey    ContextKey = "runner_context"
+	ProviderContextKey      ContextKey = "provider_context"
+	RunnerContextKey        ContextKey = "runner_context"
+	MachineContextKey       ContextKey = "machine_context"
+	EndConditionsContextKey ContextKey = "end_conditions_context"
+	ToolsContextKey         ContextKey = "tools_context"
 )
 
 func (e *ExecutionContext) ModelName() string {

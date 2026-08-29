@@ -114,8 +114,8 @@ func TestGenerateTextWithTool(t *testing.T) {
 	params := Params{
 		Prompt:   prompt,
 		Provider: mockProvider,
-		EndConditions: []EndCondition{
-			NewMaxStepsEndCondition(5),
+		EndConditions: []models.EndCondition{
+			models.NewMaxStepsEndCondition(5),
 		},
 		Tools: tools,
 	}

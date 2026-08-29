@@ -5,7 +5,8 @@ import (
 	"time"
 )
 
-type Action[T any, A any] func(iteration int, acc *A) (T, bool, error)
+type LoopAction[T any, A any] func(iteration int, acc *A) (T, bool, error)
+type Action[T any, A any] func(acc *A) (T, error)
 type ShouldContinueFn[T any, A any] func(iteration int, acc *A) bool
 type Accumulator[T any, A any] func(acc *A, item T)
 
@@ -32,7 +33,7 @@ type Runner[T any, A any] struct {
 	Accumulator  Accumulator[T, A]
 }
 
-func (r *Runner[T, A]) executeWithKeepGoing(name string, action Action[T, A], iteration int, acc *A) (bool, error) {
+func (r *Runner[T, A]) executeWithKeepGoing(name string, action LoopAction[T, A], iteration int, acc *A) (bool, error) {
 	if r.EventChannel != nil {
 		r.EventChannel <- RunnerEvent[T, A]{
 			Type:       RunnerEventStart,
@@ -70,15 +71,45 @@ func (r *Runner[T, A]) executeWithKeepGoing(name string, action Action[T, A], it
 	return keepGoing, nil
 }
 
-func (r *Runner[T, A]) Execute(name string, action Action[T, A], iteration int, acc *A) error {
-	_, err := r.executeWithKeepGoing(name, action, iteration, acc)
-	return err
+func (r *Runner[T, A]) Execute(name string, action Action[T, A], acc *A) error {
+	if r.EventChannel != nil {
+		r.EventChannel <- RunnerEvent[T, A]{
+			Type:       RunnerEventStart,
+			ActionName: name,
+			Acc:        acc,
+		}
+	}
+
+	result, err := action(acc)
+	if err != nil {
+		r.EventChannel <- RunnerEvent[T, A]{
+			Type:       RunnerEventError,
+			ActionName: name,
+			Acc:        acc,
+		}
+		return err
+	}
+
+	if r.EventChannel != nil {
+		r.EventChannel <- RunnerEvent[T, A]{
+			Type:       RunnerEventSuccess,
+			ActionName: name,
+			Acc:        acc,
+			Result:     result,
+		}
+	}
+
+	if r.Accumulator != nil {
+		r.Accumulator(acc, result)
+	}
+
+	return nil
 }
 
 func (r *Runner[T, A]) Loop(
 	name string,
 	shouldContinueFn ShouldContinueFn[T, A],
-	action Action[T, A],
+	action LoopAction[T, A],
 	acc *A,
 	breakIfError bool,
 ) {
