@@ -16,7 +16,7 @@ func GenerateText(ctx context.Context, params Params) (models.LanguageModelOutpu
 	accumulator := func(acc *models.ExecutionContext, item *models.ToolExecuteOutput) {
 		accumulateToolCallResult(acc, item, &messages)
 	}
-	runner := utils.NewRunner(nil, accumulator)
+	runner := utils.NewRunnerNoEmit(accumulator)
 	machine := fsm.New[fsm.AgentContext]()
 
 	ctx = context.WithValue(ctx, models.ProviderContextKey, provider)
@@ -24,12 +24,13 @@ func GenerateText(ctx context.Context, params Params) (models.LanguageModelOutpu
 	ctx = context.WithValue(ctx, models.MachineContextKey, machine)
 	ctx = context.WithValue(ctx, models.EndConditionsContextKey, params.EndConditions)
 	ctx = context.WithValue(ctx, models.ToolsContextKey, params.Tools)
+	ctx = context.WithValue(ctx, models.StreamContextKey, false)
 
 	agentContext := fsm.AgentContext{
 		ExecutionContext: execContext,
 		Messages:         &messages,
 	}
-	machine.Run(ctx, &fsm.PredicateState{}, &agentContext)
+	machine.Run(ctx, &fsm.StartState{}, &agentContext)
 
 	return resolveExecutionContextAsTextOutput(execContext)
 }

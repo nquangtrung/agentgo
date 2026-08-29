@@ -34,7 +34,7 @@ func (s *TextGenerationState) Execute(ctx context.Context, fsmCtx *AgentContext)
 	messages := fsmCtx.Messages
 
 	runner.Execute(
-		"text_generation",
+		"text",
 		func(acc *models.ExecutionContext) (*models.ToolExecuteOutput, error) {
 			output := resolveTextOutputAsToolExecuteOutput(
 				provider.GenerateText(ctx, providers.AgentProviderPromptMessageParams{
@@ -46,5 +46,5 @@ func (s *TextGenerationState) Execute(ctx context.Context, fsmCtx *AgentContext)
 		fsmCtx.ExecutionContext,
 	)
 
-	return &EndState{}, nil
+	return &AfterTextGenerationState{}, nil
 }

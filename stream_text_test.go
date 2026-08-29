@@ -55,16 +55,9 @@ func TestStreamText(t *testing.T) {
 			ModelName: modelName,
 		}
 		t.Log(channel)
-		channel <- models.NewStepStartPart(context, "step start")
 		for i := range 3 {
 			channel <- models.NewTextPart(context, fmt.Sprintf("text %d", i))
 		}
-		channel <- models.NewStepEndPart(context, "step start", models.LanguageModelUsage{
-			OutputTokens:    123,
-			InputTokens:     245,
-			CachedTokens:    21,
-			ReasoningTokens: 12,
-		})
 	})
 	output := StreamText(ctx, params)
 	assert.NotNil(t, output.Channel, "Output channel should not be nil")
@@ -72,6 +65,7 @@ func TestStreamText(t *testing.T) {
 
 	var texts []string = []string{}
 	for part := range output.Channel {
+		log.Printf("Received part: %s", part.Type())
 		switch p := part.(type) {
 		case models.StepStartPart:
 			assert.NotNil(t, p, "should be able to access converted step")
@@ -94,7 +88,6 @@ func TestStreamTextWithTool(t *testing.T) {
 
 	prompt := "Say this is a test"
 	modelName := "mocked-llm-3.6-flash"
-	// result := "This is a test"
 	ctx := context.Background()
 
 	toolParams := map[string]any{
@@ -187,33 +180,41 @@ func TestStreamTextWithTool(t *testing.T) {
 		ModelName: modelName,
 	})
 
+	mockProvider.EXPECT().StreamText(
+		gomock.Any(),
+		gomock.Cond(
+			func(p providers.AgentProviderPromptMessageParams) bool {
+				switch {
+				case len(p.Messages) != 2:
+					return false
+				case p.Messages[0].Content().Text() != params.Prompt:
+					return false
+				default:
+					return true
+				}
+			}),
+		gomock.Cond(
+			func(channel chan models.Part) bool {
+				return true
+			},
+		),
+	).Do(func(ctx context.Context, params providers.AgentProviderPromptMessageParams, channel chan models.Part) {
+		log.Printf("StreamText called with params: %v", params)
+		context := models.LanguageModelContext{
+			ModelName: modelName,
+		}
+		for i := range 3 {
+			channel <- models.NewTextPart(context, fmt.Sprintf("text %d", i))
+		}
+	})
+
 	output := StreamText(ctx, params)
 	assert.NotNil(t, output.Channel, "Output channel should not be nil")
 	assert.Equal(t, modelName, output.ModelName, "Output model name should be correct")
 
 	for part := range output.Channel {
-		log.Printf("Received part: %v", part)
+		log.Printf("Received part: %s", part.Type())
 	}
-	// mockProvider.EXPECT().GenerateText(
-	// 	gomock.Any(),
-	// 	gomock.Cond(checkResolveToolCall),
-	// ).Return(
-	// 	models.LanguageModelOutput{
-	// 		Text: result,
-	// 		Usage: models.LanguageModelUsage{
-	// 			OutputTokens:    123,
-	// 			InputTokens:     245,
-	// 			CachedTokens:    21,
-	// 			ReasoningTokens: 12,
-	// 		},
-	// 		ModelName: modelName,
-	// 	},
-	// 	nil,
-	// )
-	// output, err := GenerateText(ctx, params)
-	// if err != nil {
-	// 	panic(err)
-	// }
 
 	// assert.Equal(t, modelName, output.ModelName, "should have correct model name")
 	// assert.Equal(t, result, output.Text, "should have correct output")

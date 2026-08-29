@@ -65,5 +65,5 @@ func (s *ToolResolveState) Execute(ctx context.Context, fsmCtx *AgentContext) (S
 		)
 	})
 
-	return &PredicateState{}, nil
+	return &StepEndState{}, nil
 }

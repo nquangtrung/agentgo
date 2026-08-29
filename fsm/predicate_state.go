@@ -24,11 +24,13 @@ func (s *PredicateState) Execute(ctx context.Context, fsmCtx *AgentContext) (Sta
 	tools := ctx.Value(models.ToolsContextKey).([]models.BaseTool)
 
 	switch {
+	case fsmCtx.TextGenerated:
+		return &StepEndState{toEnd: true}, nil
 	case len(endConditions) == 0 || len(tools) == 0:
 		return &PrepareTextGenerationState{}, nil
 	case canProceedToNextStep(fsmCtx.ExecutionContext, endConditions):
 		return &ToolResolveState{}, nil
 	default:
-		return &EndState{}, nil
+		return &StepEndState{toEnd: true}, nil
 	}
 }
