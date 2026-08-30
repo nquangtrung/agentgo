@@ -1,0 +1,8 @@
+- The blog post is to document my journey of learning  golang by implementing an agentic framework.
+- Be plain and explain the concept simply. 
+- Do not use to many emoticon.
+- Do no be too verbose with code excerpt. Only use code excerpt from the repo only.
+- Keep the the timeline of the blog post in mind and make sure to explain the concept in a way that is easy to understand for readers who may not be familiar with the topic.
+- The posts are intended to be informative and educational, so please focus on providing clear explanations and examples that will help readers understand the topic at hand.
+- The previous posts are available for reference inside /blogs folder.
+- Always use mermaid diagrams to explain the concepts and flow of the code.

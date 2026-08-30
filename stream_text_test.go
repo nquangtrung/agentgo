@@ -17,9 +17,10 @@ import (
 
 func checkPart(channel <-chan models.Part, check func(part models.Part)) {
 	part := <-channel
-	log.Printf("Received part: %v+", part)
+	log.Printf("Received part: %s", part.Type())
 	check(part)
 }
+
 func TestStreamText(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
