@@ -9,7 +9,7 @@ import (
 type PredicateState struct {
 }
 
-func canProceedToNextStep(context *models.ExecutionContext, endConds []models.EndCondition) bool {
+func canProceedToNextStep(context *models.ToolExecutionsArchive, endConds []models.EndCondition) bool {
 	conditions := endConds
 	for _, condition := range conditions {
 		if condition.Condition(context) {
@@ -28,7 +28,7 @@ func (s *PredicateState) Execute(ctx context.Context, fsmCtx *AgentContext) (Sta
 		return &StepEndState{toEnd: true}, nil
 	case len(endConditions) == 0 || len(tools) == 0:
 		return &PrepareTextGenerationState{}, nil
-	case canProceedToNextStep(fsmCtx.ExecutionContext, endConditions):
+	case canProceedToNextStep(fsmCtx.ToolExecutionsArchive, endConditions):
 		return &ToolResolveState{}, nil
 	default:
 		return &StepEndState{toEnd: true}, nil

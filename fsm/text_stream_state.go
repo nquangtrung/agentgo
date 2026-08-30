@@ -14,16 +14,20 @@ type TextStreamState struct {
 func (s *TextStreamState) Execute(ctx context.Context, fsmCtx *AgentContext) (State[AgentContext], error) {
 	messages := fsmCtx.Messages
 	provider := ctx.Value(models.ProviderContextKey).(providers.AgentProvider)
-	partChannel := ctx.Value(models.StreamPartChannelContextKey).(chan models.Part)
+	emitter := ctx.Value(models.PartEmitterContextKey).(*models.PartEmitter)
 
-	log.Printf("TextStreamState: Executing with %d messages", len(*messages))
-	log.Printf("TextStreamState: Provider %+v", provider)
-	provider.StreamText(
-		ctx,
-		providers.AgentProviderPromptMessageParams{Messages: *messages},
-		partChannel,
+	output := resolveTextOutputAsToolExecuteOutput(
+		provider.StreamText(
+			ctx,
+			providers.AgentProviderPromptMessageParams{Messages: *messages},
+			*emitter,
+		),
 	)
-	log.Printf("TextStreamState: Finished streaming text")
 
-	return &AfterTextGenerationState{}, nil
+	log.Printf("TextStreamState: Finished streaming text")
+	models.AccumulateToolCallResult(fsmCtx.ToolExecutionsArchive, &output, messages)
+
+	return &AfterTextGenerationState{
+		output: &output,
+	}, nil
 }

@@ -4,8 +4,18 @@ import (
 	"trontria.com/agentgo/models"
 )
 
+type Step struct {
+	StepIndex int
+	Usage     models.LanguageModelUsage
+}
+
 type AgentContext struct {
-	ExecutionContext *models.ExecutionContext
-	Messages         *[]models.Message
-	TextGenerated    bool
+	ToolExecutionsArchive *models.ToolExecutionsArchive
+	Messages              *[]models.Message
+	TextGenerated         bool
+
+	Steps       []Step
+	CurrentStep Step
+
+	TotalUsage models.LanguageModelUsage
 }

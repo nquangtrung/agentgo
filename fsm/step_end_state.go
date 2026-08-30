@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"trontria.com/agentgo/models"
-	"trontria.com/agentgo/utils"
+	"trontria.com/agentgo/providers"
 )
 
 type StepEndState struct {
@@ -12,9 +12,18 @@ type StepEndState struct {
 }
 
 func (s *StepEndState) Execute(ctx context.Context, fsmCtx *AgentContext) (State[AgentContext], error) {
-	runner := ctx.Value(models.RunnerContextKey).(*utils.Runner[*models.ToolExecuteOutput, models.ExecutionContext])
-	runner.EmitSuccess(utils.RunnerEventSuccess, "step", &models.ToolExecuteOutput{}, fsmCtx.ExecutionContext)
+	provider := ctx.Value(models.ProviderContextKey).(providers.AgentProvider)
+	emitter := ctx.Value(models.PartEmitterContextKey).(*models.PartEmitter)
+	emitter.Emit(models.NewStepEndPart(
+		provider.Context(),
+		"step",
+		fsmCtx.CurrentStep.Usage,
+	))
 
+	fsmCtx.TotalUsage = models.AccumulateUsage(
+		fsmCtx.TotalUsage,
+		fsmCtx.CurrentStep.Usage,
+	)
 	if !s.toEnd {
 		return &StepStartState{}, nil
 	} else {

@@ -17,7 +17,7 @@ func TestResolveExecutionContextAsTextOutput(t *testing.T) {
 	_, err := resolveExecutionContextAsTextOutput(execCtx)
 	assert.Error(t, err, "expected error when resolving execution context as text output")
 
-	execCtx.AddStep("tool-step: mock_tool_1",
+	execCtx.AddToolCall("tool-step: mock_tool_1",
 		&models.ToolCall{
 			ToolName: "mock_tool_1",
 			Params: map[string]any{
@@ -26,7 +26,7 @@ func TestResolveExecutionContextAsTextOutput(t *testing.T) {
 			},
 		},
 	)
-	execCtx.UpdateLastStepResult(&models.ToolExecuteOutput{
+	execCtx.UpdateLastRecordResult(&models.ToolExecuteOutput{
 		Output: map[string]any{
 			"key1": "value1",
 		},
@@ -37,7 +37,7 @@ func TestResolveExecutionContextAsTextOutput(t *testing.T) {
 			ReasoningTokens: 0,
 		},
 	})
-	execCtx.AddStep("tool-step: mock_tool_2",
+	execCtx.AddToolCall("tool-step: mock_tool_2",
 		&models.ToolCall{
 			ToolName: "mock_tool_2",
 			Params: map[string]any{
@@ -46,7 +46,7 @@ func TestResolveExecutionContextAsTextOutput(t *testing.T) {
 			},
 		},
 	)
-	execCtx.UpdateLastStepResult(&models.ToolExecuteOutput{
+	execCtx.UpdateLastRecordResult(&models.ToolExecuteOutput{
 		Output: map[string]any{
 			"key2": "value2",
 		},
@@ -58,7 +58,7 @@ func TestResolveExecutionContextAsTextOutput(t *testing.T) {
 		},
 	})
 
-	execCtx.AddStep("tool-step: mock_tool_3",
+	execCtx.AddToolCall("tool-step: mock_tool_3",
 		&models.ToolCall{
 			ToolName: "mock_tool_3",
 			Params: map[string]any{
@@ -67,14 +67,14 @@ func TestResolveExecutionContextAsTextOutput(t *testing.T) {
 			},
 		},
 	)
-	execCtx.UpdateLastStepResult(&models.ToolExecuteOutput{
+	execCtx.UpdateLastRecordResult(&models.ToolExecuteOutput{
 		Output: map[string]any{
 			"key3": "value3",
 		},
 	})
 
-	execCtx.AddStep("text-step: final-output", nil)
-	execCtx.UpdateLastStepResult(&models.ToolExecuteOutput{
+	execCtx.AddToolCall("text-step: final-output", nil)
+	execCtx.UpdateLastRecordResult(&models.ToolExecuteOutput{
 		Output: map[string]any{
 			"text": "final-output",
 		},
@@ -94,17 +94,17 @@ func TestResolveExecutionContextAsTextOutput(t *testing.T) {
 	assert.Equal(t, int64(2200+200+100), output.Usage.OutputTokens, "expected output tokens to match")
 	assert.Equal(t, int64(20+20+20), output.Usage.CachedTokens, "expected cached tokens to match")
 	assert.Equal(t, int64(20+0+0), output.Usage.ReasoningTokens, "expected reasoning tokens to match")
-	assert.Equal(t, 4, len(output.Context.Steps()), "expected number of steps to match")
+	assert.Equal(t, 4, len(output.Context.Records()), "expected number of steps to match")
 
-	assert.Equal(t, "text-step: final-output", utils.Must(output.Context.Step(3)).Name, "expected fourth step name to match")
+	assert.Equal(t, "text-step: final-output", utils.Must(output.Context.Record(3)).Name, "expected fourth step name to match")
 
-	assert.Equal(t, "mock_tool_1", utils.Must(output.Context.Step(0)).ToolCalled.ToolName, "expected first step tool name to match")
-	assert.Equal(t, "mock_tool_2", utils.Must(output.Context.Step(1)).ToolCalled.ToolName, "expected second step tool name to match")
-	assert.Equal(t, "mock_tool_3", utils.Must(output.Context.Step(2)).ToolCalled.ToolName, "expected third step tool name to match")
-	assert.Equal(t, "tool-step: mock_tool_1", utils.Must(output.Context.Step(0)).Name, "expected first step name to match")
-	assert.Equal(t, "tool-step: mock_tool_2", utils.Must(output.Context.Step(1)).Name, "expected second step name to match")
-	assert.Equal(t, "tool-step: mock_tool_3", utils.Must(output.Context.Step(2)).Name, "expected third step name to match")
-	assert.Equal(t, map[string]any{"key1": "value1"}, utils.Must(output.Context.Step(0)).ToolResult.Output, "expected first step tool name to match")
-	assert.Equal(t, map[string]any{"key2": "value2"}, utils.Must(output.Context.Step(1)).ToolResult.Output, "expected first step tool name to match")
-	assert.Equal(t, map[string]any{"key3": "value3"}, utils.Must(output.Context.Step(2)).ToolResult.Output, "expected first step tool name to match")
+	assert.Equal(t, "mock_tool_1", utils.Must(output.Context.Record(0)).ToolCalled.ToolName, "expected first step tool name to match")
+	assert.Equal(t, "mock_tool_2", utils.Must(output.Context.Record(1)).ToolCalled.ToolName, "expected second step tool name to match")
+	assert.Equal(t, "mock_tool_3", utils.Must(output.Context.Record(2)).ToolCalled.ToolName, "expected third step tool name to match")
+	assert.Equal(t, "tool-step: mock_tool_1", utils.Must(output.Context.Record(0)).Name, "expected first step name to match")
+	assert.Equal(t, "tool-step: mock_tool_2", utils.Must(output.Context.Record(1)).Name, "expected second step name to match")
+	assert.Equal(t, "tool-step: mock_tool_3", utils.Must(output.Context.Record(2)).Name, "expected third step name to match")
+	assert.Equal(t, map[string]any{"key1": "value1"}, utils.Must(output.Context.Record(0)).ToolResult.Output, "expected first step tool name to match")
+	assert.Equal(t, map[string]any{"key2": "value2"}, utils.Must(output.Context.Record(1)).ToolResult.Output, "expected first step tool name to match")
+	assert.Equal(t, map[string]any{"key3": "value3"}, utils.Must(output.Context.Record(2)).ToolResult.Output, "expected first step tool name to match")
 }

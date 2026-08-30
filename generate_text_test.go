@@ -200,7 +200,7 @@ func TestGenerateTextWithTool(t *testing.T) {
 	assert.Equal(t, int64(123+100), output.Usage.OutputTokens, "should have correct output tokens")
 	assert.Equal(t, int64(21+20), output.Usage.CachedTokens, "should have correct cached token")
 	assert.Equal(t, int64(12+0), output.Usage.ReasoningTokens, "should have correct reasoning token")
-	assert.Equal(t, 2, len(output.Context.Steps()), "should have correct number of steps")
-	assert.Equal(t, "mock_tool", utils.Must(output.Context.Step(0)).Name, "should have correct first step name")
-	assert.Equal(t, toolResult, utils.Must(output.Context.Step(0)).ToolResult.Output, "should have correct result in first step")
+	assert.Equal(t, 2, len(output.Context.Records()), "should have correct number of steps")
+	assert.Equal(t, "mock_tool", utils.Must(output.Context.Record(0)).Name, "should have correct first step name")
+	assert.Equal(t, toolResult, utils.Must(output.Context.Record(0)).ToolResult.Output, "should have correct result in first step")
 }

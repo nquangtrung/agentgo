@@ -1,15 +1,15 @@
 package models
 
 type EndCondition interface {
-	Condition(context *ExecutionContext) bool
+	Condition(context *ToolExecutionsArchive) bool
 }
 
 type MaxStepsEndCondition struct {
 	MaxSteps int
 }
 
-func (m MaxStepsEndCondition) Condition(context *ExecutionContext) bool {
-	return len(context.Steps()) >= m.MaxSteps
+func (m MaxStepsEndCondition) Condition(context *ToolExecutionsArchive) bool {
+	return len(context.Records()) >= m.MaxSteps
 }
 
 func NewMaxStepsEndCondition(maxSteps int) MaxStepsEndCondition {

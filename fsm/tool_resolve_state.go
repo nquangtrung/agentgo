@@ -38,10 +38,9 @@ func executeToolCall(_ context.Context, toolCall models.ToolCall, tools []models
 func (s *ToolResolveState) Execute(ctx context.Context, fsmCtx *AgentContext) (State[AgentContext], error) {
 	provider := ctx.Value(models.ProviderContextKey).(providers.AgentProvider)
 	tools := ctx.Value(models.ToolsContextKey).([]models.BaseTool)
-	runner := ctx.Value(models.RunnerContextKey).(*utils.Runner[*models.ToolExecuteOutput, models.ExecutionContext])
+	emitter := ctx.Value(models.PartEmitterContextKey).(*models.PartEmitter)
 
 	messages := fsmCtx.Messages
-	execCtx := fsmCtx.ExecutionContext
 
 	toolCalls, err := provider.ResolveToolCall(ctx, providers.AgentProviderPromptMessageParams{Messages: *messages}, tools)
 	if err != nil {
@@ -55,14 +54,41 @@ func (s *ToolResolveState) Execute(ctx context.Context, fsmCtx *AgentContext) (S
 
 	utils.Each(toolCalls, func(toolCall models.ToolCall) {
 		log.Printf("Executing tool %s", toolCall.ToolName)
-		runner.Execute(
-			"tool",
-			func(execCtx *models.ExecutionContext) (*models.ToolExecuteOutput, error) {
-				result, err := executeToolCall(ctx, toolCall, tools)
-				return result, err
-			},
-			execCtx,
-		)
+
+		emitter.Emit(models.NewToolStartPart(
+			provider.Context(),
+			toolCall.ToolName,
+		))
+		result, err := executeToolCall(ctx, toolCall, tools)
+
+		switch {
+		case err != nil:
+			// This error is before request to the provider, so usage is 0.
+			log.Printf("Error executing tool %s: %v", toolCall.ToolName, err)
+			emitter.Emit(models.NewToolErrorPart(
+				provider.Context(),
+				toolCall.ToolName,
+				models.NewLanguageModelUsage(0, 0, 0, 0),
+				err,
+			))
+		case result.Error != nil:
+			emitter.Emit(models.NewToolErrorPart(
+				provider.Context(),
+				toolCall.ToolName,
+				result.Usage,
+				result.Error,
+			))
+			models.AccumulateToolCallResult(fsmCtx.ToolExecutionsArchive, result, messages)
+			fsmCtx.CurrentStep.Usage = models.AccumulateUsage(fsmCtx.CurrentStep.Usage, result.Usage)
+		default:
+			emitter.Emit(models.NewToolResultPart(
+				provider.Context(),
+				toolCall.ToolName,
+				*result,
+			))
+			models.AccumulateToolCallResult(fsmCtx.ToolExecutionsArchive, result, messages)
+			fsmCtx.CurrentStep.Usage = models.AccumulateUsage(fsmCtx.CurrentStep.Usage, result.Usage)
+		}
 	})
 
 	return &StepEndState{}, nil

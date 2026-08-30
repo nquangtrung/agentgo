@@ -17,8 +17,8 @@ func TestGenerateTextWithToolOpenAI(t *testing.T) {
 	output, err := agentgo.GenerateText(ctx, agentgo.Params{
 		ModelName: "gpt-5-mini",
 		Prompt:    "Hello, can you tell me the temperature in New York?",
-		EndConditions: []agentgo.EndCondition{
-			agentgo.NewMaxStepsEndCondition(5),
+		EndConditions: []models.EndCondition{
+			models.NewMaxStepsEndCondition(5),
 		},
 		Tools: []models.BaseTool{
 			models.NewTool(models.NewToolParams{

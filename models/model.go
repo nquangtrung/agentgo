@@ -25,7 +25,7 @@ type LanguageModelOutput struct {
 	Text      string
 	Usage     LanguageModelUsage
 	ModelName string
-	Context   *ExecutionContext
+	Context   *ToolExecutionsArchive
 }
 
 func NewLanguageModelOutput(text string, usage LanguageModelUsage, modelName string) LanguageModelOutput {
@@ -58,110 +58,110 @@ func NewLanguageModelContext(modelName string) LanguageModelContext {
 	}
 }
 
-type Step struct {
+type ToolExecutionRecord struct {
 	Name       string
 	ToolCalled *ToolCall
 	ToolResult *ToolExecuteOutput
 }
-type ExecutionContext struct {
+type ToolExecutionsArchive struct {
 	LanguageModelContext
 
-	stepLocker sync.Mutex
-	steps      []Step
+	recordsLocker sync.Mutex
+	records       []ToolExecutionRecord
 }
 
 type ContextKey string
 
 const (
-	ProviderContextKey          ContextKey = "provider_context"
-	RunnerContextKey            ContextKey = "runner_context"
-	MachineContextKey           ContextKey = "machine_context"
-	EndConditionsContextKey     ContextKey = "end_conditions_context"
-	ToolsContextKey             ContextKey = "tools_context"
-	StreamContextKey            ContextKey = "stream_context"
-	StreamPartChannelContextKey ContextKey = "stream_part_channel_context"
+	ProviderContextKey      ContextKey = "provider_context"
+	MachineContextKey       ContextKey = "machine_context"
+	EndConditionsContextKey ContextKey = "end_conditions_context"
+	ToolsContextKey         ContextKey = "tools_context"
+	StreamContextKey        ContextKey = "stream_context"
+	PartEmitterContextKey   ContextKey = "part_emitter_context"
+	AccumulatorContextKey   ContextKey = "accumulator_context"
 )
 
-func (e *ExecutionContext) ModelName() string {
+func (e *ToolExecutionsArchive) ModelName() string {
 	return e.LanguageModelContext.ModelName
 }
 
-func (e *ExecutionContext) AddStep(stepName string, toolCalled *ToolCall) {
-	e.stepLocker.Lock()
-	defer e.stepLocker.Unlock()
+func (e *ToolExecutionsArchive) AddToolCall(stepName string, toolCalled *ToolCall) {
+	e.recordsLocker.Lock()
+	defer e.recordsLocker.Unlock()
 
-	step := Step{
+	record := ToolExecutionRecord{
 		Name:       stepName,
 		ToolCalled: toolCalled,
 	}
-	e.steps = append(e.steps, step)
+	e.records = append(e.records, record)
 }
 
-func (e *ExecutionContext) AddStepWithResult(stepName string, toolResult *ToolExecuteOutput) {
-	e.stepLocker.Lock()
-	defer e.stepLocker.Unlock()
+func (e *ToolExecutionsArchive) AddToolCallWithResult(stepName string, toolResult *ToolExecuteOutput) {
+	e.recordsLocker.Lock()
+	defer e.recordsLocker.Unlock()
 
-	step := Step{
+	step := ToolExecutionRecord{
 		Name:       stepName,
 		ToolCalled: toolResult.ToolCall,
 		ToolResult: toolResult,
 	}
 
-	e.steps = append(e.steps, step)
+	e.records = append(e.records, step)
 }
 
-func (e *ExecutionContext) Steps() []Step {
-	e.stepLocker.Lock()
-	defer e.stepLocker.Unlock()
+func (e *ToolExecutionsArchive) Records() []ToolExecutionRecord {
+	e.recordsLocker.Lock()
+	defer e.recordsLocker.Unlock()
 
-	return e.steps
+	return e.records
 }
-func (e *ExecutionContext) StepCount() int {
-	e.stepLocker.Lock()
-	defer e.stepLocker.Unlock()
+func (e *ToolExecutionsArchive) RecordCount() int {
+	e.recordsLocker.Lock()
+	defer e.recordsLocker.Unlock()
 
-	return len(e.steps)
+	return len(e.records)
 }
 
-func (e *ExecutionContext) Step(index int) (*Step, error) {
-	e.stepLocker.Lock()
-	defer e.stepLocker.Unlock()
+func (e *ToolExecutionsArchive) Record(index int) (*ToolExecutionRecord, error) {
+	e.recordsLocker.Lock()
+	defer e.recordsLocker.Unlock()
 
-	if index < 0 || index >= len(e.steps) {
+	if index < 0 || index >= len(e.records) {
 		return nil, fmt.Errorf("step index out of range")
 	}
-	return &e.steps[index], nil
+	return &e.records[index], nil
 }
-func (e *ExecutionContext) LastStep() *Step {
-	e.stepLocker.Lock()
-	defer e.stepLocker.Unlock()
+func (e *ToolExecutionsArchive) LastRecord() *ToolExecutionRecord {
+	e.recordsLocker.Lock()
+	defer e.recordsLocker.Unlock()
 
-	if len(e.steps) == 0 {
+	if len(e.records) == 0 {
 		return nil
 	}
-	return &e.steps[len(e.steps)-1]
+	return &e.records[len(e.records)-1]
 }
-func (e *ExecutionContext) UpdateLastStepResult(result *ToolExecuteOutput) {
-	e.stepLocker.Lock()
-	defer e.stepLocker.Unlock()
+func (e *ToolExecutionsArchive) UpdateLastRecordResult(result *ToolExecuteOutput) {
+	e.recordsLocker.Lock()
+	defer e.recordsLocker.Unlock()
 
-	if len(e.steps) == 0 {
+	if len(e.records) == 0 {
 		return
 	}
 
-	result.ToolCall = e.steps[len(e.steps)-1].ToolCalled
-	e.steps[len(e.steps)-1].ToolResult = result
+	result.ToolCall = e.records[len(e.records)-1].ToolCalled
+	e.records[len(e.records)-1].ToolResult = result
 }
-func (e *ExecutionContext) UpdateLastStepError(err error) {
-	e.UpdateLastStepResult(&ToolExecuteOutput{
+func (e *ToolExecutionsArchive) UpdateLastRecordError(err error) {
+	e.UpdateLastRecordResult(&ToolExecuteOutput{
 		Error: err,
 	})
 }
 
 //go:generate mockgen -source=model.go -destination=../tests/mocks/mock_context.go -package=mocks
-func NewExecutionContextFromLanguageModelContext(context LanguageModelContext) *ExecutionContext {
-	return &ExecutionContext{
+func NewExecutionContextFromLanguageModelContext(context LanguageModelContext) *ToolExecutionsArchive {
+	return &ToolExecutionsArchive{
 		LanguageModelContext: context,
-		steps:                []Step{},
+		records:              []ToolExecutionRecord{},
 	}
 }

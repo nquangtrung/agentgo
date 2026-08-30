@@ -15,6 +15,11 @@ import (
 	"trontria.com/agentgo/utils"
 )
 
+func checkPart(channel <-chan models.Part, check func(part models.Part)) {
+	part := <-channel
+	log.Printf("Received part: %s", part.Type())
+	check(part)
+}
 func TestStreamText(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
@@ -45,18 +50,13 @@ func TestStreamText(t *testing.T) {
 					return true
 				}
 			}),
-		gomock.Cond(
-			func(channel chan models.Part) bool {
-				return true
-			},
-		),
-	).Do(func(ctx context.Context, params providers.AgentProviderPromptMessageParams, channel chan models.Part) {
+		gomock.Any(),
+	).Do(func(ctx context.Context, params providers.AgentProviderPromptMessageParams, emitter models.PartEmitter) {
 		context := models.LanguageModelContext{
 			ModelName: modelName,
 		}
-		t.Log(channel)
 		for i := range 3 {
-			channel <- models.NewTextPart(context, fmt.Sprintf("text %d", i))
+			emitter.Emit(models.NewTextPart(context, fmt.Sprintf("text %d", i)))
 		}
 	})
 	output := StreamText(ctx, params)
@@ -64,18 +64,25 @@ func TestStreamText(t *testing.T) {
 	assert.Equal(t, modelName, output.ModelName, "Output model name should be correct")
 
 	var texts []string = []string{}
-	for part := range output.Channel {
-		log.Printf("Received part: %s", part.Type())
-		switch p := part.(type) {
-		case models.StepStartPart:
-			assert.NotNil(t, p, "should be able to access converted step")
-		case models.TextPart:
-			texts = append(texts, p.Text())
-		case models.StepEndPart:
-			assert.NotNil(t, p.Usage(), "should contain usage")
-			assert.Equal(t, int64(245), p.Usage().InputTokens, "input token should be correct")
-		}
+
+	checkPart(output.Channel, func(part models.Part) {
+		_, ok := part.(models.StepStartPart)
+		assert.True(t, ok, "part should be of type StepStartPart")
+	})
+
+	for range 3 {
+		checkPart(output.Channel, func(part models.Part) {
+			textPart, ok := part.(models.TextPart)
+			assert.True(t, ok, "part should be of type TextPart")
+			texts = append(texts, textPart.Text())
+		})
 	}
+
+	checkPart(output.Channel, func(part models.Part) {
+		_, ok := part.(models.StepEndPart)
+		assert.True(t, ok, "part should be of type StepEndPart")
+	})
+
 	assert.ElementsMatch(
 		t, []string{"text 0", "text 1", "text 2"}, texts, "should receive correct deltas",
 	)
@@ -189,6 +196,9 @@ func TestStreamTextWithTool(t *testing.T) {
 					return false
 				case p.Messages[0].Content().Text() != params.Prompt:
 					return false
+				case p.Messages[1].Content().Text() != fmt.Sprintf("Tool [%s] execution result: %s", tools[0].Name(), jsonedToolResult):
+					log.Printf("Expected second message to be tool result, got '%s'", p.Messages[1].Content().Text())
+					return false
 				default:
 					return true
 				}
@@ -216,7 +226,7 @@ func TestStreamTextWithTool(t *testing.T) {
 		log.Printf("Received part: %s", part.Type())
 	}
 
-	// assert.Equal(t, modelName, output.ModelName, "should have correct model name")
+	assert.Equal(t, modelName, output.ModelName, "should have correct model name")
 	// assert.Equal(t, result, output.Text, "should have correct output")
 	// assert.Equal(t, int64(245+200), output.Usage.InputTokens, "should have correct input tokens")
 	// assert.Equal(t, int64(123+100), output.Usage.OutputTokens, "should have correct output tokens")

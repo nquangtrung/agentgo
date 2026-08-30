@@ -87,13 +87,16 @@ func (mr *MockAgentProviderMockRecorder) ResolveToolCall(ctx, params, toolParams
 }
 
 // StreamText mocks base method.
-func (m *MockAgentProvider) StreamText(ctx context.Context, params providers.AgentProviderPromptMessageParams, channel chan models.Part) {
+func (m *MockAgentProvider) StreamText(ctx context.Context, params providers.AgentProviderPromptMessageParams, emitter models.PartEmitter) (models.LanguageModelOutput, error) {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "StreamText", ctx, params, channel)
+	ret := m.ctrl.Call(m, "StreamText", ctx, params, emitter)
+	ret0, _ := ret[0].(models.LanguageModelOutput)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // StreamText indicates an expected call of StreamText.
-func (mr *MockAgentProviderMockRecorder) StreamText(ctx, params, channel any) *gomock.Call {
+func (mr *MockAgentProviderMockRecorder) StreamText(ctx, params, emitter any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StreamText", reflect.TypeOf((*MockAgentProvider)(nil).StreamText), ctx, params, channel)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StreamText", reflect.TypeOf((*MockAgentProvider)(nil).StreamText), ctx, params, emitter)
 }

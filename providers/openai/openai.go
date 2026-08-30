@@ -3,6 +3,7 @@ package openai
 import (
 	"context"
 	"log"
+	"strings"
 
 	"github.com/openai/openai-go/v3"
 	"github.com/openai/openai-go/v3/option"
@@ -38,29 +39,39 @@ func (p OpenAIProvider) GenerateText(ctx context.Context, params providers.Agent
 	}, nil
 }
 
-func (p OpenAIProvider) StreamText(ctx context.Context, params providers.AgentProviderPromptMessageParams, channel chan models.Part) {
+func (p OpenAIProvider) StreamText(ctx context.Context, params providers.AgentProviderPromptMessageParams, emitter models.PartEmitter) (models.LanguageModelOutput, error) {
 	stream := p.response.NewStreaming(ctx, responses.ResponseNewParams{
 		Model: p.BaseAgentProvider.Context().ModelName,
 		Input: convertInputFromParams(params),
 	})
 
-	channel <- models.NewStepStartPart(p.Context(), "streaming started")
+	emitter.Emit(models.NewStepStartPart(p.Context(), "streaming started"))
 
+	builder := strings.Builder{}
+	usage := models.LanguageModelUsage{}
 	for stream.Next() {
 		chunk := stream.Current()
 		log.Println("Received chunk:", chunk.Type)
 		switch chunk.Type {
 		case "response.output_text.delta":
-			channel <- models.NewTextPart(p.Context(), string(chunk.Delta))
+			emitter.Emit(models.NewTextPart(p.Context(), string(chunk.Delta)))
+			builder.Write([]byte(chunk.Delta))
 		case "response.completed":
-			channel <- models.NewStepEndPart(p.Context(), "stream completed", models.NewLanguageModelUsage(
-				int64(chunk.Response.Usage.OutputTokens),
-				int64(chunk.Response.Usage.InputTokens),
-				int64(chunk.Response.Usage.InputTokensDetails.CachedTokens)+int64(chunk.Response.Usage.InputTokensDetails.CacheWriteTokens),
-				int64(chunk.Response.Usage.OutputTokensDetails.ReasoningTokens),
-			))
+			usage = models.LanguageModelUsage{
+				OutputTokens:    int64(chunk.Response.Usage.OutputTokens),
+				InputTokens:     int64(chunk.Response.Usage.InputTokens),
+				CachedTokens:    int64(chunk.Response.Usage.InputTokensDetails.CachedTokens) + int64(chunk.Response.Usage.InputTokensDetails.CacheWriteTokens),
+				ReasoningTokens: int64(chunk.Response.Usage.OutputTokensDetails.ReasoningTokens),
+			}
+			emitter.Emit(models.NewStepEndPart(p.Context(), "stream completed", usage))
 		}
 	}
+
+	return models.LanguageModelOutput{
+		Text:      builder.String(),
+		Usage:     usage,
+		ModelName: p.BaseAgentProvider.Context().ModelName,
+	}, nil
 }
 
 func (p OpenAIProvider) ResolveToolCall(ctx context.Context, params providers.AgentProviderPromptMessageParams, toolParams []models.BaseTool) ([]models.ToolCall, error) {

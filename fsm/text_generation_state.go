@@ -5,7 +5,6 @@ import (
 
 	"trontria.com/agentgo/models"
 	"trontria.com/agentgo/providers"
-	"trontria.com/agentgo/utils"
 )
 
 type TextGenerationState struct {
@@ -28,23 +27,20 @@ func resolveTextOutputAsToolExecuteOutput(textOutput models.LanguageModelOutput,
 	}
 }
 
+type ExecutionContextAccumulator = func(acc *models.ToolExecutionsArchive, item *models.ToolExecuteOutput, messages *[]models.Message)
+
 func (s *TextGenerationState) Execute(ctx context.Context, fsmCtx *AgentContext) (State[AgentContext], error) {
 	provider := ctx.Value(models.ProviderContextKey).(providers.AgentProvider)
-	runner := ctx.Value(models.RunnerContextKey).(*utils.Runner[*models.ToolExecuteOutput, models.ExecutionContext])
 	messages := fsmCtx.Messages
 
-	runner.Execute(
-		"text",
-		func(acc *models.ExecutionContext) (*models.ToolExecuteOutput, error) {
-			output := resolveTextOutputAsToolExecuteOutput(
-				provider.GenerateText(ctx, providers.AgentProviderPromptMessageParams{
-					Messages: *messages,
-				}),
-			)
-			return &output, nil
-		},
-		fsmCtx.ExecutionContext,
+	output := resolveTextOutputAsToolExecuteOutput(
+		provider.GenerateText(ctx, providers.AgentProviderPromptMessageParams{
+			Messages: *messages,
+		}),
 	)
 
-	return &AfterTextGenerationState{}, nil
+	models.AccumulateToolCallResult(fsmCtx.ToolExecutionsArchive, &output, messages)
+	return &AfterTextGenerationState{
+		output: &output,
+	}, nil
 }
