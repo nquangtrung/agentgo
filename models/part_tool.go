@@ -40,7 +40,7 @@ type BaseToolStartPart struct {
 
 type BaseToolResultPart struct {
 	BaseToolPart
-	EndPartImpl
+	BaseEndPart
 	data map[string]any
 }
 
@@ -50,7 +50,7 @@ func (t BaseToolResultPart) Result() map[string]any {
 
 type BaseToolErrorPart struct {
 	BaseToolPart
-	EndPartImpl
+	BaseEndPart
 	error error
 }
 
@@ -72,7 +72,7 @@ func NewToolStartPart(context LanguageModelContext, toolName string) *BaseToolSt
 
 func NewToolResultPart(context LanguageModelContext, toolName string, result ToolExecuteOutput) *BaseToolResultPart {
 	return &BaseToolResultPart{
-		EndPartImpl: NewEndPart(result.Usage, FinishReasonCompleted),
+		BaseEndPart: NewEndPart(result.Usage, FinishReasonCompleted),
 		BaseToolPart: BaseToolPart{
 			BasePart: BasePart{
 				partType: PartTypeToolResult,
@@ -86,7 +86,7 @@ func NewToolResultPart(context LanguageModelContext, toolName string, result Too
 
 func NewToolErrorPart(context LanguageModelContext, toolName string, usage LanguageModelUsage, error error) *BaseToolErrorPart {
 	return &BaseToolErrorPart{
-		EndPartImpl: NewEndPart(usage, FinishReasonFailed),
+		BaseEndPart: NewEndPart(usage, FinishReasonFailed),
 		BaseToolPart: BaseToolPart{
 			BasePart: BasePart{
 				partType: PartTypeToolError,

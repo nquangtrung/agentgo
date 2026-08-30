@@ -17,7 +17,7 @@ type StepPartImpl struct {
 
 type BaseStepStartPart struct {
 	StepPartImpl
-	StartPartImpl
+	BaseStartPart
 }
 
 type StepEndPart interface {
@@ -28,7 +28,7 @@ type StepEndPart interface {
 
 type BaseStepEndPart struct {
 	StepPartImpl
-	EndPartImpl
+	BaseEndPart
 }
 
 func (s StepPartImpl) StepName() string {
@@ -56,7 +56,7 @@ func NewStepEndPart(context LanguageModelContext, stepName string, usage Languag
 			},
 			stepName: stepName,
 		},
-		EndPartImpl: NewEndPart(usage, FinishReasonCompleted),
+		BaseEndPart: NewEndPart(usage, FinishReasonCompleted),
 	}
 }
 
@@ -69,7 +69,7 @@ type StepErrorPart interface {
 
 type BaseStepErrorPart struct {
 	StepPartImpl
-	EndPartImpl
+	BaseEndPart
 	error error
 }
 
@@ -86,7 +86,7 @@ func NewStepErrorPart(context LanguageModelContext, stepName string, usage Langu
 			},
 			stepName: stepName,
 		},
-		EndPartImpl: NewEndPart(usage, FinishReasonFailed),
+		BaseEndPart: NewEndPart(usage, FinishReasonFailed),
 		error:       err,
 	}
 }

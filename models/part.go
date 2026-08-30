@@ -27,7 +27,6 @@ const (
 	FinishReasonTimeout   FinishReason = "timeout"
 )
 
-//go:generate mockgen -destination=../mocks/mock_part.go -package=mocks trontria.com/agentgo/models Part
 type Part interface {
 	Context() LanguageModelContext
 	Type() PartType
@@ -52,33 +51,73 @@ func NewPart(context LanguageModelContext, partType PartType) BasePart {
 	}
 }
 
-//go:generate mockgen -destination=../mocks/mock_start_part.go -package=mocks trontria.com/agentgo/models StartPart
 type StartPart interface {
 	At() time.Time
 }
-type StartPartImpl struct {
+type BaseStartPart struct {
 	at time.Time
 }
 
-func (s *StartPartImpl) At() time.Time { return s.at }
+func (s *BaseStartPart) At() time.Time { return s.at }
 
-//go:generate mockgen -destination=../mocks/mock_end_part.go -package=mocks trontria.com/agentgo/models EndPart
 type EndPart interface {
 	Usage() LanguageModelUsage
 	FinishReason() FinishReason
 }
 
-type EndPartImpl struct {
+type BaseEndPart struct {
 	usage        LanguageModelUsage
 	finishReason FinishReason
 }
 
-func (p EndPartImpl) Usage() LanguageModelUsage  { return p.usage }
-func (p EndPartImpl) FinishReason() FinishReason { return p.finishReason }
+func (p BaseEndPart) Usage() LanguageModelUsage  { return p.usage }
+func (p BaseEndPart) FinishReason() FinishReason { return p.finishReason }
 
-func NewEndPart(usage LanguageModelUsage, finishReason FinishReason) EndPartImpl {
-	return EndPartImpl{
+func NewEndPart(usage LanguageModelUsage, finishReason FinishReason) BaseEndPart {
+	return BaseEndPart{
 		usage:        usage,
 		finishReason: finishReason,
+	}
+}
+
+type ProcessStartPart interface {
+	Part
+	StartPart
+}
+
+type BaseProcessStartPart struct {
+	BasePart
+	BaseStartPart
+}
+
+func NewProcessStartPart(context LanguageModelContext) *BaseProcessStartPart {
+	return &BaseProcessStartPart{
+		BasePart: BasePart{
+			partType: PartTypeStart,
+			context:  context,
+		},
+		BaseStartPart: BaseStartPart{
+			at: time.Now(),
+		},
+	}
+}
+
+type ProcessEndPart interface {
+	Part
+	EndPart
+}
+
+type BaseProcessEndPart struct {
+	BasePart
+	BaseEndPart
+}
+
+func NewProcessEndPart(context LanguageModelContext, usage LanguageModelUsage, finishReason FinishReason) *BaseProcessEndPart {
+	return &BaseProcessEndPart{
+		BasePart: BasePart{
+			partType: PartTypeEnd,
+			context:  context,
+		},
+		BaseEndPart: NewEndPart(usage, finishReason),
 	}
 }

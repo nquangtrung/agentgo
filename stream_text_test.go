@@ -17,7 +17,7 @@ import (
 
 func checkPart(channel <-chan models.Part, check func(part models.Part)) {
 	part := <-channel
-	log.Printf("Received part: %s", part.Type())
+	log.Printf("Received part: %v+", part)
 	check(part)
 }
 func TestStreamText(t *testing.T) {
@@ -66,10 +66,13 @@ func TestStreamText(t *testing.T) {
 	var texts []string = []string{}
 
 	checkPart(output.Channel, func(part models.Part) {
+		_, ok := part.(models.ProcessStartPart)
+		assert.True(t, ok, "part should be of type ProcessStartPart")
+	})
+	checkPart(output.Channel, func(part models.Part) {
 		_, ok := part.(models.StepStartPart)
 		assert.True(t, ok, "part should be of type StepStartPart")
 	})
-
 	for range 3 {
 		checkPart(output.Channel, func(part models.Part) {
 			textPart, ok := part.(models.TextPart)
@@ -77,10 +80,13 @@ func TestStreamText(t *testing.T) {
 			texts = append(texts, textPart.Text())
 		})
 	}
-
 	checkPart(output.Channel, func(part models.Part) {
 		_, ok := part.(models.StepEndPart)
 		assert.True(t, ok, "part should be of type StepEndPart")
+	})
+	checkPart(output.Channel, func(part models.Part) {
+		_, ok := part.(models.ProcessEndPart)
+		assert.True(t, ok, "part should be of type ProcessEndPart")
 	})
 
 	assert.ElementsMatch(
