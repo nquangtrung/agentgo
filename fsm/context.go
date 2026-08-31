@@ -5,8 +5,9 @@ import (
 )
 
 type Step struct {
-	StepIndex int
-	Usage     models.LanguageModelUsage
+	StepIndex         int
+	Usage             models.LanguageModelUsage
+	PrepareStepResult PrepareStepResult
 }
 
 type AgentContext struct {

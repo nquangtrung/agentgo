@@ -42,6 +42,7 @@ const (
 	StreamContextKey        ContextKey = "stream_context"
 	PartEmitterContextKey   ContextKey = "part_emitter_context"
 	AccumulatorContextKey   ContextKey = "accumulator_context"
+	PrepareStepFnContextKey ContextKey = "prepare_step_fn_context"
 )
 
 func (e *ToolExecutionsArchive) ModelName() string {

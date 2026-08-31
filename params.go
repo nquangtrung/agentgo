@@ -1,6 +1,7 @@
 package agentgo
 
 import (
+	"trontria.com/agentgo/fsm"
 	"trontria.com/agentgo/models"
 	"trontria.com/agentgo/providers"
 )
@@ -12,4 +13,5 @@ type Params struct {
 	Messages      []models.Message
 	Tools         []models.BaseTool
 	EndConditions []models.EndCondition
+	PrepareStep   fsm.PrepareStepFn
 }

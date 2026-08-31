@@ -24,6 +24,7 @@ func StreamText(ctx context.Context, params Params) models.LanguageModelStreamOu
 	ctx = context.WithValue(ctx, models.ToolsContextKey, params.Tools)
 	ctx = context.WithValue(ctx, models.StreamContextKey, true)
 	ctx = context.WithValue(ctx, models.PartEmitterContextKey, emitter)
+	ctx = context.WithValue(ctx, models.PrepareStepFnContextKey, params.PrepareStep)
 
 	var wg sync.WaitGroup
 	wg.Go(func() {

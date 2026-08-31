@@ -21,6 +21,7 @@ func GenerateText(ctx context.Context, params Params) (models.LanguageModelOutpu
 	ctx = context.WithValue(ctx, models.ToolsContextKey, params.Tools)
 	ctx = context.WithValue(ctx, models.StreamContextKey, false)
 	ctx = context.WithValue(ctx, models.PartEmitterContextKey, emitter)
+	ctx = context.WithValue(ctx, models.PrepareStepFnContextKey, params.PrepareStep)
 
 	agentContext := fsm.AgentContext{
 		ToolExecutionsArchive: execContext,
