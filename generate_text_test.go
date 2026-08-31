@@ -9,6 +9,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
+	"trontria.com/agentgo/endconditions"
 	"trontria.com/agentgo/mocks"
 	"trontria.com/agentgo/models"
 	"trontria.com/agentgo/providers"
@@ -122,7 +123,7 @@ func TestGenerateTextWithTool(t *testing.T) {
 		Prompt:   prompt,
 		Provider: mockProvider,
 		EndConditions: []models.EndCondition{
-			models.NewMaxStepsEndCondition(5),
+			endconditions.NewMaxStepsEndCondition(5),
 		},
 		Tools: tools,
 	}
@@ -260,7 +261,7 @@ func TestGenerateTextStopsAtMaxSteps(t *testing.T) {
 		Prompt:   prompt,
 		Provider: mockProvider,
 		EndConditions: []models.EndCondition{
-			models.NewMaxStepsEndCondition(1),
+			endconditions.NewMaxStepsEndCondition(1),
 		},
 		Tools: tools,
 	})
@@ -321,7 +322,7 @@ func TestGenerateTextMultipleToolCalls(t *testing.T) {
 	output, err := GenerateText(ctx, Params{
 		Prompt:        prompt,
 		Provider:      mockProvider,
-		EndConditions: []models.EndCondition{models.NewMaxStepsEndCondition(10)},
+		EndConditions: []models.EndCondition{endconditions.NewMaxStepsEndCondition(10)},
 		Tools:         tools,
 	})
 	assert.NoError(t, err)

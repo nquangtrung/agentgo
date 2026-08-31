@@ -27,20 +27,25 @@ func (p OpenAIProvider) GenerateText(ctx context.Context, params providers.Agent
 		return models.LanguageModelOutput{}, err
 	}
 
-	return models.LanguageModelOutput{
-		Text: resp.OutputText(),
-		Usage: models.LanguageModelUsage{
-			InputTokens: int64(resp.Usage.InputTokens),
-			InputTokensDetails: models.LanguageModelUsageInputTokensDetails{
-				CachedTokens:     int64(resp.Usage.InputTokensDetails.CachedTokens),
-				CacheWriteTokens: int64(resp.Usage.InputTokensDetails.CacheWriteTokens),
-			},
-			OutputTokens: int64(resp.Usage.OutputTokens),
-			OutputTokensDetails: models.LanguageModelUsageOutputTokensDetails{
-				ReasoningTokens: int64(resp.Usage.OutputTokensDetails.ReasoningTokens),
-			},
-			TotalTokens: int64(resp.Usage.TotalTokens),
+	usage := models.LanguageModelUsage{
+		InputTokens: int64(resp.Usage.InputTokens),
+		InputTokensDetails: models.LanguageModelUsageInputTokensDetails{
+			CachedTokens:     int64(resp.Usage.InputTokensDetails.CachedTokens),
+			CacheWriteTokens: int64(resp.Usage.InputTokensDetails.CacheWriteTokens),
 		},
+		OutputTokens: int64(resp.Usage.OutputTokens),
+		OutputTokensDetails: models.LanguageModelUsageOutputTokensDetails{
+			ReasoningTokens: int64(resp.Usage.OutputTokensDetails.ReasoningTokens),
+		},
+		TotalTokens: int64(resp.Usage.TotalTokens),
+	}
+	if usage.TotalTokens == 0 {
+		usage.TotalTokens = usage.InputTokens + usage.OutputTokens
+	}
+
+	return models.LanguageModelOutput{
+		Text:      resp.OutputText(),
+		Usage:     usage,
 		ModelName: p.BaseAgentProvider.Context().ModelName,
 	}, nil
 }
@@ -74,6 +79,9 @@ func (p OpenAIProvider) StreamText(ctx context.Context, params providers.AgentPr
 					ReasoningTokens: int64(chunk.Response.Usage.OutputTokensDetails.ReasoningTokens),
 				},
 				TotalTokens: int64(chunk.Response.Usage.TotalTokens),
+			}
+			if usage.TotalTokens == 0 {
+				usage.TotalTokens = usage.InputTokens + usage.OutputTokens
 			}
 			emitter.Emit(models.NewStepEndPart(p.Context(), "stream completed", usage))
 		}

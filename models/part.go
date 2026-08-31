@@ -1,6 +1,8 @@
 package models
 
-import "time"
+import (
+	"time"
+)
 
 type PartType string
 
@@ -45,15 +47,13 @@ func (p BasePart) Context() LanguageModelContext { return p.context }
 func (p BasePart) isPart()                       {}
 
 func NewPart(context LanguageModelContext, partType PartType) BasePart {
-	return BasePart{
-		partType: partType,
-		context:  context,
-	}
+	return BasePart{partType: partType, context: context}
 }
 
 type StartPart interface {
 	At() time.Time
 }
+
 type BaseStartPart struct {
 	at time.Time
 }
@@ -74,10 +74,7 @@ func (p BaseEndPart) Usage() LanguageModelUsage  { return p.usage }
 func (p BaseEndPart) FinishReason() FinishReason { return p.finishReason }
 
 func NewEndPart(usage LanguageModelUsage, finishReason FinishReason) BaseEndPart {
-	return BaseEndPart{
-		usage:        usage,
-		finishReason: finishReason,
-	}
+	return BaseEndPart{usage: usage, finishReason: finishReason}
 }
 
 type ProcessStartPart interface {
@@ -92,13 +89,8 @@ type BaseProcessStartPart struct {
 
 func NewProcessStartPart(context LanguageModelContext) *BaseProcessStartPart {
 	return &BaseProcessStartPart{
-		BasePart: BasePart{
-			partType: PartTypeStart,
-			context:  context,
-		},
-		BaseStartPart: BaseStartPart{
-			at: time.Now(),
-		},
+		BasePart:      BasePart{partType: PartTypeStart, context: context},
+		BaseStartPart: BaseStartPart{at: time.Now()},
 	}
 }
 
@@ -114,10 +106,7 @@ type BaseProcessEndPart struct {
 
 func NewProcessEndPart(context LanguageModelContext, usage LanguageModelUsage, finishReason FinishReason) *BaseProcessEndPart {
 	return &BaseProcessEndPart{
-		BasePart: BasePart{
-			partType: PartTypeEnd,
-			context:  context,
-		},
+		BasePart:    BasePart{partType: PartTypeEnd, context: context},
 		BaseEndPart: NewEndPart(usage, finishReason),
 	}
 }

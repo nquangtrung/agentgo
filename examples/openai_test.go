@@ -3,12 +3,11 @@ package main
 import (
 	"context"
 	"log"
+	"testing"
 
 	"trontria.com/agentgo"
 	"trontria.com/agentgo/models"
 	"trontria.com/agentgo/utils"
-
-	"testing"
 )
 
 func TestGenerateTextOpenAI(t *testing.T) {

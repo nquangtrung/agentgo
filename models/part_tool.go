@@ -24,9 +24,7 @@ type BaseToolPart struct {
 	toolName string
 }
 
-func (t BaseToolPart) ToolName() string {
-	return t.toolName
-}
+func (t BaseToolPart) ToolName() string { return t.toolName }
 
 type ToolStartPart interface {
 	Part
@@ -44,9 +42,7 @@ type BaseToolResultPart struct {
 	data map[string]any
 }
 
-func (t BaseToolResultPart) Result() map[string]any {
-	return t.data
-}
+func (t BaseToolResultPart) Result() map[string]any { return t.data }
 
 type BaseToolErrorPart struct {
 	BaseToolPart
@@ -54,17 +50,12 @@ type BaseToolErrorPart struct {
 	error error
 }
 
-func (t BaseToolErrorPart) Error() error {
-	return t.error
-}
+func (t BaseToolErrorPart) Error() error { return t.error }
 
 func NewToolStartPart(context LanguageModelContext, toolName string) *BaseToolStartPart {
 	return &BaseToolStartPart{
 		BaseToolPart: BaseToolPart{
-			BasePart: BasePart{
-				partType: PartTypeToolStart,
-				context:  context,
-			},
+			BasePart: BasePart{partType: PartTypeToolStart, context: context},
 			toolName: toolName,
 		},
 	}
@@ -72,28 +63,37 @@ func NewToolStartPart(context LanguageModelContext, toolName string) *BaseToolSt
 
 func NewToolResultPart(context LanguageModelContext, toolName string, result ToolExecuteOutput) *BaseToolResultPart {
 	return &BaseToolResultPart{
-		BaseEndPart: NewEndPart(result.Usage, FinishReasonCompleted),
+		BaseEndPart: NewEndPart(llmUsageFromModels(result.Usage), FinishReasonCompleted),
 		BaseToolPart: BaseToolPart{
-			BasePart: BasePart{
-				partType: PartTypeToolResult,
-				context:  context,
-			},
+			BasePart: BasePart{partType: PartTypeToolResult, context: context},
 			toolName: toolName,
 		},
 		data: result.Output,
 	}
 }
 
-func NewToolErrorPart(context LanguageModelContext, toolName string, usage LanguageModelUsage, error error) *BaseToolErrorPart {
+func NewToolErrorPart(context LanguageModelContext, toolName string, usage LanguageModelUsage, err error) *BaseToolErrorPart {
 	return &BaseToolErrorPart{
 		BaseEndPart: NewEndPart(usage, FinishReasonFailed),
 		BaseToolPart: BaseToolPart{
-			BasePart: BasePart{
-				partType: PartTypeToolError,
-				context:  context,
-			},
+			BasePart: BasePart{partType: PartTypeToolError, context: context},
 			toolName: toolName,
 		},
-		error: error,
+		error: err,
+	}
+}
+
+func llmUsageFromModels(u LanguageModelUsage) LanguageModelUsage {
+	return LanguageModelUsage{
+		InputTokens: u.InputTokens,
+		InputTokensDetails: LanguageModelUsageInputTokensDetails{
+			CachedTokens:     u.InputTokensDetails.CachedTokens,
+			CacheWriteTokens: u.InputTokensDetails.CacheWriteTokens,
+		},
+		OutputTokens: u.OutputTokens,
+		OutputTokensDetails: LanguageModelUsageOutputTokensDetails{
+			ReasoningTokens: u.OutputTokensDetails.ReasoningTokens,
+		},
+		TotalTokens: u.TotalTokens,
 	}
 }

@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"trontria.com/agentgo"
+	"trontria.com/agentgo/endconditions"
 	"trontria.com/agentgo/models"
 	"trontria.com/agentgo/utils"
 
@@ -18,7 +19,7 @@ func TestGenerateTextWithToolOpenAI(t *testing.T) {
 		ModelName: "gpt-5-mini",
 		Prompt:    "Hello, can you tell me the temperature in New York?",
 		EndConditions: []models.EndCondition{
-			models.NewMaxStepsEndCondition(5),
+			endconditions.NewMaxStepsEndCondition(5),
 		},
 		Tools: []models.BaseTool{
 			models.NewTool(models.NewToolParams{

@@ -20,10 +20,7 @@ func (t BaseTextPart) Text() string {
 
 func NewTextPart(context LanguageModelContext, text string) *BaseTextPart {
 	return &BaseTextPart{
-		BasePart: BasePart{
-			partType: PartTypeText,
-			context:  context,
-		},
-		text: text,
+		BasePart: BasePart{partType: PartTypeText, context: context},
+		text:     text,
 	}
 }

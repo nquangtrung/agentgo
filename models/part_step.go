@@ -38,10 +38,7 @@ func (s StepPartImpl) StepName() string {
 func NewStepStartPart(context LanguageModelContext, stepName string) *BaseStepStartPart {
 	return &BaseStepStartPart{
 		StepPartImpl: StepPartImpl{
-			BasePart: BasePart{
-				partType: PartTypeStepStart,
-				context:  context,
-			},
+			BasePart: BasePart{partType: PartTypeStepStart, context: context},
 			stepName: stepName,
 		},
 	}
@@ -50,10 +47,7 @@ func NewStepStartPart(context LanguageModelContext, stepName string) *BaseStepSt
 func NewStepEndPart(context LanguageModelContext, stepName string, usage LanguageModelUsage) *BaseStepEndPart {
 	return &BaseStepEndPart{
 		StepPartImpl: StepPartImpl{
-			BasePart: BasePart{
-				partType: PartTypeStepEnd,
-				context:  context,
-			},
+			BasePart: BasePart{partType: PartTypeStepEnd, context: context},
 			stepName: stepName,
 		},
 		BaseEndPart: NewEndPart(usage, FinishReasonCompleted),
@@ -80,10 +74,7 @@ func (s BaseStepErrorPart) Error() error {
 func NewStepErrorPart(context LanguageModelContext, stepName string, usage LanguageModelUsage, err error) *BaseStepErrorPart {
 	return &BaseStepErrorPart{
 		StepPartImpl: StepPartImpl{
-			BasePart: BasePart{
-				partType: PartTypeStepError,
-				context:  context,
-			},
+			BasePart: BasePart{partType: PartTypeStepError, context: context},
 			stepName: stepName,
 		},
 		BaseEndPart: NewEndPart(usage, FinishReasonFailed),

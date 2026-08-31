@@ -12,12 +12,9 @@ func (e *PartEmitter) Emit(part Part) {
 }
 
 func NewPartEmitter(channel chan Part) *PartEmitter {
-	return &PartEmitter{
-		channel: channel,
-	}
+	return &PartEmitter{channel: channel}
 }
 
 func NewEmptyPartEmitter() *PartEmitter {
 	return NewPartEmitter(nil)
-
 }

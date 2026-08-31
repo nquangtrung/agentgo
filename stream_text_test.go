@@ -9,6 +9,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
+	"trontria.com/agentgo/endconditions"
 	"trontria.com/agentgo/mocks"
 	"trontria.com/agentgo/models"
 	"trontria.com/agentgo/providers"
@@ -137,7 +138,7 @@ func TestStreamTextWithTool(t *testing.T) {
 		Prompt:   prompt,
 		Provider: mockProvider,
 		EndConditions: []models.EndCondition{
-			models.NewMaxStepsEndCondition(5),
+			endconditions.NewMaxStepsEndCondition(5),
 		},
 		Tools: tools,
 	}
@@ -304,7 +305,7 @@ func TestStreamTextStopsAtMaxSteps(t *testing.T) {
 	output := StreamText(ctx, Params{
 		Prompt:        prompt,
 		Provider:      mockProvider,
-		EndConditions: []models.EndCondition{models.NewMaxStepsEndCondition(1)},
+		EndConditions: []models.EndCondition{endconditions.NewMaxStepsEndCondition(1)},
 		Tools:         tools,
 	})
 
@@ -373,7 +374,7 @@ func TestStreamTextMultipleToolCalls(t *testing.T) {
 	output := StreamText(ctx, Params{
 		Prompt:        prompt,
 		Provider:      mockProvider,
-		EndConditions: []models.EndCondition{models.NewMaxStepsEndCondition(10)},
+		EndConditions: []models.EndCondition{endconditions.NewMaxStepsEndCondition(10)},
 		Tools:         tools,
 	})
 
