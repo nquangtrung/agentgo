@@ -23,5 +23,5 @@ func (s *AfterTextGenerationState) Execute(ctx context.Context, fsmCtx *AgentCon
 		s.output.Usage,
 	)
 
-	return &StepEndState{toEnd: true}, nil
+	return &FinalizedState{}, nil
 }

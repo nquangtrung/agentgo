@@ -8,10 +8,9 @@ import (
 )
 
 type StepEndState struct {
-	toEnd bool
 }
 
-func (s *StepEndState) Execute(ctx context.Context, fsmCtx *AgentContext) (State[AgentContext], error) {
+func finalizeStep(ctx context.Context, fsmCtx *AgentContext) {
 	provider := ctx.Value(models.ProviderContextKey).(providers.AgentProvider)
 	emitter := ctx.Value(models.PartEmitterContextKey).(*models.PartEmitter)
 	emitter.Emit(models.NewStepEndPart(
@@ -24,9 +23,9 @@ func (s *StepEndState) Execute(ctx context.Context, fsmCtx *AgentContext) (State
 		fsmCtx.TotalUsage,
 		fsmCtx.CurrentStep.Usage,
 	)
-	if !s.toEnd {
-		return &StepStartState{}, nil
-	} else {
-		return &EndState{}, nil
-	}
+}
+
+func (s *StepEndState) Execute(ctx context.Context, fsmCtx *AgentContext) (State[AgentContext], error) {
+	finalizeStep(ctx, fsmCtx)
+	return &StepStartState{}, nil
 }
