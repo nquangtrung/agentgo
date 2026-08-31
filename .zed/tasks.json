@@ -1,0 +1,9 @@
+
+[
+  {
+    "label": "Run tests in the current file",
+    "command": "go test -v -run $ZED_FILE",
+    "allow_concurrent_runs": false,
+    "use_new_terminal": false,
+  }
+]
