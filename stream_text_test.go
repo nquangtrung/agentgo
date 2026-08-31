@@ -122,10 +122,12 @@ func TestStreamTextWithTool(t *testing.T) {
 				return models.ToolExecuteOutput{
 					Output: toolResult,
 					Usage: models.LanguageModelUsage{
-						OutputTokens:    100,
-						InputTokens:     200,
-						CachedTokens:    20,
-						ReasoningTokens: 0,
+						OutputTokens: 100,
+						InputTokens:  200,
+						InputTokensDetails: models.LanguageModelUsageInputTokensDetails{
+							CachedTokens: 20,
+						},
+						TotalTokens: 300,
 					},
 				}
 			},
@@ -210,36 +212,187 @@ func TestStreamTextWithTool(t *testing.T) {
 					return true
 				}
 			}),
-		gomock.Cond(
-			func(channel chan models.Part) bool {
-				return true
-			},
-		),
-	).Do(func(ctx context.Context, params providers.AgentProviderPromptMessageParams, channel chan models.Part) {
+		gomock.Any(),
+	).DoAndReturn(func(ctx context.Context, params providers.AgentProviderPromptMessageParams, emitter models.PartEmitter) (models.LanguageModelOutput, error) {
 		log.Printf("StreamText called with params: %v", params)
 		context := models.LanguageModelContext{
 			ModelName: modelName,
 		}
 		for i := range 3 {
-			channel <- models.NewTextPart(context, fmt.Sprintf("text %d", i))
+			emitter.Emit(models.NewTextPart(context, fmt.Sprintf("text %d", i)))
 		}
+		return models.LanguageModelOutput{
+			Text: "text 0text 1text 2",
+			Usage: models.LanguageModelUsage{
+				OutputTokens: 123,
+				InputTokens:  245,
+				InputTokensDetails: models.LanguageModelUsageInputTokensDetails{
+					CachedTokens: 21,
+				},
+				OutputTokensDetails: models.LanguageModelUsageOutputTokensDetails{
+					ReasoningTokens: 12,
+				},
+				TotalTokens: 368,
+			},
+			ModelName: modelName,
+		}, nil
 	})
 
 	output := StreamText(ctx, params)
 	assert.NotNil(t, output.Channel, "Output channel should not be nil")
 	assert.Equal(t, modelName, output.ModelName, "Output model name should be correct")
 
+	var endPart models.ProcessEndPart
+	var texts []string
 	for part := range output.Channel {
 		log.Printf("Received part: %s", part.Type())
+		switch p := part.(type) {
+		case models.ProcessEndPart:
+			endPart = p
+		case models.TextPart:
+			texts = append(texts, p.Text())
+		}
 	}
 
+	assert.NotNil(t, endPart, "process end part should be emitted")
 	assert.Equal(t, modelName, output.ModelName, "should have correct model name")
-	// assert.Equal(t, result, output.Text, "should have correct output")
-	// assert.Equal(t, int64(245+200), output.Usage.InputTokens, "should have correct input tokens")
-	// assert.Equal(t, int64(123+100), output.Usage.OutputTokens, "should have correct output tokens")
-	// assert.Equal(t, int64(21+20), output.Usage.CachedTokens, "should have correct cached token")
-	// assert.Equal(t, int64(12+0), output.Usage.ReasoningTokens, "should have correct reasoning token")
-	// assert.Equal(t, 2, len(output.Context.Steps()), "should have correct number of steps")
-	// assert.Equal(t, "mock_tool", utils.Must(output.Context.Step(0)).Name, "should have correct first step name")
-	// assert.Equal(t, toolResult, utils.Must(output.Context.Step(0)).ToolResult.Output, "should have correct result in first step")
+	assert.ElementsMatch(t, []string{"text 0", "text 1", "text 2"}, texts, "should receive correct deltas")
+	assert.Equal(t, int64(245+200), endPart.Usage().InputTokens, "should have correct input tokens")
+	assert.Equal(t, int64(123+100), endPart.Usage().OutputTokens, "should have correct output tokens")
+	assert.Equal(t, int64(21+20), endPart.Usage().InputTokensDetails.CachedTokens, "should have correct cached token")
+	assert.Equal(t, int64(12+0), endPart.Usage().OutputTokensDetails.ReasoningTokens, "should have correct reasoning token")
+}
+
+func TestStreamTextStopsAtMaxSteps(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockProvider := mocks.NewMockAgentProvider(ctrl)
+	prompt := "Stop after one tool call"
+	modelName := "mocked-llm-3.6-flash"
+	ctx := context.Background()
+	tools := []models.BaseTool{
+		models.NewTool(models.NewToolParams{
+			Name: "mock_tool",
+			Fn: func(params models.ToolExecuteParams) models.ToolExecuteOutput {
+				assert.Equal(t, map[string]any{"param": "value"}, params.Input)
+				return models.ToolExecuteOutput{
+					Output: map[string]any{"status": "ok"},
+					Usage: models.LanguageModelUsage{
+						OutputTokens: 40,
+						InputTokens:  50,
+						InputTokensDetails: models.LanguageModelUsageInputTokensDetails{
+							CachedTokens: 5,
+						},
+						OutputTokensDetails: models.LanguageModelUsageOutputTokensDetails{
+							ReasoningTokens: 4,
+						},
+						TotalTokens: 90,
+					},
+				}
+			},
+		}),
+	}
+
+	mockProvider.EXPECT().Context().AnyTimes().Return(models.LanguageModelContext{ModelName: modelName})
+	mockProvider.EXPECT().ResolveToolCall(
+		gomock.Any(),
+		gomock.Any(),
+		gomock.Eq(tools),
+	).Return([]models.ToolCall{{ToolName: "mock_tool", Params: map[string]any{"param": "value"}}}, nil)
+
+	output := StreamText(ctx, Params{
+		Prompt:        prompt,
+		Provider:      mockProvider,
+		EndConditions: []models.EndCondition{models.NewMaxStepsEndCondition(1)},
+		Tools:         tools,
+	})
+
+	var endPart models.ProcessEndPart
+	for part := range output.Channel {
+		if p, ok := part.(models.ProcessEndPart); ok {
+			endPart = p
+		}
+	}
+
+	assert.Equal(t, modelName, output.ModelName)
+	assert.NotNil(t, endPart)
+	assert.Equal(t, int64(50), endPart.Usage().InputTokens)
+	assert.Equal(t, int64(40), endPart.Usage().OutputTokens)
+	assert.Equal(t, int64(5), endPart.Usage().InputTokensDetails.CachedTokens)
+	assert.Equal(t, int64(4), endPart.Usage().OutputTokensDetails.ReasoningTokens)
+}
+
+func TestStreamTextMultipleToolCalls(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockProvider := mocks.NewMockAgentProvider(ctrl)
+	prompt := "Run both tools"
+	modelName := "mocked-llm-3.6-flash"
+	ctx := context.Background()
+	tool1Params := map[string]any{"first": "value1"}
+	tool2Params := map[string]any{"second": "value2"}
+	tool1Result := map[string]any{"result": "first"}
+	tool2Result := map[string]any{"result": "second"}
+	tool1Usage := models.LanguageModelUsage{OutputTokens: 10, InputTokens: 20, InputTokensDetails: models.LanguageModelUsageInputTokensDetails{CachedTokens: 2}, OutputTokensDetails: models.LanguageModelUsageOutputTokensDetails{ReasoningTokens: 1}, TotalTokens: 30}
+	tool2Usage := models.LanguageModelUsage{OutputTokens: 25, InputTokens: 30, InputTokensDetails: models.LanguageModelUsageInputTokensDetails{CachedTokens: 3}, OutputTokensDetails: models.LanguageModelUsageOutputTokensDetails{ReasoningTokens: 2}, TotalTokens: 55}
+	finalUsage := models.LanguageModelUsage{OutputTokens: 35, InputTokens: 40, InputTokensDetails: models.LanguageModelUsageInputTokensDetails{CachedTokens: 4}, OutputTokensDetails: models.LanguageModelUsageOutputTokensDetails{ReasoningTokens: 3}, TotalTokens: 75}
+	tools := []models.BaseTool{
+		models.NewTool(models.NewToolParams{Name: "first_tool", Fn: func(params models.ToolExecuteParams) models.ToolExecuteOutput {
+			assert.Equal(t, tool1Params, params.Input)
+			return models.ToolExecuteOutput{Output: tool1Result, Usage: tool1Usage}
+		}}),
+		models.NewTool(models.NewToolParams{Name: "second_tool", Fn: func(params models.ToolExecuteParams) models.ToolExecuteOutput {
+			assert.Equal(t, tool2Params, params.Input)
+			return models.ToolExecuteOutput{Output: tool2Result, Usage: tool2Usage}
+		}}),
+	}
+
+	gomock.InOrder(
+		mockProvider.EXPECT().ResolveToolCall(
+			gomock.Any(),
+			gomock.Any(),
+			gomock.Eq(tools),
+		).Return([]models.ToolCall{{ToolName: "first_tool", Params: tool1Params}, {ToolName: "second_tool", Params: tool2Params}}, nil),
+		mockProvider.EXPECT().ResolveToolCall(
+			gomock.Any(),
+			gomock.Any(),
+			gomock.Eq(tools),
+		).Return(nil, nil),
+	)
+	mockProvider.EXPECT().Context().AnyTimes().Return(models.LanguageModelContext{ModelName: modelName})
+	mockProvider.EXPECT().StreamText(
+		gomock.Any(),
+		gomock.Any(),
+		gomock.Any(),
+	).Do(func(ctx context.Context, params providers.AgentProviderPromptMessageParams, emitter models.PartEmitter) {
+		emitter.Emit(models.NewTextPart(models.LanguageModelContext{ModelName: modelName}, "done"))
+	}).Return(models.LanguageModelOutput{Text: "done", Usage: finalUsage, ModelName: modelName}, nil)
+
+	output := StreamText(ctx, Params{
+		Prompt:        prompt,
+		Provider:      mockProvider,
+		EndConditions: []models.EndCondition{models.NewMaxStepsEndCondition(10)},
+		Tools:         tools,
+	})
+
+	var endPart models.ProcessEndPart
+	var textParts []string
+	for part := range output.Channel {
+		switch p := part.(type) {
+		case models.ProcessEndPart:
+			endPart = p
+		case models.TextPart:
+			textParts = append(textParts, p.Text())
+		}
+	}
+
+	assert.Equal(t, modelName, output.ModelName)
+	assert.NotNil(t, endPart)
+	assert.Equal(t, []string{"done"}, textParts)
+	assert.Equal(t, int64(20+30+40), endPart.Usage().InputTokens)
+	assert.Equal(t, int64(10+25+35), endPart.Usage().OutputTokens)
+	assert.Equal(t, int64(2+3+4), endPart.Usage().InputTokensDetails.CachedTokens)
+	assert.Equal(t, int64(1+2+3), endPart.Usage().OutputTokensDetails.ReasoningTokens)
 }

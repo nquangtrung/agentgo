@@ -23,9 +23,15 @@ func AccumulateToolCallResult(acc *ToolExecutionsArchive, item *ToolExecuteOutpu
 
 func AccumulateUsage(u1 LanguageModelUsage, u2 LanguageModelUsage) LanguageModelUsage {
 	return LanguageModelUsage{
-		InputTokens:     u1.InputTokens + u2.InputTokens,
-		OutputTokens:    u1.OutputTokens + u2.OutputTokens,
-		CachedTokens:    u1.CachedTokens + u2.CachedTokens,
-		ReasoningTokens: u1.ReasoningTokens + u2.ReasoningTokens,
+		InputTokens: u1.InputTokens + u2.InputTokens,
+		InputTokensDetails: LanguageModelUsageInputTokensDetails{
+			CachedTokens:     u1.InputTokensDetails.CachedTokens + u2.InputTokensDetails.CachedTokens,
+			CacheWriteTokens: u1.InputTokensDetails.CacheWriteTokens + u2.InputTokensDetails.CacheWriteTokens,
+		},
+		OutputTokens: u1.OutputTokens + u2.OutputTokens,
+		OutputTokensDetails: LanguageModelUsageOutputTokensDetails{
+			ReasoningTokens: u1.OutputTokensDetails.ReasoningTokens + u2.OutputTokensDetails.ReasoningTokens,
+		},
+		TotalTokens: u1.TotalTokens + u2.TotalTokens,
 	}
 }

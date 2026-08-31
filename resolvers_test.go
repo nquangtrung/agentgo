@@ -31,10 +31,12 @@ func TestResolveExecutionContextAsTextOutput(t *testing.T) {
 			"key1": "value1",
 		},
 		Usage: models.LanguageModelUsage{
-			OutputTokens:    100,
-			InputTokens:     10,
-			CachedTokens:    20,
-			ReasoningTokens: 0,
+			OutputTokens: 100,
+			InputTokens:  10,
+			InputTokensDetails: models.LanguageModelUsageInputTokensDetails{
+				CachedTokens: 20,
+			},
+			TotalTokens: 110,
 		},
 	})
 	execCtx.AddToolCall("tool-step: mock_tool_2",
@@ -51,10 +53,12 @@ func TestResolveExecutionContextAsTextOutput(t *testing.T) {
 			"key2": "value2",
 		},
 		Usage: models.LanguageModelUsage{
-			OutputTokens:    200,
-			InputTokens:     200,
-			CachedTokens:    20,
-			ReasoningTokens: 0,
+			OutputTokens: 200,
+			InputTokens:  200,
+			InputTokensDetails: models.LanguageModelUsageInputTokensDetails{
+				CachedTokens: 20,
+			},
+			TotalTokens: 400,
 		},
 	})
 
@@ -79,10 +83,15 @@ func TestResolveExecutionContextAsTextOutput(t *testing.T) {
 			"text": "final-output",
 		},
 		Usage: models.LanguageModelUsage{
-			OutputTokens:    2200,
-			InputTokens:     300,
-			CachedTokens:    20,
-			ReasoningTokens: 20,
+			OutputTokens: 2200,
+			InputTokens:  300,
+			InputTokensDetails: models.LanguageModelUsageInputTokensDetails{
+				CachedTokens: 20,
+			},
+			OutputTokensDetails: models.LanguageModelUsageOutputTokensDetails{
+				ReasoningTokens: 20,
+			},
+			TotalTokens: 2500,
 		},
 	})
 
@@ -92,8 +101,8 @@ func TestResolveExecutionContextAsTextOutput(t *testing.T) {
 	assert.Equal(t, "final-output", output.Text, "expected last output to match")
 	assert.Equal(t, int64(300+200+10), output.Usage.InputTokens, "expected input tokens to match")
 	assert.Equal(t, int64(2200+200+100), output.Usage.OutputTokens, "expected output tokens to match")
-	assert.Equal(t, int64(20+20+20), output.Usage.CachedTokens, "expected cached tokens to match")
-	assert.Equal(t, int64(20+0+0), output.Usage.ReasoningTokens, "expected reasoning tokens to match")
+	assert.Equal(t, int64(20+20+20), output.Usage.InputTokensDetails.CachedTokens, "expected cached tokens to match")
+	assert.Equal(t, int64(20+0+0), output.Usage.OutputTokensDetails.ReasoningTokens, "expected reasoning tokens to match")
 	assert.Equal(t, 4, len(output.Context.Records()), "expected number of steps to match")
 
 	assert.Equal(t, "text-step: final-output", utils.Must(output.Context.Record(3)).Name, "expected fourth step name to match")

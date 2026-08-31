@@ -88,10 +88,16 @@ func resolveExecutionContextAsTextOutput(context *models.ToolExecutionsArchive) 
 		context.Records(),
 		func(acc models.LanguageModelUsage, step models.ToolExecutionRecord) models.LanguageModelUsage {
 			return models.LanguageModelUsage{
-				InputTokens:     acc.InputTokens + step.ToolResult.Usage.InputTokens,
-				OutputTokens:    acc.OutputTokens + step.ToolResult.Usage.OutputTokens,
-				CachedTokens:    acc.CachedTokens + step.ToolResult.Usage.CachedTokens,
-				ReasoningTokens: acc.ReasoningTokens + step.ToolResult.Usage.ReasoningTokens,
+				InputTokens: acc.InputTokens + step.ToolResult.Usage.InputTokens,
+				InputTokensDetails: models.LanguageModelUsageInputTokensDetails{
+					CachedTokens:     acc.InputTokensDetails.CachedTokens + step.ToolResult.Usage.InputTokensDetails.CachedTokens,
+					CacheWriteTokens: acc.InputTokensDetails.CacheWriteTokens + step.ToolResult.Usage.InputTokensDetails.CacheWriteTokens,
+				},
+				OutputTokens: acc.OutputTokens + step.ToolResult.Usage.OutputTokens,
+				OutputTokensDetails: models.LanguageModelUsageOutputTokensDetails{
+					ReasoningTokens: acc.OutputTokensDetails.ReasoningTokens + step.ToolResult.Usage.OutputTokensDetails.ReasoningTokens,
+				},
+				TotalTokens: acc.TotalTokens + step.ToolResult.Usage.TotalTokens,
 			}
 		},
 		models.LanguageModelUsage{},

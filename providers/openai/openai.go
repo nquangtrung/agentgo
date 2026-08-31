@@ -30,10 +30,16 @@ func (p OpenAIProvider) GenerateText(ctx context.Context, params providers.Agent
 	return models.LanguageModelOutput{
 		Text: resp.OutputText(),
 		Usage: models.LanguageModelUsage{
-			OutputTokens:    int64(resp.Usage.OutputTokens),
-			InputTokens:     int64(resp.Usage.InputTokens),
-			CachedTokens:    int64(resp.Usage.InputTokensDetails.CachedTokens) + int64(resp.Usage.InputTokensDetails.CacheWriteTokens),
-			ReasoningTokens: int64(resp.Usage.OutputTokensDetails.ReasoningTokens),
+			InputTokens: int64(resp.Usage.InputTokens),
+			InputTokensDetails: models.LanguageModelUsageInputTokensDetails{
+				CachedTokens:     int64(resp.Usage.InputTokensDetails.CachedTokens),
+				CacheWriteTokens: int64(resp.Usage.InputTokensDetails.CacheWriteTokens),
+			},
+			OutputTokens: int64(resp.Usage.OutputTokens),
+			OutputTokensDetails: models.LanguageModelUsageOutputTokensDetails{
+				ReasoningTokens: int64(resp.Usage.OutputTokensDetails.ReasoningTokens),
+			},
+			TotalTokens: int64(resp.Usage.TotalTokens),
 		},
 		ModelName: p.BaseAgentProvider.Context().ModelName,
 	}, nil
@@ -58,10 +64,16 @@ func (p OpenAIProvider) StreamText(ctx context.Context, params providers.AgentPr
 			builder.Write([]byte(chunk.Delta))
 		case "response.completed":
 			usage = models.LanguageModelUsage{
-				OutputTokens:    int64(chunk.Response.Usage.OutputTokens),
-				InputTokens:     int64(chunk.Response.Usage.InputTokens),
-				CachedTokens:    int64(chunk.Response.Usage.InputTokensDetails.CachedTokens) + int64(chunk.Response.Usage.InputTokensDetails.CacheWriteTokens),
-				ReasoningTokens: int64(chunk.Response.Usage.OutputTokensDetails.ReasoningTokens),
+				InputTokens: int64(chunk.Response.Usage.InputTokens),
+				InputTokensDetails: models.LanguageModelUsageInputTokensDetails{
+					CachedTokens:     int64(chunk.Response.Usage.InputTokensDetails.CachedTokens),
+					CacheWriteTokens: int64(chunk.Response.Usage.InputTokensDetails.CacheWriteTokens),
+				},
+				OutputTokens: int64(chunk.Response.Usage.OutputTokens),
+				OutputTokensDetails: models.LanguageModelUsageOutputTokensDetails{
+					ReasoningTokens: int64(chunk.Response.Usage.OutputTokensDetails.ReasoningTokens),
+				},
+				TotalTokens: int64(chunk.Response.Usage.TotalTokens),
 			}
 			emitter.Emit(models.NewStepEndPart(p.Context(), "stream completed", usage))
 		}

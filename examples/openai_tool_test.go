@@ -54,6 +54,8 @@ func TestGenerateTextWithToolOpenAI(t *testing.T) {
 	log.Printf("Text: %s\n", output.Text)
 	log.Printf("Input Tokens: %d\n", output.Usage.InputTokens)
 	log.Printf("Output Tokens: %d\n", output.Usage.OutputTokens)
-	log.Printf("Cached Tokens: %d\n", output.Usage.CachedTokens)
-	log.Printf("Reasoning Tokens: %d\n", output.Usage.ReasoningTokens)
+	log.Printf("Cached Tokens: %d\n", output.Usage.InputTokensDetails.CachedTokens)
+	log.Printf("Cache Write Tokens: %d\n", output.Usage.InputTokensDetails.CacheWriteTokens)
+	log.Printf("Reasoning Tokens: %d\n", output.Usage.OutputTokensDetails.ReasoningTokens)
+	log.Printf("Total Tokens: %d\n", output.Usage.TotalTokens)
 }

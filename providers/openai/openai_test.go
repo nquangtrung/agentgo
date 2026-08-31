@@ -47,10 +47,16 @@ func TestGenerateText(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, "Great, thank you!", output.Text)
 	assert.Equal(t, models.LanguageModelUsage{
-		InputTokens:     125,
-		OutputTokens:    256,
-		CachedTokens:    50, // 20 + 30
-		ReasoningTokens: 50,
+		InputTokens: 125,
+		InputTokensDetails: models.LanguageModelUsageInputTokensDetails{
+			CachedTokens:     30,
+			CacheWriteTokens: 20,
+		},
+		OutputTokens: 256,
+		OutputTokensDetails: models.LanguageModelUsageOutputTokensDetails{
+			ReasoningTokens: 50,
+		},
+		TotalTokens: 381,
 	}, output.Usage)
 }
 

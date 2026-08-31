@@ -6,18 +6,33 @@ import (
 )
 
 type LanguageModelUsage struct {
-	OutputTokens    int64
-	InputTokens     int64
-	CachedTokens    int64
+	InputTokens         int64
+	InputTokensDetails  LanguageModelUsageInputTokensDetails
+	OutputTokens        int64
+	OutputTokensDetails LanguageModelUsageOutputTokensDetails
+	TotalTokens         int64
+}
+
+type LanguageModelUsageInputTokensDetails struct {
+	CachedTokens     int64
+	CacheWriteTokens int64
+}
+
+type LanguageModelUsageOutputTokensDetails struct {
 	ReasoningTokens int64
 }
 
 func NewLanguageModelUsage(outputTokens, inputTokens, cachedTokens, reasoningTokens int64) LanguageModelUsage {
 	return LanguageModelUsage{
-		OutputTokens:    outputTokens,
-		InputTokens:     inputTokens,
-		CachedTokens:    cachedTokens,
-		ReasoningTokens: reasoningTokens,
+		InputTokens: inputTokens,
+		InputTokensDetails: LanguageModelUsageInputTokensDetails{
+			CachedTokens: cachedTokens,
+		},
+		OutputTokens: outputTokens,
+		OutputTokensDetails: LanguageModelUsageOutputTokensDetails{
+			ReasoningTokens: reasoningTokens,
+		},
+		TotalTokens: inputTokens + outputTokens,
 	}
 }
 
