@@ -23,6 +23,14 @@ func (s *PredicateState) Execute(ctx context.Context, fsmCtx *AgentContext) (Sta
 	endConditions := ctx.Value(models.EndConditionsContextKey).([]models.EndCondition)
 	tools := ctx.Value(models.ToolsContextKey).([]models.BaseTool)
 
+	step := fsmCtx.CurrentStep
+	if step.PrepareStepResult.ToolChoice != nil {
+		toolChoice := step.PrepareStepResult.ToolChoice
+		if toolChoice.Name != "" {
+			return &ToolResolveState{}, nil
+		}
+	}
+
 	switch {
 	case fsmCtx.TextGenerated:
 		return &FinalizedState{}, nil

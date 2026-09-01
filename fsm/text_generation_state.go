@@ -31,15 +31,15 @@ type ExecutionContextAccumulator = func(acc *models.ToolExecutionsArchive, item 
 
 func (s *TextGenerationState) Execute(ctx context.Context, fsmCtx *AgentContext) (State[AgentContext], error) {
 	provider := ctx.Value(models.ProviderContextKey).(providers.AgentProvider)
-	messages := fsmCtx.Messages
+	messages := fsmCtx.ResolveCurrentStepMessages(ctx)
 
 	output := resolveTextOutputAsToolExecuteOutput(
 		provider.GenerateText(ctx, providers.AgentProviderPromptMessageParams{
-			Messages: *messages,
+			Messages: messages,
 		}),
 	)
 
-	models.AccumulateToolCallResult(fsmCtx.ToolExecutionsArchive, &output, messages)
+	models.AccumulateToolCallResult(fsmCtx.ToolExecutionsArchive, &output, fsmCtx.Messages)
 	return &AfterTextGenerationState{
 		output: &output,
 	}, nil

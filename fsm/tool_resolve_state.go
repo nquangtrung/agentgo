@@ -37,12 +37,12 @@ func executeToolCall(_ context.Context, toolCall models.ToolCall, tools []models
 
 func (s *ToolResolveState) Execute(ctx context.Context, fsmCtx *AgentContext) (State[AgentContext], error) {
 	provider := ctx.Value(models.ProviderContextKey).(providers.AgentProvider)
-	tools := ctx.Value(models.ToolsContextKey).([]models.BaseTool)
 	emitter := ctx.Value(models.PartEmitterContextKey).(*models.PartEmitter)
 
-	messages := fsmCtx.Messages
+	messages := fsmCtx.ResolveCurrentStepMessages(ctx)
 
-	toolCalls, err := provider.ResolveToolCall(ctx, providers.AgentProviderPromptMessageParams{Messages: *messages}, tools)
+	tools := fsmCtx.ResolveCurrentStepActiveTools(ctx)
+	toolCalls, err := provider.ResolveToolCall(ctx, providers.AgentProviderPromptMessageParams{Messages: messages}, tools)
 	if err != nil {
 		return &PredicateState{}, err
 	}
@@ -78,7 +78,7 @@ func (s *ToolResolveState) Execute(ctx context.Context, fsmCtx *AgentContext) (S
 				result.Usage,
 				result.Error,
 			))
-			models.AccumulateToolCallResult(fsmCtx.ToolExecutionsArchive, result, messages)
+			models.AccumulateToolCallResult(fsmCtx.ToolExecutionsArchive, result, fsmCtx.Messages)
 			fsmCtx.CurrentStep.Usage = models.AccumulateUsage(fsmCtx.CurrentStep.Usage, result.Usage)
 		default:
 			emitter.Emit(models.NewToolResultPart(
@@ -86,7 +86,7 @@ func (s *ToolResolveState) Execute(ctx context.Context, fsmCtx *AgentContext) (S
 				toolCall.ToolName,
 				*result,
 			))
-			models.AccumulateToolCallResult(fsmCtx.ToolExecutionsArchive, result, messages)
+			models.AccumulateToolCallResult(fsmCtx.ToolExecutionsArchive, result, fsmCtx.Messages)
 			fsmCtx.CurrentStep.Usage = models.AccumulateUsage(fsmCtx.CurrentStep.Usage, result.Usage)
 		}
 	})
