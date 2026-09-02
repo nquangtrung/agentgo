@@ -5,19 +5,13 @@ import (
 
 	"trontria.com/agentgo/models"
 	"trontria.com/agentgo/providers"
+	"trontria.com/agentgo/utils"
 )
 
 type TextGenerationState struct {
 }
 
-func resolveTextOutputAsToolExecuteOutput(textOutput models.LanguageModelOutput, err error) models.ToolExecuteOutput {
-	if err != nil {
-		return models.ToolExecuteOutput{
-			Output: nil,
-			Error:  err,
-			Usage:  textOutput.Usage,
-		}
-	}
+func resolveTextOutputAsToolExecuteOutput(textOutput models.LanguageModelOutput) models.ToolExecuteOutput {
 	return models.ToolExecuteOutput{
 		Output: map[string]any{
 			"text": textOutput.Text,
@@ -33,14 +27,23 @@ func (s *TextGenerationState) Execute(ctx context.Context, fsmCtx *AgentContext)
 	provider := ctx.Value(models.ProviderContextKey).(providers.AgentProvider)
 	messages := fsmCtx.ResolveCurrentStepMessages(ctx)
 
-	output := resolveTextOutputAsToolExecuteOutput(
-		provider.GenerateText(ctx, providers.AgentProviderPromptMessageParams{
-			Messages: messages,
-		}),
-	)
+	output, err := provider.GenerateText(ctx, providers.AgentProviderPromptMessageParams{
+		Messages: messages,
+	})
 
-	models.AccumulateToolCallResult(fsmCtx.ToolExecutionsArchive, &output, fsmCtx.Messages)
-	return &AfterTextGenerationState{
-		output: &output,
-	}, nil
+	switch {
+	case err == nil:
+		outputAsToolExecuteOutput := resolveTextOutputAsToolExecuteOutput(output)
+		models.AccumulateToolCallResult(fsmCtx.ToolExecutionsArchive, &outputAsToolExecuteOutput, fsmCtx.Messages)
+		return &AfterTextGenerationState{
+			output: &outputAsToolExecuteOutput,
+		}, nil
+	case utils.IsTransientError(err):
+		return &RetryState{
+			OriginalState: s,
+		}, nil
+	default:
+		// go to error state, and end the loop
+		return &ErrorState{Err: err}, nil
+	}
 }

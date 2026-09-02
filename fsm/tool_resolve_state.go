@@ -44,7 +44,9 @@ func (s *ToolResolveState) Execute(ctx context.Context, fsmCtx *AgentContext) (S
 	tools := fsmCtx.ResolveCurrentStepActiveTools(ctx)
 	toolCalls, err := provider.ResolveToolCall(ctx, providers.AgentProviderPromptMessageParams{Messages: messages}, tools)
 	if err != nil {
-		return &PredicateState{}, err
+		return &RetryState{
+			OriginalState: s,
+		}, nil
 	}
 
 	if len(toolCalls) == 0 {

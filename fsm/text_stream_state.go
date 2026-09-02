@@ -2,10 +2,10 @@ package fsm
 
 import (
 	"context"
-	"log"
 
 	"trontria.com/agentgo/models"
 	"trontria.com/agentgo/providers"
+	"trontria.com/agentgo/utils"
 )
 
 type TextStreamState struct {
@@ -16,18 +16,25 @@ func (s *TextStreamState) Execute(ctx context.Context, fsmCtx *AgentContext) (St
 	emitter := ctx.Value(models.PartEmitterContextKey).(*models.PartEmitter)
 
 	messages := fsmCtx.ResolveCurrentStepMessages(ctx)
-	output := resolveTextOutputAsToolExecuteOutput(
-		provider.StreamText(
-			ctx,
-			providers.AgentProviderPromptMessageParams{Messages: messages},
-			*emitter,
-		),
+	output, err := provider.StreamText(
+		ctx,
+		providers.AgentProviderPromptMessageParams{Messages: messages},
+		*emitter,
 	)
 
-	log.Printf("TextStreamState: Finished streaming text")
-	models.AccumulateToolCallResult(fsmCtx.ToolExecutionsArchive, &output, fsmCtx.Messages)
-
-	return &AfterTextGenerationState{
-		output: &output,
-	}, nil
+	switch {
+	case err == nil:
+		outputAsToolExecuteOutput := resolveTextOutputAsToolExecuteOutput(output)
+		models.AccumulateToolCallResult(fsmCtx.ToolExecutionsArchive, &outputAsToolExecuteOutput, fsmCtx.Messages)
+		return &AfterTextGenerationState{
+			output: &outputAsToolExecuteOutput,
+		}, nil
+	case utils.IsTransientError(err):
+		return &RetryState{
+			OriginalState: s,
+		}, nil
+	default:
+		// go to error state, and end the loop
+		return &ErrorState{Err: err}, nil
+	}
 }

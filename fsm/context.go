@@ -2,6 +2,7 @@ package fsm
 
 import (
 	"context"
+	"time"
 
 	"trontria.com/agentgo/models"
 )
@@ -21,6 +22,9 @@ type AgentContext struct {
 	CurrentStep Step
 
 	TotalUsage models.LanguageModelUsage
+
+	RetryCount    int
+	LastRetryWait time.Duration
 }
 
 func (ac *AgentContext) ResolveCurrentStepMessages(_ context.Context) []models.Message {
