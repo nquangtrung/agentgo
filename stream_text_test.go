@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 	"trontria.com/agentgo/endconditions"
+	"trontria.com/agentgo/fsm"
 	"trontria.com/agentgo/mocks"
 	"trontria.com/agentgo/models"
 	"trontria.com/agentgo/providers"
@@ -396,4 +397,633 @@ func TestStreamTextMultipleToolCalls(t *testing.T) {
 	assert.Equal(t, int64(10+25+35), endPart.Usage().OutputTokens)
 	assert.Equal(t, int64(2+3+4), endPart.Usage().InputTokensDetails.CachedTokens)
 	assert.Equal(t, int64(1+2+3), endPart.Usage().OutputTokensDetails.ReasoningTokens)
+}
+
+// ============================================================================
+// RETRY AND ERROR HANDLING TESTS
+// ============================================================================
+
+func TestStreamTextToolNotFoundError(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockProvider := mocks.NewMockAgentProvider(ctrl)
+	prompt := "Call a tool that doesn't exist"
+	modelName := "mocked-llm-3.6-flash"
+	ctx := context.Background()
+	tools := []models.BaseTool{
+		models.NewTool(models.NewToolParams{
+			Name: "existing_tool",
+			Fn: func(params models.ToolExecuteParams) models.ToolExecuteOutput {
+				return models.ToolExecuteOutput{
+					Output: map[string]any{"result": "ok"},
+					Usage: models.LanguageModelUsage{
+						OutputTokens: 10,
+						InputTokens:  20,
+						TotalTokens:  30,
+					},
+				}
+			},
+		}),
+	}
+
+	mockProvider.EXPECT().Context().AnyTimes().Return(models.LanguageModelContext{ModelName: modelName})
+	// First call returns a tool call for a non-existent tool
+	mockProvider.EXPECT().ResolveToolCall(
+		gomock.Any(),
+		gomock.Any(),
+		gomock.Eq(tools),
+	).Return([]models.ToolCall{{ToolName: "non_existent_tool", Params: map[string]any{}}}, nil).Times(1)
+	// Second call (after retry) returns no tool calls
+	mockProvider.EXPECT().ResolveToolCall(
+		gomock.Any(),
+		gomock.Any(),
+		gomock.Eq(tools),
+	).Return(nil, nil).Times(1)
+	mockProvider.EXPECT().StreamText(
+		gomock.Any(),
+		gomock.Any(),
+		gomock.Any(),
+	).Do(func(ctx context.Context, params providers.AgentProviderPromptMessageParams, emitter models.PartEmitter) {
+		emitter.Emit(models.NewTextPart(models.LanguageModelContext{ModelName: modelName}, "done"))
+	}).Return(models.LanguageModelOutput{Text: "done", ModelName: modelName}, nil)
+
+	output := StreamText(ctx, Params{
+		Prompt:        prompt,
+		Provider:      mockProvider,
+		EndConditions: []models.EndCondition{endconditions.NewMaxStepsEndCondition(10)},
+		Tools:         tools,
+	})
+
+	var endPart models.ProcessEndPart
+	for part := range output.Channel {
+		if p, ok := part.(models.ProcessEndPart); ok {
+			endPart = p
+		}
+	}
+
+	assert.Equal(t, modelName, output.ModelName, "should have correct model name")
+	assert.NotNil(t, endPart)
+}
+
+func TestStreamTextToolExecutionError(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockProvider := mocks.NewMockAgentProvider(ctrl)
+	prompt := "Call a tool that fails"
+	modelName := "mocked-llm-3.6-flash"
+	ctx := context.Background()
+	
+	toolExecutionError := fmt.Errorf("tool crashed")
+	tools := []models.BaseTool{
+		models.NewTool(models.NewToolParams{
+			Name: "failing_tool",
+			Fn: func(params models.ToolExecuteParams) models.ToolExecuteOutput {
+				return models.ToolExecuteOutput{
+					Output: nil,
+					Error:  toolExecutionError,
+					Usage: models.LanguageModelUsage{
+						OutputTokens: 10,
+						InputTokens:  20,
+						TotalTokens:  30,
+					},
+				}
+			},
+		}),
+	}
+
+	mockProvider.EXPECT().Context().AnyTimes().Return(models.LanguageModelContext{ModelName: modelName})
+	gomock.InOrder(
+		mockProvider.EXPECT().ResolveToolCall(
+			gomock.Any(),
+			gomock.Any(),
+			gomock.Eq(tools),
+		).Return([]models.ToolCall{{ToolName: "failing_tool", Params: map[string]any{}}}, nil),
+		mockProvider.EXPECT().ResolveToolCall(
+			gomock.Any(),
+			gomock.Any(),
+			gomock.Eq(tools),
+		).Return(nil, nil),
+	)
+	mockProvider.EXPECT().StreamText(
+		gomock.Any(),
+		gomock.Any(),
+		gomock.Any(),
+	).Do(func(ctx context.Context, params providers.AgentProviderPromptMessageParams, emitter models.PartEmitter) {
+		emitter.Emit(models.NewTextPart(models.LanguageModelContext{ModelName: modelName}, "handled error"))
+	}).Return(models.LanguageModelOutput{Text: "handled error", ModelName: modelName}, nil)
+
+	output := StreamText(ctx, Params{
+		Prompt:        prompt,
+		Provider:      mockProvider,
+		EndConditions: []models.EndCondition{endconditions.NewMaxStepsEndCondition(10)},
+		Tools:         tools,
+	})
+
+	var endPart models.ProcessEndPart
+	for part := range output.Channel {
+		if p, ok := part.(models.ProcessEndPart); ok {
+			endPart = p
+		}
+	}
+
+	assert.NotNil(t, endPart)
+	assert.Equal(t, modelName, output.ModelName)
+}
+
+func TestStreamTextResolveToolCallError(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockProvider := mocks.NewMockAgentProvider(ctrl)
+	prompt := "Provider fails to resolve tools"
+	modelName := "mocked-llm-3.6-flash"
+	ctx := context.Background()
+	tools := []models.BaseTool{
+		models.NewTool(models.NewToolParams{
+			Name: "test_tool",
+			Fn: func(params models.ToolExecuteParams) models.ToolExecuteOutput {
+				return models.ToolExecuteOutput{
+					Output: map[string]any{"ok": true},
+					Usage:  models.LanguageModelUsage{OutputTokens: 10, InputTokens: 20, TotalTokens: 30},
+				}
+			},
+		}),
+	}
+
+	mockProvider.EXPECT().Context().AnyTimes().Return(models.LanguageModelContext{ModelName: modelName})
+	// First call fails (triggers retry)
+	mockProvider.EXPECT().ResolveToolCall(
+		gomock.Any(),
+		gomock.Any(),
+		gomock.Eq(tools),
+	).Return(nil, fmt.Errorf("provider error")).Times(1)
+	// After retry, returns successfully
+	mockProvider.EXPECT().ResolveToolCall(
+		gomock.Any(),
+		gomock.Any(),
+		gomock.Eq(tools),
+	).Return(nil, nil).Times(1)
+	mockProvider.EXPECT().StreamText(
+		gomock.Any(),
+		gomock.Any(),
+		gomock.Any(),
+	).Do(func(ctx context.Context, params providers.AgentProviderPromptMessageParams, emitter models.PartEmitter) {
+		emitter.Emit(models.NewTextPart(models.LanguageModelContext{ModelName: modelName}, "recovered"))
+	}).Return(models.LanguageModelOutput{Text: "recovered", ModelName: modelName}, nil)
+
+	output := StreamText(ctx, Params{
+		Prompt:        prompt,
+		Provider:      mockProvider,
+		EndConditions: []models.EndCondition{endconditions.NewMaxStepsEndCondition(10)},
+		Tools:         tools,
+	})
+
+	var endPart models.ProcessEndPart
+	for part := range output.Channel {
+		if p, ok := part.(models.ProcessEndPart); ok {
+			endPart = p
+		}
+	}
+
+	assert.NotNil(t, endPart)
+	assert.Equal(t, modelName, output.ModelName)
+}
+
+// ============================================================================
+// PREPARE STEP OPTIONS TESTS
+// ============================================================================
+
+func TestStreamTextPrepareStepWithToolChoice(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockProvider := mocks.NewMockAgentProvider(ctrl)
+	prompt := "Test prepare step with tool choice"
+	modelName := "mocked-llm-3.6-flash"
+	ctx := context.Background()
+
+	tools := []models.BaseTool{
+		models.NewTool(models.NewToolParams{
+			Name: "tool_a",
+			Fn: func(params models.ToolExecuteParams) models.ToolExecuteOutput {
+				return models.ToolExecuteOutput{
+					Output: map[string]any{"called": "tool_a"},
+					Usage:  models.LanguageModelUsage{OutputTokens: 10, InputTokens: 20, TotalTokens: 30},
+				}
+			},
+		}),
+		models.NewTool(models.NewToolParams{
+			Name: "tool_b",
+			Fn: func(params models.ToolExecuteParams) models.ToolExecuteOutput {
+				return models.ToolExecuteOutput{
+					Output: map[string]any{"called": "tool_b"},
+					Usage:  models.LanguageModelUsage{OutputTokens: 10, InputTokens: 20, TotalTokens: 30},
+				}
+			},
+		}),
+	}
+
+	prepareStep := func(step fsm.Step, ctx fsm.AgentContext) (fsm.PrepareStepResult, error) {
+		// Only first step has tool choice override
+		if step.StepIndex == 1 {
+			return fsm.PrepareStepResult{
+				ToolChoice: &fsm.ToolChoice{Name: "tool_a"},
+			}, nil
+		}
+		return fsm.PrepareStepResult{}, nil
+	}
+
+	mockProvider.EXPECT().Context().AnyTimes().Return(models.LanguageModelContext{ModelName: modelName})
+	mockProvider.EXPECT().ResolveToolCall(
+		gomock.Any(),
+		gomock.Any(),
+		gomock.Any(),
+	).Return(nil, nil).MinTimes(1)
+	mockProvider.EXPECT().StreamText(
+		gomock.Any(),
+		gomock.Any(),
+		gomock.Any(),
+	).Do(func(ctx context.Context, params providers.AgentProviderPromptMessageParams, emitter models.PartEmitter) {
+		emitter.Emit(models.NewTextPart(models.LanguageModelContext{ModelName: modelName}, "done"))
+	}).Return(models.LanguageModelOutput{Text: "done", ModelName: modelName}, nil)
+
+	output := StreamText(ctx, Params{
+		Prompt:      prompt,
+		Provider:    mockProvider,
+		Tools:       tools,
+		PrepareStep: prepareStep,
+		EndConditions: []models.EndCondition{
+			endconditions.NewMaxStepsEndCondition(5),
+		},
+	})
+
+	var endPart models.ProcessEndPart
+	for part := range output.Channel {
+		if p, ok := part.(models.ProcessEndPart); ok {
+			endPart = p
+		}
+	}
+
+	assert.NotNil(t, endPart)
+	assert.Equal(t, modelName, output.ModelName)
+}
+
+func TestStreamTextPrepareStepWithMessages(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockProvider := mocks.NewMockAgentProvider(ctrl)
+	prompt := "Original prompt"
+	modelName := "mocked-llm-3.6-flash"
+	ctx := context.Background()
+
+	tools := []models.BaseTool{
+		models.NewTool(models.NewToolParams{
+			Name: "dummy_tool",
+			Fn: func(params models.ToolExecuteParams) models.ToolExecuteOutput {
+				return models.ToolExecuteOutput{
+					Output: map[string]any{"ok": true},
+					Usage:  models.LanguageModelUsage{OutputTokens: 10, InputTokens: 20, TotalTokens: 30},
+				}
+			},
+		}),
+	}
+
+	prepareStep := func(step fsm.Step, ctx fsm.AgentContext) (fsm.PrepareStepResult, error) {
+		if step.StepIndex == 1 {
+			// Override messages on first step
+			customMessages := []models.Message{
+				models.NewStringMessage("system", "You are a helpful assistant"),
+				models.NewStringMessage("user", "Modified prompt in prepare step"),
+			}
+			return fsm.PrepareStepResult{
+				Messages: &customMessages,
+			}, nil
+		}
+		return fsm.PrepareStepResult{}, nil
+	}
+
+	mockProvider.EXPECT().Context().AnyTimes().Return(models.LanguageModelContext{ModelName: modelName})
+	
+	// Track which messages are passed to ResolveToolCall
+	messageCheckPassed := false
+	mockProvider.EXPECT().ResolveToolCall(
+		gomock.Any(),
+		gomock.Cond(func(p providers.AgentProviderPromptMessageParams) bool {
+			// First call should have modified messages
+			if len(p.Messages) == 2 && p.Messages[1].Content().Text() == "Modified prompt in prepare step" {
+				messageCheckPassed = true
+			}
+			return true
+		}),
+		gomock.Any(),
+	).Return(nil, nil).MinTimes(1)
+
+	mockProvider.EXPECT().StreamText(
+		gomock.Any(),
+		gomock.Any(),
+		gomock.Any(),
+	).Do(func(ctx context.Context, params providers.AgentProviderPromptMessageParams, emitter models.PartEmitter) {
+		emitter.Emit(models.NewTextPart(models.LanguageModelContext{ModelName: modelName}, "done"))
+	}).Return(models.LanguageModelOutput{Text: "done", ModelName: modelName}, nil)
+
+	output := StreamText(ctx, Params{
+		Prompt:      prompt,
+		Provider:    mockProvider,
+		Tools:       tools,
+		PrepareStep: prepareStep,
+		EndConditions: []models.EndCondition{
+			endconditions.NewMaxStepsEndCondition(5),
+		},
+	})
+
+	var endPart models.ProcessEndPart
+	for part := range output.Channel {
+		if p, ok := part.(models.ProcessEndPart); ok {
+			endPart = p
+		}
+	}
+
+	assert.NotNil(t, endPart)
+	assert.True(t, messageCheckPassed, "should have passed modified messages to ResolveToolCall")
+}
+
+func TestStreamTextPrepareStepWithActiveTools(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockProvider := mocks.NewMockAgentProvider(ctrl)
+	prompt := "Test with active tools override"
+	modelName := "mocked-llm-3.6-flash"
+	ctx := context.Background()
+
+	tools := []models.BaseTool{
+		models.NewTool(models.NewToolParams{
+			Name: "tool_1",
+			Fn: func(params models.ToolExecuteParams) models.ToolExecuteOutput {
+				return models.ToolExecuteOutput{
+					Output: map[string]any{"ok": true},
+					Usage:  models.LanguageModelUsage{OutputTokens: 10, InputTokens: 20, TotalTokens: 30},
+				}
+			},
+		}),
+		models.NewTool(models.NewToolParams{
+			Name: "tool_2",
+			Fn: func(params models.ToolExecuteParams) models.ToolExecuteOutput {
+				return models.ToolExecuteOutput{
+					Output: map[string]any{"ok": true},
+					Usage:  models.LanguageModelUsage{OutputTokens: 10, InputTokens: 20, TotalTokens: 30},
+				}
+			},
+		}),
+	}
+
+	prepareStep := func(step fsm.Step, ctx fsm.AgentContext) (fsm.PrepareStepResult, error) {
+		if step.StepIndex == 1 {
+			// Restrict to only tool_1
+			activeTools := []string{"tool_1"}
+			return fsm.PrepareStepResult{
+				ActiveTools: &activeTools,
+			}, nil
+		}
+		return fsm.PrepareStepResult{}, nil
+	}
+
+	mockProvider.EXPECT().Context().AnyTimes().Return(models.LanguageModelContext{ModelName: modelName})
+	
+	// Verify that only tool_1 is passed
+	mockProvider.EXPECT().ResolveToolCall(
+		gomock.Any(),
+		gomock.Any(),
+		gomock.Cond(func(tools []models.BaseTool) bool {
+			// First call should have only tool_1
+			return len(tools) == 1 && tools[0].Name() == "tool_1"
+		}),
+	).Return(nil, nil).Times(1)
+	
+	mockProvider.EXPECT().ResolveToolCall(
+		gomock.Any(),
+		gomock.Any(),
+		gomock.Any(),
+	).Return(nil, nil).MinTimes(0)
+
+	mockProvider.EXPECT().StreamText(
+		gomock.Any(),
+		gomock.Any(),
+		gomock.Any(),
+	).Do(func(ctx context.Context, params providers.AgentProviderPromptMessageParams, emitter models.PartEmitter) {
+		emitter.Emit(models.NewTextPart(models.LanguageModelContext{ModelName: modelName}, "done"))
+	}).Return(models.LanguageModelOutput{Text: "done", ModelName: modelName}, nil)
+
+	output := StreamText(ctx, Params{
+		Prompt:      prompt,
+		Provider:    mockProvider,
+		Tools:       tools,
+		PrepareStep: prepareStep,
+		EndConditions: []models.EndCondition{
+			endconditions.NewMaxStepsEndCondition(5),
+		},
+	})
+
+	var endPart models.ProcessEndPart
+	for part := range output.Channel {
+		if p, ok := part.(models.ProcessEndPart); ok {
+			endPart = p
+		}
+	}
+
+	assert.NotNil(t, endPart)
+}
+
+func TestStreamTextPrepareStepMultipleOverrides(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockProvider := mocks.NewMockAgentProvider(ctrl)
+	prompt := "Test multiple prepare step overrides"
+	modelName := "mocked-llm-3.6-flash"
+	ctx := context.Background()
+
+	tools := []models.BaseTool{
+		models.NewTool(models.NewToolParams{
+			Name: "search",
+			Fn: func(params models.ToolExecuteParams) models.ToolExecuteOutput {
+				return models.ToolExecuteOutput{
+					Output: map[string]any{"results": []string{"result1", "result2"}},
+					Usage:  models.LanguageModelUsage{OutputTokens: 20, InputTokens: 40, TotalTokens: 60},
+				}
+			},
+		}),
+		models.NewTool(models.NewToolParams{
+			Name: "calculate",
+			Fn: func(params models.ToolExecuteParams) models.ToolExecuteOutput {
+				return models.ToolExecuteOutput{
+					Output: map[string]any{"result": 42},
+					Usage:  models.LanguageModelUsage{OutputTokens: 15, InputTokens: 30, TotalTokens: 45},
+				}
+			},
+		}),
+	}
+
+	prepareStep := func(step fsm.Step, ctx fsm.AgentContext) (fsm.PrepareStepResult, error) {
+		if step.StepIndex == 1 {
+			// Override all three options
+			activeTools := []string{"search"}
+			customMessages := []models.Message{
+				models.NewStringMessage("user", "Search for information"),
+			}
+			return fsm.PrepareStepResult{
+				ToolChoice:  &fsm.ToolChoice{Name: "search"},
+				Messages:    &customMessages,
+				ActiveTools: &activeTools,
+			}, nil
+		}
+		return fsm.PrepareStepResult{}, nil
+	}
+
+	mockProvider.EXPECT().Context().AnyTimes().Return(models.LanguageModelContext{ModelName: modelName})
+	mockProvider.EXPECT().ResolveToolCall(
+		gomock.Any(),
+		gomock.Any(),
+		gomock.Cond(func(tools []models.BaseTool) bool {
+			// Should only have search tool
+			return len(tools) == 1 && tools[0].Name() == "search"
+		}),
+	).Return([]models.ToolCall{{ToolName: "search", Params: map[string]any{}}}, nil)
+	mockProvider.EXPECT().ResolveToolCall(
+		gomock.Any(),
+		gomock.Any(),
+		gomock.Any(),
+	).Return(nil, nil).MinTimes(0)
+	mockProvider.EXPECT().StreamText(
+		gomock.Any(),
+		gomock.Any(),
+		gomock.Any(),
+	).Do(func(ctx context.Context, params providers.AgentProviderPromptMessageParams, emitter models.PartEmitter) {
+		emitter.Emit(models.NewTextPart(models.LanguageModelContext{ModelName: modelName}, "search completed"))
+	}).Return(models.LanguageModelOutput{Text: "search completed", ModelName: modelName}, nil)
+
+	output := StreamText(ctx, Params{
+		Prompt:      prompt,
+		Provider:    mockProvider,
+		Tools:       tools,
+		PrepareStep: prepareStep,
+		EndConditions: []models.EndCondition{
+			endconditions.NewMaxStepsEndCondition(5),
+		},
+	})
+
+	var endPart models.ProcessEndPart
+	for part := range output.Channel {
+		if p, ok := part.(models.ProcessEndPart); ok {
+			endPart = p
+		}
+	}
+
+	assert.NotNil(t, endPart)
+	assert.Equal(t, modelName, output.ModelName)
+}
+
+func TestStreamTextPrepareStepPerStepOptions(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockProvider := mocks.NewMockAgentProvider(ctrl)
+	prompt := "Multi-step with different options"
+	modelName := "mocked-llm-3.6-flash"
+	ctx := context.Background()
+
+	tools := []models.BaseTool{
+		models.NewTool(models.NewToolParams{
+			Name: "step1_tool",
+			Fn: func(params models.ToolExecuteParams) models.ToolExecuteOutput {
+				return models.ToolExecuteOutput{
+					Output: map[string]any{"step": "1"},
+					Usage:  models.LanguageModelUsage{OutputTokens: 10, InputTokens: 20, TotalTokens: 30},
+				}
+			},
+		}),
+		models.NewTool(models.NewToolParams{
+			Name: "step2_tool",
+			Fn: func(params models.ToolExecuteParams) models.ToolExecuteOutput {
+				return models.ToolExecuteOutput{
+					Output: map[string]any{"step": "2"},
+					Usage:  models.LanguageModelUsage{OutputTokens: 10, InputTokens: 20, TotalTokens: 30},
+				}
+			},
+		}),
+	}
+
+	prepareStep := func(step fsm.Step, ctx fsm.AgentContext) (fsm.PrepareStepResult, error) {
+		if step.StepIndex == 1 {
+			// First step: use only step1_tool
+			activeTools := []string{"step1_tool"}
+			return fsm.PrepareStepResult{
+				ActiveTools: &activeTools,
+			}, nil
+		} else if step.StepIndex == 2 {
+			// Second step: use only step2_tool
+			activeTools := []string{"step2_tool"}
+			return fsm.PrepareStepResult{
+				ActiveTools: &activeTools,
+			}, nil
+		}
+		return fsm.PrepareStepResult{}, nil
+	}
+
+	mockProvider.EXPECT().Context().AnyTimes().Return(models.LanguageModelContext{ModelName: modelName})
+	
+	// First ResolveToolCall should have step1_tool
+	mockProvider.EXPECT().ResolveToolCall(
+		gomock.Any(),
+		gomock.Any(),
+		gomock.Cond(func(tools []models.BaseTool) bool {
+			return len(tools) == 1 && tools[0].Name() == "step1_tool"
+		}),
+	).Return([]models.ToolCall{{ToolName: "step1_tool", Params: map[string]any{}}}, nil).Times(1)
+	
+	// Second ResolveToolCall should have step2_tool
+	mockProvider.EXPECT().ResolveToolCall(
+		gomock.Any(),
+		gomock.Any(),
+		gomock.Cond(func(tools []models.BaseTool) bool {
+			return len(tools) == 1 && tools[0].Name() == "step2_tool"
+		}),
+	).Return([]models.ToolCall{{ToolName: "step2_tool", Params: map[string]any{}}}, nil).Times(1)
+	
+	// Final ResolveToolCall
+	mockProvider.EXPECT().ResolveToolCall(
+		gomock.Any(),
+		gomock.Any(),
+		gomock.Any(),
+	).Return(nil, nil).MinTimes(0)
+
+	mockProvider.EXPECT().StreamText(
+		gomock.Any(),
+		gomock.Any(),
+		gomock.Any(),
+	).Do(func(ctx context.Context, params providers.AgentProviderPromptMessageParams, emitter models.PartEmitter) {
+		emitter.Emit(models.NewTextPart(models.LanguageModelContext{ModelName: modelName}, "multi-step complete"))
+	}).Return(models.LanguageModelOutput{Text: "multi-step complete", ModelName: modelName}, nil)
+
+	output := StreamText(ctx, Params{
+		Prompt:      prompt,
+		Provider:    mockProvider,
+		Tools:       tools,
+		PrepareStep: prepareStep,
+		EndConditions: []models.EndCondition{
+			endconditions.NewMaxStepsEndCondition(5),
+		},
+	})
+
+	var endPart models.ProcessEndPart
+	for part := range output.Channel {
+		if p, ok := part.(models.ProcessEndPart); ok {
+			endPart = p
+		}
+	}
+
+	assert.NotNil(t, endPart)
 }
