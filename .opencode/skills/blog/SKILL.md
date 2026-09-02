@@ -1,3 +1,8 @@
+---
+name: blog writer
+description: "A skill for writing informative and educational blog posts about learning golang by implementing an agentic framework."
+---
+
 - The blog post is to document my journey of learning  golang by implementing an agentic framework.
 - Be plain and explain the concept simply. 
 - Do not use to many emoticon.
