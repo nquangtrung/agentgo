@@ -148,7 +148,7 @@ func TestGenerateTextWithTool(t *testing.T) {
 	mockResolveToolCallReturn := func(
 		paramsMatcher gomock.Matcher,
 		toolParamsMatcher gomock.Matcher,
-		returned []models.ToolCall,
+		returned models.LanguageModelToolCallResolveOutput,
 	) *gomock.Call {
 		return mockProvider.EXPECT().ResolveToolCall(gomock.Any(), paramsMatcher, toolParamsMatcher).Return(returned, nil)
 	}
@@ -167,16 +167,18 @@ func TestGenerateTextWithTool(t *testing.T) {
 				}
 			}),
 			gomock.Eq(tools),
-			[]models.ToolCall{
-				{
-					ToolName: "mock_tool",
-					Params:   toolParams,
+			models.LanguageModelToolCallResolveOutput{
+				ToolCalls: []models.ToolCall{
+					{
+						ToolName: "mock_tool",
+						Params:   toolParams,
+					},
 				},
 			}),
 		mockResolveToolCallReturn(
 			gomock.Cond(checkResolveToolCall),
 			gomock.Eq(tools),
-			nil,
+			models.LanguageModelToolCallResolveOutput{},
 		),
 	)
 	mockProvider.EXPECT().Context().MinTimes(1).Return(models.LanguageModelContext{
@@ -256,7 +258,9 @@ func TestGenerateTextStopsAtMaxSteps(t *testing.T) {
 		gomock.Any(),
 		gomock.Any(),
 		gomock.Eq(tools),
-	).Return([]models.ToolCall{{ToolName: "mock_tool", Params: toolParams}}, nil)
+	).Return(models.LanguageModelToolCallResolveOutput{
+		ToolCalls: []models.ToolCall{{ToolName: "mock_tool", Params: toolParams}},
+	}, nil)
 
 	output, err := GenerateText(ctx, Params{
 		Prompt:   prompt,
@@ -307,12 +311,14 @@ func TestGenerateTextMultipleToolCalls(t *testing.T) {
 			gomock.Any(),
 			gomock.Any(),
 			gomock.Eq(tools),
-		).Return([]models.ToolCall{{ToolName: "first_tool", Params: tool1Params}, {ToolName: "second_tool", Params: tool2Params}}, nil),
+		).Return(models.LanguageModelToolCallResolveOutput{
+			ToolCalls: []models.ToolCall{{ToolName: "first_tool", Params: tool1Params}, {ToolName: "second_tool", Params: tool2Params}},
+		}, nil),
 		mockProvider.EXPECT().ResolveToolCall(
 			gomock.Any(),
 			gomock.Any(),
 			gomock.Eq(tools),
-		).Return(nil, nil),
+		).Return(models.LanguageModelToolCallResolveOutput{}, nil),
 	)
 	mockProvider.EXPECT().Context().AnyTimes().Return(models.LanguageModelContext{ModelName: modelName})
 	mockProvider.EXPECT().GenerateText(
@@ -333,8 +339,12 @@ func TestGenerateTextMultipleToolCalls(t *testing.T) {
 	assert.Equal(t, int64(2+3+4), output.Usage.InputTokensDetails.CachedTokens)
 	assert.Equal(t, int64(1+2+3), output.Usage.OutputTokensDetails.ReasoningTokens)
 	assert.Len(t, output.Context.Records(), 3)
-	assert.Equal(t, "first_tool", utils.Must(output.Context.Record(0)).ToolCalled.ToolName)
-	assert.Equal(t, "second_tool", utils.Must(output.Context.Record(1)).ToolCalled.ToolName)
+	// Tools are executed concurrently, so order is non-deterministic
+	toolNames := []string{
+		utils.Must(output.Context.Record(0)).ToolCalled.ToolName,
+		utils.Must(output.Context.Record(1)).ToolCalled.ToolName,
+	}
+	assert.ElementsMatch(t, []string{"first_tool", "second_tool"}, toolNames)
 	assert.Equal(t, "text", utils.Must(output.Context.Record(2)).Name)
 }
 
@@ -372,13 +382,15 @@ func TestGenerateTextToolNotFoundError(t *testing.T) {
 		gomock.Any(),
 		gomock.Any(),
 		gomock.Eq(tools),
-	).Return([]models.ToolCall{{ToolName: "non_existent_tool", Params: map[string]any{}}}, nil).Times(1)
+	).Return(models.LanguageModelToolCallResolveOutput{
+		ToolCalls: []models.ToolCall{{ToolName: "non_existent_tool", Params: map[string]any{}}},
+	}, nil).Times(1)
 	// Second call (after retry) returns no tool calls
 	mockProvider.EXPECT().ResolveToolCall(
 		gomock.Any(),
 		gomock.Any(),
 		gomock.Eq(tools),
-	).Return(nil, nil).Times(1)
+	).Return(models.LanguageModelToolCallResolveOutput{}, nil).Times(1)
 	mockProvider.EXPECT().GenerateText(
 		gomock.Any(),
 		gomock.Any(),
@@ -430,12 +442,14 @@ func TestGenerateTextToolExecutionError(t *testing.T) {
 			gomock.Any(),
 			gomock.Any(),
 			gomock.Eq(tools),
-		).Return([]models.ToolCall{{ToolName: "failing_tool", Params: map[string]any{}}}, nil),
+		).Return(models.LanguageModelToolCallResolveOutput{
+			ToolCalls: []models.ToolCall{{ToolName: "failing_tool", Params: map[string]any{}}},
+		}, nil),
 		mockProvider.EXPECT().ResolveToolCall(
 			gomock.Any(),
 			gomock.Any(),
 			gomock.Eq(tools),
-		).Return(nil, nil),
+		).Return(models.LanguageModelToolCallResolveOutput{}, nil),
 	)
 	mockProvider.EXPECT().GenerateText(
 		gomock.Any(),
@@ -480,13 +494,13 @@ func TestGenerateTextResolveToolCallError(t *testing.T) {
 		gomock.Any(),
 		gomock.Any(),
 		gomock.Eq(tools),
-	).Return(nil, fmt.Errorf("provider error")).Times(1)
+	).Return(models.LanguageModelToolCallResolveOutput{}, fmt.Errorf("provider error")).Times(1)
 	// After retry, returns successfully
 	mockProvider.EXPECT().ResolveToolCall(
 		gomock.Any(),
 		gomock.Any(),
 		gomock.Eq(tools),
-	).Return(nil, nil).Times(1)
+	).Return(models.LanguageModelToolCallResolveOutput{}, nil).Times(1)
 	mockProvider.EXPECT().GenerateText(
 		gomock.Any(),
 		gomock.Any(),
@@ -556,7 +570,7 @@ func TestGenerateTextPrepareStepWithToolChoice(t *testing.T) {
 		gomock.Any(),
 	).Do(func(ctx context.Context, params providers.AgentProviderPromptMessageParams, tools []models.BaseTool) {
 		stepCount++
-	}).Return(nil, nil).MinTimes(1)
+	}).Return(models.LanguageModelToolCallResolveOutput{}, nil).MinTimes(1)
 	mockProvider.EXPECT().GenerateText(
 		gomock.Any(),
 		gomock.Any(),
@@ -626,7 +640,7 @@ func TestGenerateTextPrepareStepWithMessages(t *testing.T) {
 			return true
 		}),
 		gomock.Eq(tools),
-	).Return(nil, nil).MinTimes(1)
+	).Return(models.LanguageModelToolCallResolveOutput{}, nil).MinTimes(1)
 
 	mockProvider.EXPECT().GenerateText(
 		gomock.Any(),
@@ -699,13 +713,13 @@ func TestGenerateTextPrepareStepWithActiveTools(t *testing.T) {
 			// First call should have only tool_1
 			return len(tools) == 1 && tools[0].Name() == "tool_1"
 		}),
-	).Return(nil, nil).Times(1)
+	).Return(models.LanguageModelToolCallResolveOutput{}, nil).Times(1)
 	
 	mockProvider.EXPECT().ResolveToolCall(
 		gomock.Any(),
 		gomock.Any(),
 		gomock.Any(),
-	).Return(nil, nil).MinTimes(0)
+	).Return(models.LanguageModelToolCallResolveOutput{}, nil).MinTimes(0)
 
 	mockProvider.EXPECT().GenerateText(
 		gomock.Any(),
@@ -780,12 +794,14 @@ func TestGenerateTextPrepareStepMultipleOverrides(t *testing.T) {
 			// Should only have search tool
 			return len(tools) == 1 && tools[0].Name() == "search"
 		}),
-	).Return([]models.ToolCall{{ToolName: "search", Params: map[string]any{}}}, nil)
+	).Return(models.LanguageModelToolCallResolveOutput{
+		ToolCalls: []models.ToolCall{{ToolName: "search", Params: map[string]any{}}},
+	}, nil)
 	mockProvider.EXPECT().ResolveToolCall(
 		gomock.Any(),
 		gomock.Any(),
 		gomock.Any(),
-	).Return(nil, nil).MinTimes(0)
+	).Return(models.LanguageModelToolCallResolveOutput{}, nil).MinTimes(0)
 	mockProvider.EXPECT().GenerateText(
 		gomock.Any(),
 		gomock.Any(),
@@ -865,7 +881,9 @@ func TestGenerateTextPrepareStepPerStepOptions(t *testing.T) {
 		gomock.Cond(func(tools []models.BaseTool) bool {
 			return len(tools) == 1 && tools[0].Name() == "step1_tool"
 		}),
-	).Return([]models.ToolCall{{ToolName: "step1_tool", Params: map[string]any{}}}, nil).Times(1)
+	).Return(models.LanguageModelToolCallResolveOutput{
+		ToolCalls: []models.ToolCall{{ToolName: "step1_tool", Params: map[string]any{}}},
+	}, nil).Times(1)
 	
 	// Second ResolveToolCall should have step2_tool
 	mockProvider.EXPECT().ResolveToolCall(
@@ -874,14 +892,16 @@ func TestGenerateTextPrepareStepPerStepOptions(t *testing.T) {
 		gomock.Cond(func(tools []models.BaseTool) bool {
 			return len(tools) == 1 && tools[0].Name() == "step2_tool"
 		}),
-	).Return([]models.ToolCall{{ToolName: "step2_tool", Params: map[string]any{}}}, nil).Times(1)
+	).Return(models.LanguageModelToolCallResolveOutput{
+		ToolCalls: []models.ToolCall{{ToolName: "step2_tool", Params: map[string]any{}}},
+	}, nil).Times(1)
 	
 	// Final ResolveToolCall
 	mockProvider.EXPECT().ResolveToolCall(
 		gomock.Any(),
 		gomock.Any(),
 		gomock.Any(),
-	).Return(nil, nil).MinTimes(0)
+	).Return(models.LanguageModelToolCallResolveOutput{}, nil).MinTimes(0)
 
 	mockProvider.EXPECT().GenerateText(
 		gomock.Any(),

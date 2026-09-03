@@ -15,7 +15,7 @@ type AgentProvider interface {
 	Context() models.LanguageModelContext
 	GenerateText(ctx context.Context, params AgentProviderPromptMessageParams) (models.LanguageModelOutput, error)
 	StreamText(ctx context.Context, params AgentProviderPromptMessageParams, emitter models.PartEmitter) (models.LanguageModelOutput, error)
-	ResolveToolCall(ctx context.Context, params AgentProviderPromptMessageParams, toolParams []models.BaseTool) ([]models.ToolCall, error)
+	ResolveToolCall(ctx context.Context, params AgentProviderPromptMessageParams, toolParams []models.BaseTool) (models.LanguageModelToolCallResolveOutput, error)
 }
 
 type BaseAgentProvider struct {

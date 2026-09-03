@@ -12,6 +12,13 @@ type LanguageModelOutput struct {
 	Context   *ToolExecutionsArchive
 }
 
+type LanguageModelToolCallResolveOutput struct {
+	ToolCalls []ToolCall
+	Usage     LanguageModelUsage
+	ModelName string
+	Context   *ToolExecutionsArchive
+}
+
 func NewLanguageModelOutput(text string, usage LanguageModelUsage, modelName string) LanguageModelOutput {
 	return LanguageModelOutput{
 		Text:      text,

@@ -18,7 +18,25 @@ type OpenAIProvider struct {
 	response openAIResponsesService
 }
 
-func (p OpenAIProvider) GenerateText(ctx context.Context, params providers.AgentProviderPromptMessageParams) (models.LanguageModelOutput, error) {
+func convertOpenAIUsageToLanguageModelUsage(usage responses.ResponseUsage) models.LanguageModelUsage {
+	return models.LanguageModelUsage{
+		InputTokens: int64(usage.InputTokens),
+		InputTokensDetails: models.LanguageModelUsageInputTokensDetails{
+			CachedTokens:     int64(usage.InputTokensDetails.CachedTokens),
+			CacheWriteTokens: int64(usage.InputTokensDetails.CacheWriteTokens),
+		},
+		OutputTokens: int64(usage.OutputTokens),
+		OutputTokensDetails: models.LanguageModelUsageOutputTokensDetails{
+			ReasoningTokens: int64(usage.OutputTokensDetails.ReasoningTokens),
+		},
+		TotalTokens: int64(usage.TotalTokens),
+	}
+}
+
+func (p OpenAIProvider) GenerateText(
+	ctx context.Context,
+	params providers.AgentProviderPromptMessageParams,
+) (models.LanguageModelOutput, error) {
 	resp, err := p.response.New(ctx, responses.ResponseNewParams{
 		Model: p.BaseAgentProvider.Context().ModelName,
 		Input: convertInputFromParams(params),
@@ -27,18 +45,7 @@ func (p OpenAIProvider) GenerateText(ctx context.Context, params providers.Agent
 		return models.LanguageModelOutput{}, err
 	}
 
-	usage := models.LanguageModelUsage{
-		InputTokens: int64(resp.Usage.InputTokens),
-		InputTokensDetails: models.LanguageModelUsageInputTokensDetails{
-			CachedTokens:     int64(resp.Usage.InputTokensDetails.CachedTokens),
-			CacheWriteTokens: int64(resp.Usage.InputTokensDetails.CacheWriteTokens),
-		},
-		OutputTokens: int64(resp.Usage.OutputTokens),
-		OutputTokensDetails: models.LanguageModelUsageOutputTokensDetails{
-			ReasoningTokens: int64(resp.Usage.OutputTokensDetails.ReasoningTokens),
-		},
-		TotalTokens: int64(resp.Usage.TotalTokens),
-	}
+	usage := convertOpenAIUsageToLanguageModelUsage(resp.Usage)
 	if usage.TotalTokens == 0 {
 		usage.TotalTokens = usage.InputTokens + usage.OutputTokens
 	}
@@ -50,7 +57,10 @@ func (p OpenAIProvider) GenerateText(ctx context.Context, params providers.Agent
 	}, nil
 }
 
-func (p OpenAIProvider) StreamText(ctx context.Context, params providers.AgentProviderPromptMessageParams, emitter models.PartEmitter) (models.LanguageModelOutput, error) {
+func (p OpenAIProvider) StreamText(
+	ctx context.Context,
+	params providers.AgentProviderPromptMessageParams,
+	emitter models.PartEmitter) (models.LanguageModelOutput, error) {
 	stream := p.response.NewStreaming(ctx, responses.ResponseNewParams{
 		Model: p.BaseAgentProvider.Context().ModelName,
 		Input: convertInputFromParams(params),
@@ -94,20 +104,27 @@ func (p OpenAIProvider) StreamText(ctx context.Context, params providers.AgentPr
 	}, nil
 }
 
-func (p OpenAIProvider) ResolveToolCall(ctx context.Context, params providers.AgentProviderPromptMessageParams, toolParams []models.BaseTool) ([]models.ToolCall, error) {
+func (p OpenAIProvider) ResolveToolCall(
+	ctx context.Context,
+	params providers.AgentProviderPromptMessageParams,
+	toolParams []models.BaseTool) (models.LanguageModelToolCallResolveOutput, error) {
 	response, err := p.response.New(ctx, responses.ResponseNewParams{
 		Model: p.BaseAgentProvider.Context().ModelName,
 		Input: convertInputFromParams(params),
 		Tools: convertToolParamsToInput(toolParams),
 	})
 	if err != nil {
-		return nil, err
+		return models.LanguageModelToolCallResolveOutput{}, err
 	}
 
 	log.Printf("Response ID: %s", response.ID)
 	toolCalls := convertOutputToToolCalls(response)
 
-	return toolCalls, nil
+	return models.LanguageModelToolCallResolveOutput{
+		ToolCalls: toolCalls,
+		Usage:     convertOpenAIUsageToLanguageModelUsage(response.Usage),
+		ModelName: p.BaseAgentProvider.Context().ModelName,
+	}, nil
 }
 
 func NewOpenAIProvider(apiKey, modelName string) OpenAIProvider {

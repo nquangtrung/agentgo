@@ -40,9 +40,11 @@ func (s *ToolResolveState) Execute(ctx context.Context, fsmCtx *AgentContext) (S
 	emitter := ctx.Value(models.PartEmitterContextKey).(*models.PartEmitter)
 
 	messages := fsmCtx.ResolveCurrentStepMessages(ctx)
-
 	tools := fsmCtx.ResolveCurrentStepActiveTools(ctx)
-	toolCalls, err := provider.ResolveToolCall(ctx, providers.AgentProviderPromptMessageParams{Messages: messages}, tools)
+
+	resolveOutput, err := provider.ResolveToolCall(ctx, providers.AgentProviderPromptMessageParams{Messages: messages}, tools)
+	fsmCtx.CurrentStep.Usage = models.AccumulateUsage(fsmCtx.CurrentStep.Usage, resolveOutput.Usage)
+	toolCalls := resolveOutput.ToolCalls
 	if err != nil {
 		return &RetryState{
 			OriginalState: s,
@@ -59,37 +61,20 @@ func (s *ToolResolveState) Execute(ctx context.Context, fsmCtx *AgentContext) (S
 		wg.Go(func() {
 			log.Printf("Executing tool %s", toolCall.ToolName)
 
-			emitter.Emit(models.NewToolStartPart(
-				provider.Context(),
-				toolCall.ToolName,
-			))
+			emitter.Emit(models.NewToolStartPart(provider.Context(), toolCall.ToolName))
 			result, err := executeToolCall(ctx, toolCall, tools)
 
 			switch {
 			case err != nil:
 				// This error is before request to the provider, so usage is 0.
 				log.Printf("Error executing tool %s: %v", toolCall.ToolName, err)
-				emitter.Emit(models.NewToolErrorPart(
-					provider.Context(),
-					toolCall.ToolName,
-					models.NewLanguageModelUsage(0, 0, 0, 0),
-					err,
-				))
+				emitter.Emit(models.NewToolErrorPart(provider.Context(), toolCall.ToolName, models.NewLanguageModelUsage(0, 0, 0, 0), err))
 			case result.Error != nil:
-				emitter.Emit(models.NewToolErrorPart(
-					provider.Context(),
-					toolCall.ToolName,
-					result.Usage,
-					result.Error,
-				))
+				emitter.Emit(models.NewToolErrorPart(provider.Context(), toolCall.ToolName, result.Usage, result.Error))
 				models.AccumulateToolCallResult(fsmCtx.ToolExecutionsArchive, result, fsmCtx.Messages)
 				fsmCtx.CurrentStep.Usage = models.AccumulateUsage(fsmCtx.CurrentStep.Usage, result.Usage)
 			default:
-				emitter.Emit(models.NewToolResultPart(
-					provider.Context(),
-					toolCall.ToolName,
-					*result,
-				))
+				emitter.Emit(models.NewToolResultPart(provider.Context(), toolCall.ToolName, *result))
 				models.AccumulateToolCallResult(fsmCtx.ToolExecutionsArchive, result, fsmCtx.Messages)
 				fsmCtx.CurrentStep.Usage = models.AccumulateUsage(fsmCtx.CurrentStep.Usage, result.Usage)
 			}

@@ -81,14 +81,14 @@ func TestResolveToolCall(t *testing.T) {
 		},
 	})
 
-	toolCall, err := provider.ResolveToolCall(
+	output, err := provider.ResolveToolCall(
 		ctx,
 		providers.AgentProviderPromptMessageParams{Messages: []models.Message{models.NewHumanStringMessage("Hello")}},
 		[]models.BaseTool{mockTool},
 	)
 
 	require.NoError(t, err)
-	require.Len(t, toolCall, 1)
-	assert.Equal(t, "mock-tool-1", toolCall[0].ToolName)
-	assert.Equal(t, map[string]any{"key1": "value1", "key2": "value2"}, toolCall[0].Params)
+	require.Len(t, output.ToolCalls, 1)
+	assert.Equal(t, "mock-tool-1", output.ToolCalls[0].ToolName)
+	assert.Equal(t, map[string]any{"key1": "value1", "key2": "value2"}, output.ToolCalls[0].Params)
 }
