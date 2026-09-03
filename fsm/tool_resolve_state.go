@@ -3,10 +3,10 @@ package fsm
 import (
 	"context"
 	"log"
+	"sync"
 
 	"trontria.com/agentgo/models"
 	"trontria.com/agentgo/providers"
-	"trontria.com/agentgo/utils"
 )
 
 type ToolResolveState struct {
@@ -54,44 +54,47 @@ func (s *ToolResolveState) Execute(ctx context.Context, fsmCtx *AgentContext) (S
 		return &PrepareTextGenerationState{}, nil
 	}
 
-	utils.Each(toolCalls, func(toolCall models.ToolCall) {
-		log.Printf("Executing tool %s", toolCall.ToolName)
+	var wg sync.WaitGroup
+	for _, toolCall := range toolCalls {
+		wg.Go(func() {
+			log.Printf("Executing tool %s", toolCall.ToolName)
 
-		emitter.Emit(models.NewToolStartPart(
-			provider.Context(),
-			toolCall.ToolName,
-		))
-		result, err := executeToolCall(ctx, toolCall, tools)
-
-		switch {
-		case err != nil:
-			// This error is before request to the provider, so usage is 0.
-			log.Printf("Error executing tool %s: %v", toolCall.ToolName, err)
-			emitter.Emit(models.NewToolErrorPart(
+			emitter.Emit(models.NewToolStartPart(
 				provider.Context(),
 				toolCall.ToolName,
-				models.NewLanguageModelUsage(0, 0, 0, 0),
-				err,
 			))
-		case result.Error != nil:
-			emitter.Emit(models.NewToolErrorPart(
-				provider.Context(),
-				toolCall.ToolName,
-				result.Usage,
-				result.Error,
-			))
-			models.AccumulateToolCallResult(fsmCtx.ToolExecutionsArchive, result, fsmCtx.Messages)
-			fsmCtx.CurrentStep.Usage = models.AccumulateUsage(fsmCtx.CurrentStep.Usage, result.Usage)
-		default:
-			emitter.Emit(models.NewToolResultPart(
-				provider.Context(),
-				toolCall.ToolName,
-				*result,
-			))
-			models.AccumulateToolCallResult(fsmCtx.ToolExecutionsArchive, result, fsmCtx.Messages)
-			fsmCtx.CurrentStep.Usage = models.AccumulateUsage(fsmCtx.CurrentStep.Usage, result.Usage)
-		}
-	})
+			result, err := executeToolCall(ctx, toolCall, tools)
 
+			switch {
+			case err != nil:
+				// This error is before request to the provider, so usage is 0.
+				log.Printf("Error executing tool %s: %v", toolCall.ToolName, err)
+				emitter.Emit(models.NewToolErrorPart(
+					provider.Context(),
+					toolCall.ToolName,
+					models.NewLanguageModelUsage(0, 0, 0, 0),
+					err,
+				))
+			case result.Error != nil:
+				emitter.Emit(models.NewToolErrorPart(
+					provider.Context(),
+					toolCall.ToolName,
+					result.Usage,
+					result.Error,
+				))
+				models.AccumulateToolCallResult(fsmCtx.ToolExecutionsArchive, result, fsmCtx.Messages)
+				fsmCtx.CurrentStep.Usage = models.AccumulateUsage(fsmCtx.CurrentStep.Usage, result.Usage)
+			default:
+				emitter.Emit(models.NewToolResultPart(
+					provider.Context(),
+					toolCall.ToolName,
+					*result,
+				))
+				models.AccumulateToolCallResult(fsmCtx.ToolExecutionsArchive, result, fsmCtx.Messages)
+				fsmCtx.CurrentStep.Usage = models.AccumulateUsage(fsmCtx.CurrentStep.Usage, result.Usage)
+			}
+		})
+	}
+	wg.Wait()
 	return &StepEndState{}, nil
 }
