@@ -9,8 +9,8 @@ import (
 	"github.com/openai/openai-go/v3/option"
 	"github.com/openai/openai-go/v3/responses"
 
-	"trontria.com/agentgo/models"
-	"trontria.com/agentgo/providers"
+	"github.com/nquangtrung/agentgo/models"
+	"github.com/nquangtrung/agentgo/providers"
 )
 
 type OpenAIProvider struct {

@@ -16,7 +16,7 @@ type ToolCall struct {
 	Params   map[string]any
 }
 
-//go:generate mockgen -destination=../mocks/mock_tool.go -package=mocks trontria.com/agentgo/models Tool
+//go:generate mockgen -destination=../mocks/mock_tool.go -package=mocks github.com/nquangtrung/agentgo/models Tool
 type Tool interface {
 	Name() string
 	Description() string

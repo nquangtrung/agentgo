@@ -3,8 +3,8 @@ package fsm
 import (
 	"context"
 
-	"trontria.com/agentgo/models"
-	"trontria.com/agentgo/providers"
+	"github.com/nquangtrung/agentgo/models"
+	"github.com/nquangtrung/agentgo/providers"
 )
 
 type StepStartState struct {

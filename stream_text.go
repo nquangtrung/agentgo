@@ -4,8 +4,8 @@ import (
 	"context"
 	"sync"
 
-	"trontria.com/agentgo/fsm"
-	"trontria.com/agentgo/models"
+	"github.com/nquangtrung/agentgo/fsm"
+	"github.com/nquangtrung/agentgo/models"
 )
 
 func StreamText(ctx context.Context, params Params) models.LanguageModelStreamOutput {

@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"slices"
 
-	"trontria.com/agentgo/models"
+	"github.com/nquangtrung/agentgo/models"
 )
 
 type MaxStepsEndCondition struct {

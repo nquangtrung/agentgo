@@ -3,9 +3,9 @@ package agentgo
 import (
 	"testing"
 
+	"github.com/nquangtrung/agentgo/models"
+	"github.com/nquangtrung/agentgo/utils"
 	"github.com/stretchr/testify/assert"
-	"trontria.com/agentgo/models"
-	"trontria.com/agentgo/utils"
 )
 
 func TestResolveExecutionContextAsTextOutput(t *testing.T) {

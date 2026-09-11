@@ -4,10 +4,10 @@ import (
 	"context"
 	"log"
 
-	"trontria.com/agentgo"
-	"trontria.com/agentgo/endconditions"
-	"trontria.com/agentgo/models"
-	"trontria.com/agentgo/utils"
+	"github.com/nquangtrung/agentgo"
+	"github.com/nquangtrung/agentgo/endconditions"
+	"github.com/nquangtrung/agentgo/models"
+	"github.com/nquangtrung/agentgo/utils"
 
 	"testing"
 )

@@ -3,10 +3,10 @@ package openai
 import (
 	"testing"
 
+	"github.com/nquangtrung/agentgo/models"
+	"github.com/nquangtrung/agentgo/providers"
 	"github.com/openai/openai-go/v3/responses"
 	"github.com/stretchr/testify/assert"
-	"trontria.com/agentgo/models"
-	"trontria.com/agentgo/providers"
 )
 
 func TestConvertInputFromParams(t *testing.T) {

@@ -3,11 +3,11 @@ package openai
 import (
 	"encoding/json"
 
+	"github.com/nquangtrung/agentgo/models"
+	"github.com/nquangtrung/agentgo/providers"
+	"github.com/nquangtrung/agentgo/utils"
 	"github.com/openai/openai-go/v3"
 	"github.com/openai/openai-go/v3/responses"
-	"trontria.com/agentgo/models"
-	"trontria.com/agentgo/providers"
-	"trontria.com/agentgo/utils"
 )
 
 func convertInputFromParams(params providers.AgentProviderPromptMessageParams) responses.ResponseNewParamsInputUnion {

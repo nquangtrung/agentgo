@@ -3,8 +3,8 @@ package agentgo
 import (
 	"context"
 
-	"trontria.com/agentgo/fsm"
-	"trontria.com/agentgo/models"
+	"github.com/nquangtrung/agentgo/fsm"
+	"github.com/nquangtrung/agentgo/models"
 )
 
 func GenerateText(ctx context.Context, params Params) (models.LanguageModelOutput, error) {

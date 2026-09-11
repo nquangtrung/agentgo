@@ -3,6 +3,7 @@
 Welcome back! 👋 In Part 1 and Part 2, we built the core of our AI SDK—generating and streaming text responses. But here's what makes modern AI truly powerful: **multi-turn conversations**. Imagine building ChatGPT—you need to remember what the user said, what the assistant replied, and maintain context across dozens of turns.
 
 In this part, we'll explore:
+
 1. **Messages**: How to structure and pass conversation context to LLMs
 2. **Unit Testing in Go**: Using `testing`, `gomock`, `mock-gen`, and `testify` to test our code without hitting real APIs
 
@@ -35,6 +36,7 @@ This is where **Messages** come in. Before sending a prompt to the LLM, we build
 ### The Message Data Structure
 
 Every message in the conversation has a **role** and **content**:
+
 1. **Role**: Who said it? (human, assistant, or system)
 2. **Content**: What did they say? (text)
 
@@ -77,6 +79,7 @@ func NewSystemStringMessage(content string) Message {
 ```
 
 Notice the elegant design here:
+
 - **Interface-based**: `Message` is an interface, so we can extend it later with tool calls or other features
 - **Simple content model**: Each message has a role and text content
 - **Factory functions**: Clean ways to create different message types with `NewHumanStringMessage()`, `NewAssistantStringMessage()`, etc.
@@ -98,6 +101,7 @@ type Params struct {
 ```
 
 Notice:
+
 - `Prompt` is for simple text input (one-shot prompting)
 - `Messages` is for conversation history (multi-turn) ← **This is what we focus on!**
 - You can use either or both!
@@ -195,6 +199,7 @@ Same interface, same multi-turn capabilities, but with streaming instead of wait
 Now here's the hard truth: **If you're calling real APIs during tests, you're doing it wrong.** ❌
 
 Real APIs are:
+
 - **Slow** (might take seconds per call)
 - **Unreliable** (rate limits, network issues)
 - **Expensive** (you pay for every call!)
@@ -250,7 +255,7 @@ go install github.com/golang/mock/mockgen@latest
 Then add this comment to your interface definition (it's already there in the code):
 
 ```go
-//go:generate mockgen -destination=../mocks/mock_agent_provider.go -package=mocks trontria.com/agentgo/providers AgentProvider
+//go:generate mockgen -destination=../mocks/mock_agent_provider.go -package=mocks github.com/nquangtrung/agentgo/providers AgentProvider
 type AgentProvider interface {
 	GetContext() models.LanguageModelContext
 	GenerateText(params AgentProviderGenerateTextParams) (models.LanguageModelOutput, error)
@@ -271,17 +276,19 @@ This creates `mocks/mock_agent_provider.go` with a complete mock implementation!
 The `go generate` command reads special comments in your code and runs tools. Here's what's happening:
 
 ```
-//go:generate mockgen -destination=../mocks/mock_agent_provider.go -package=mocks trontria.com/agentgo/providers AgentProvider
+//go:generate mockgen -destination=../mocks/mock_agent_provider.go -package=mocks github.com/nquangtrung/agentgo/providers AgentProvider
 ```
 
 Breaking it down:
+
 - `mockgen`: The tool to run
 - `-destination=../mocks/mock_agent_provider.go`: Output file path
 - `-package=mocks`: Package name for generated code
-- `trontria.com/agentgo/providers`: Import path of the package
+- `github.com/nquangtrung/agentgo/providers`: Import path of the package
 - `AgentProvider`: Interface name
 
 When you run `go generate ./...`, it:
+
 1. Finds all `//go:generate` comments
 2. Runs each command
 3. Creates/updates the generated files
@@ -356,6 +363,7 @@ func TestTextPart(t *testing.T) {
 ```
 
 Testify assertions are:
+
 - **Readable**: `assert.Equal()` is clearer than `if x != y { t.Fatalf(...) }`
 - **Informative**: Testify shows helpful diffs on failure
 - **Concise**: Much less boilerplate
@@ -490,12 +498,12 @@ messages := []models.Message{}
 for {
 	userInput := getUserInput()
 	messages = append(messages, models.NewHumanStringMessage(userInput))
-	
+
 	response, _ := agentgo.GenerateText(agentgo.Params{
 		Messages:  messages,
 		ModelName: "gpt-5-mini",
 	})
-	
+
 	messages = append(messages, models.NewAssistantStringMessage(response.Text))
 }
 ```
@@ -532,6 +540,7 @@ output2, _ := agentgo.GenerateText(agentgo.Params{
 ## What's Next?
 
 You've now learned:
+
 - **Messages**: How to structure multi-turn conversations
 - **The Params Pattern**: How to pass message history to the SDK
 - **GoMock**: Auto-generating mocks from interfaces
@@ -557,6 +566,7 @@ These are production-grade patterns! Real AI companies use exactly this approach
 - **Production Ready**: This is how real SDKs are tested!
 
 Next part will cover:
+
 - **Tool Calling**: How AI can call functions and take actions
 - **Tool Definitions**: Strongly-typed tools
 - **The Agent Loop**: Multi-step reasoning with tool calls

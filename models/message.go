@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"trontria.com/agentgo/utils"
+	"github.com/nquangtrung/agentgo/utils"
 )
 
 type MessageRole string

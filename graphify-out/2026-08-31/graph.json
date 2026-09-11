@@ -1084,13 +1084,13 @@
     },
     {
       "id": "pkg_trontria_com_agentgo",
-      "label": "trontria.com/agentgo",
+      "label": "github.com/nquangtrung/agentgo",
       "_origin": "ast",
       "community": 14,
-      "community_name": "trontria.com/agentgo",
+      "community_name": "github.com/nquangtrung/agentgo",
       "ecosystem": "go",
       "file_type": "code",
-      "norm_label": "trontria.com/agentgo",
+      "norm_label": "github.com/nquangtrung/agentgo",
       "source_file": "go.mod",
       "source_location": "L1",
       "type": "package"

@@ -1,9 +1,9 @@
 package agentgo
 
 import (
-	"trontria.com/agentgo/models"
-	"trontria.com/agentgo/providers"
-	"trontria.com/agentgo/utils"
+	"github.com/nquangtrung/agentgo/models"
+	"github.com/nquangtrung/agentgo/providers"
+	"github.com/nquangtrung/agentgo/utils"
 )
 
 func newMessageFromTools(toolOutputs []models.ToolExecuteOutput) []models.Message {

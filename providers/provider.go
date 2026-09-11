@@ -3,14 +3,14 @@ package providers
 import (
 	"context"
 
-	"trontria.com/agentgo/models"
+	"github.com/nquangtrung/agentgo/models"
 )
 
 type AgentProviderPromptMessageParams struct {
 	Messages []models.Message
 }
 
-//go:generate mockgen -destination=../mocks/mock_agent_provider.go -package=mocks trontria.com/agentgo/providers AgentProvider
+//go:generate mockgen -destination=../mocks/mock_agent_provider.go -package=mocks github.com/nquangtrung/agentgo/providers AgentProvider
 type AgentProvider interface {
 	Context() models.LanguageModelContext
 	GenerateText(ctx context.Context, params AgentProviderPromptMessageParams) (models.LanguageModelOutput, error)

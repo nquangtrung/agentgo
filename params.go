@@ -1,9 +1,9 @@
 package agentgo
 
 import (
-	"trontria.com/agentgo/fsm"
-	"trontria.com/agentgo/models"
-	"trontria.com/agentgo/providers"
+	"github.com/nquangtrung/agentgo/fsm"
+	"github.com/nquangtrung/agentgo/models"
+	"github.com/nquangtrung/agentgo/providers"
 )
 
 type Params struct {

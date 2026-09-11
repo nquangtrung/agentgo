@@ -4,13 +4,13 @@ import (
 	"context"
 	"testing"
 
+	"github.com/nquangtrung/agentgo/models"
+	"github.com/nquangtrung/agentgo/providers"
+	"github.com/nquangtrung/agentgo/providers/openai/mocks"
 	"github.com/openai/openai-go/v3/responses"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
-	"trontria.com/agentgo/models"
-	"trontria.com/agentgo/providers"
-	"trontria.com/agentgo/providers/openai/mocks"
 )
 
 func TestGenerateText(t *testing.T) {

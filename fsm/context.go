@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"trontria.com/agentgo/models"
+	"github.com/nquangtrung/agentgo/models"
 )
 
 type Step struct {

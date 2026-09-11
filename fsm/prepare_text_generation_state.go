@@ -3,7 +3,7 @@ package fsm
 import (
 	"context"
 
-	"trontria.com/agentgo/models"
+	"github.com/nquangtrung/agentgo/models"
 )
 
 type PrepareTextGenerationState struct {

@@ -3,10 +3,10 @@ package agentgo
 import (
 	"strings"
 
-	"trontria.com/agentgo/models"
-	"trontria.com/agentgo/providers"
-	"trontria.com/agentgo/providers/openai"
-	"trontria.com/agentgo/utils"
+	"github.com/nquangtrung/agentgo/models"
+	"github.com/nquangtrung/agentgo/providers"
+	"github.com/nquangtrung/agentgo/providers/openai"
+	"github.com/nquangtrung/agentgo/utils"
 )
 
 type AgentProviderFactoryParams struct {

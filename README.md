@@ -7,6 +7,7 @@ Welcome to **AgentGo**, an educational project where we build our own AI SDK in 
 AgentGo is a clean, extensible SDK for working with different AI language models (OpenAI, Gemini, Claude, etc.) using a common interface. Instead of hardcoding OpenAI-specific logic throughout your app, you define a contract (an interface) that any AI provider can implement.
 
 This project demonstrates professional Go patterns like:
+
 - **Interface-based design** - Work with any provider through a common contract
 - **Composition over inheritance** - Reuse code through embedding
 - **Factory pattern** - Hide complexity behind simple functions
@@ -42,7 +43,7 @@ package main
 
 import (
 	"fmt"
-	"trontria.com/agentgo"
+	"github.com/nquangtrung/agentgo"
 )
 
 func main() {
@@ -104,9 +105,11 @@ Each blog post explains the "why" behind the design decisions, not just the "how
 ## Supported Providers
 
 Currently implemented:
+
 - ✅ **OpenAI** - All GPT models (gpt-3.5, gpt-4, etc.)
 
 Coming soon:
+
 - 🔜 **Google Gemini** - Google's language models
 - 🔜 **Anthropic Claude** - Claude models
 - 🔜 **Custom providers** - Implement your own!
@@ -123,6 +126,7 @@ go run examples/openai.go
 ## Architecture Highlights
 
 ### The Interface (The Contract)
+
 ```go
 type AgentProvider interface {
 	GetContext() models.LanguageModelContext
@@ -133,6 +137,7 @@ type AgentProvider interface {
 Any provider that implements these methods works with our SDK!
 
 ### The Base Implementation (No Repetition)
+
 ```go
 type AgentProviderImpl struct {
 	Context models.LanguageModelContext
@@ -146,6 +151,7 @@ func (p AgentProviderImpl) GetContext() models.LanguageModelContext {
 All providers embed this, so they don't repeat the common code.
 
 ### The Factory (Hide Complexity)
+
 ```go
 provider, err := CreateAgentProvider(AgentProviderFactoryParams{
 	ModelName: "gpt-5-mini",
@@ -176,6 +182,7 @@ That's it! Your new provider works everywhere automatically.
 ## Best Practices Used
 
 This project demonstrates:
+
 - ✨ Clean architecture with clear separation of concerns
 - 🎯 SOLID principles (especially Interface Segregation)
 - 🧪 Testable code (easy to mock providers)
@@ -187,17 +194,18 @@ These aren't theoretical concepts—they're what real-world Go codebases look li
 ## Contributing
 
 This is an educational project! Contributions are welcome:
+
 - Add new providers
 - Improve existing code
 - Write more blog posts
 - Add tests
 - Submit issues or suggestions
 
-
 ## Full series
 
-Check out the full series here:  
-- [Part 1: GenerateText](https://blog.trontria.com/posts/agentgo/part1-generatetext/)  
+Check out the full series here:
+
+- [Part 1: GenerateText](https://blog.trontria.com/posts/agentgo/part1-generatetext/)
 - [Part 2: StreamText & Polymorphic Parts](https://blog.trontria.com/posts/agentgo/part2-streamtext/)
 
 ## License

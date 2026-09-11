@@ -1,6 +1,6 @@
 package fsm
 
-import "trontria.com/agentgo/models"
+import "github.com/nquangtrung/agentgo/models"
 
 type ToolChoice struct {
 	Name string

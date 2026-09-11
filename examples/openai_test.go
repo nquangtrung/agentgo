@@ -5,9 +5,9 @@ import (
 	"log"
 	"testing"
 
-	"trontria.com/agentgo"
-	"trontria.com/agentgo/models"
-	"trontria.com/agentgo/utils"
+	"github.com/nquangtrung/agentgo"
+	"github.com/nquangtrung/agentgo/models"
+	"github.com/nquangtrung/agentgo/utils"
 )
 
 func TestGenerateTextOpenAI(t *testing.T) {

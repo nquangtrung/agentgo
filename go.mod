@@ -1,4 +1,4 @@
-module trontria.com/agentgo
+module github.com/nquangtrung/agentgo
 
 go 1.26.5
 

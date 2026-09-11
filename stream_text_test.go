@@ -7,14 +7,14 @@ import (
 	"log"
 	"testing"
 
+	"github.com/nquangtrung/agentgo/endconditions"
+	"github.com/nquangtrung/agentgo/fsm"
+	"github.com/nquangtrung/agentgo/mocks"
+	"github.com/nquangtrung/agentgo/models"
+	"github.com/nquangtrung/agentgo/providers"
+	"github.com/nquangtrung/agentgo/utils"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
-	"trontria.com/agentgo/endconditions"
-	"trontria.com/agentgo/fsm"
-	"trontria.com/agentgo/mocks"
-	"trontria.com/agentgo/models"
-	"trontria.com/agentgo/providers"
-	"trontria.com/agentgo/utils"
 )
 
 func checkPart(channel <-chan models.Part, check func(part models.Part)) {
@@ -482,7 +482,7 @@ func TestStreamTextToolExecutionError(t *testing.T) {
 	prompt := "Call a tool that fails"
 	modelName := "mocked-llm-3.6-flash"
 	ctx := context.Background()
-	
+
 	toolExecutionError := fmt.Errorf("tool crashed")
 	tools := []models.BaseTool{
 		models.NewTool(models.NewToolParams{
@@ -716,7 +716,7 @@ func TestStreamTextPrepareStepWithMessages(t *testing.T) {
 	}
 
 	mockProvider.EXPECT().Context().AnyTimes().Return(models.LanguageModelContext{ModelName: modelName})
-	
+
 	// Track which messages are passed to ResolveToolCall
 	messageCheckPassed := false
 	mockProvider.EXPECT().ResolveToolCall(
@@ -802,7 +802,7 @@ func TestStreamTextPrepareStepWithActiveTools(t *testing.T) {
 	}
 
 	mockProvider.EXPECT().Context().AnyTimes().Return(models.LanguageModelContext{ModelName: modelName})
-	
+
 	// Verify that only tool_1 is passed
 	mockProvider.EXPECT().ResolveToolCall(
 		gomock.Any(),
@@ -812,7 +812,7 @@ func TestStreamTextPrepareStepWithActiveTools(t *testing.T) {
 			return len(tools) == 1 && tools[0].Name() == "tool_1"
 		}),
 	).Return(models.LanguageModelToolCallResolveOutput{}, nil).Times(1)
-	
+
 	mockProvider.EXPECT().ResolveToolCall(
 		gomock.Any(),
 		gomock.Any(),
@@ -986,7 +986,7 @@ func TestStreamTextPrepareStepPerStepOptions(t *testing.T) {
 	}
 
 	mockProvider.EXPECT().Context().AnyTimes().Return(models.LanguageModelContext{ModelName: modelName})
-	
+
 	// First ResolveToolCall should have step1_tool
 	mockProvider.EXPECT().ResolveToolCall(
 		gomock.Any(),
@@ -997,7 +997,7 @@ func TestStreamTextPrepareStepPerStepOptions(t *testing.T) {
 	).Return(models.LanguageModelToolCallResolveOutput{
 		ToolCalls: []models.ToolCall{{ToolName: "step1_tool", Params: map[string]any{}}},
 	}, nil).Times(1)
-	
+
 	// Second ResolveToolCall should have step2_tool
 	mockProvider.EXPECT().ResolveToolCall(
 		gomock.Any(),
@@ -1008,7 +1008,7 @@ func TestStreamTextPrepareStepPerStepOptions(t *testing.T) {
 	).Return(models.LanguageModelToolCallResolveOutput{
 		ToolCalls: []models.ToolCall{{ToolName: "step2_tool", Params: map[string]any{}}},
 	}, nil).Times(1)
-	
+
 	// Final ResolveToolCall
 	mockProvider.EXPECT().ResolveToolCall(
 		gomock.Any(),
