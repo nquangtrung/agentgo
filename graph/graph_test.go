@@ -60,3 +60,67 @@ func TestSimpleGraph(t *testing.T) {
 	result := g.Invoke(0)
 	assert.Equal(t, 1, result, "Expected final state to be 1 after running the graph")
 }
+
+func TestGraphWithMultipleNodes(t *testing.T) {
+	g := New(func(a, b int) (int, error) {
+		return a + b, nil
+	})
+
+	g.AddNode("inc", func(state int) (int, error) {
+		return state + 1, nil
+	})
+	g.AddNode("double", func(state int) (int, error) {
+		return state * 2, nil
+	})
+
+	g.AddEdge(START, "inc")
+	g.AddEdge("inc", "double")
+	g.AddEdge("double", END)
+
+	result := g.Invoke(0)
+	assert.Equal(t, 2, result, "Expected final state to be 2 after running the graph")
+}
+
+func TestGraphWithFanOut(t *testing.T) {
+	g := New(func(a, b int) (int, error) {
+		return a + b, nil
+	})
+
+	g.AddNode("inc", func(state int) (int, error) {
+		return state + 1, nil
+	})
+	g.AddNode("double", func(state int) (int, error) {
+		return state * 2, nil
+	})
+
+	g.FanOut(START, []ID{"inc", "double"})
+	g.AddEdge("inc", END)
+	g.AddEdge("double", END)
+
+	result := g.Invoke(1)
+	assert.Equal(t, 4, result, "Expected final state to be 3 after running the graph")
+}
+
+func TestGraphWithImbalanceNodes(t *testing.T) {
+	g := New(func(a, b int) (int, error) {
+		return a + b, nil
+	})
+
+	g.AddNode("inc", func(state int) (int, error) {
+		return state + 1, nil
+	})
+	g.AddNode("inc2", func(state int) (int, error) {
+		return state + 2, nil
+	})
+	g.AddNode("double", func(state int) (int, error) {
+		return state * 2, nil
+	})
+
+	g.FanOut(START, []ID{"inc", "inc2"})
+	g.AddEdge("inc2", "double")
+	g.AddEdge("inc", END)
+	g.AddEdge("double", END)
+
+	result := g.Invoke(1)
+	assert.Equal(t, 6, result, "Expected final state to be 4 after running the graph")
+}

@@ -111,7 +111,7 @@ func (g *StateGraph[T]) reduce(result map[ID]nodeResult[T], reduceFrom []ID) T {
 func (g *StateGraph[T]) reduceAll(result map[ID]nodeResult[T], reduceFrom map[ID][]ID) map[ID]T {
 	reducedState := make(map[ID]T)
 	for id, from := range reduceFrom {
-		log.Printf("Reducing state for node %s from nodes %v", id, from)
+		log.Printf("Reducing result from nodes %v as input for node [%s]", from, id)
 		reducedState[id] = g.reduce(result, from)
 	}
 	return reducedState
@@ -136,24 +136,41 @@ func (g *StateGraph[T]) createStepInput(result map[ID]nodeResult[T]) stepInput[T
 	}
 }
 
+type step[T any] struct {
+	input  stepInput[T]
+	result map[ID]nodeResult[T]
+}
+
 func (g *StateGraph[T]) Invoke(initial T) T {
-	var input stepInput[T] = stepInput[T]{
-		nodes: []StateNode[T]{g.nodes[START]},
-		state: map[ID]T{
-			START: initial,
+	steps := []step[T]{
+		step[T]{
+			input: stepInput[T]{
+				nodes: []StateNode[T]{g.nodes[START]},
+				state: map[ID]T{
+					START: initial,
+				},
+			},
+			result: make(map[ID]nodeResult[T]),
 		},
 	}
 
-	step := 0
-	for ; len(input.nodes) > 0; step++ {
-		log.Printf("Executing step %d with nodes: %v", step, utils.Map(input.nodes, func(n StateNode[T]) ID { return n.ID }))
-		result := g.executeSuperStep(input)
-		log.Printf("Step %d executed, results: %v", step, utils.Keys(result))
-		input = g.createStepInput(result)
-		log.Printf("Step %d created next step input with nodes: %v", step, utils.Map(input.nodes, func(n StateNode[T]) ID { return n.ID }))
+	lastStep := steps[0]
+	for len(lastStep.input.nodes) > 0 {
+		log.Printf("Executing step %d with nodes: %v", len(steps), utils.Map(lastStep.input.nodes, func(n StateNode[T]) ID { return n.ID }))
+		result := g.executeSuperStep(lastStep.input)
+		lastStep.result = result
+		log.Printf("Step %d executed, results: %v", len(steps), result)
+		input := g.createStepInput(result)
+		log.Printf("Step %d created next step input with nodes: %v", len(steps), lastStep.input.nodes)
+
+		lastStep = step[T]{
+			input:  input,
+			result: result,
+		}
+		steps = append(steps, lastStep)
 	}
 
-	return initial
+	return lastStep.result[END].state
 }
 
 func (g *StateGraph[T]) Compile() {
