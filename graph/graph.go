@@ -85,39 +85,42 @@ func (g *StateGraph[T]) FanOut(start ID, ends []ID) {
 	}
 }
 
-func (g StateGraph[T]) execute(input stepInput[T]) map[ID]nodeResult[T] {
-	channel := make(chan nodeResult[T], len(input.nodes))
-	go func() {
-		var wg sync.WaitGroup
-		utils.Each(input.nodes, func(n StateNode[T]) {
-			wg.Go(func() {
-				log.Printf("Executing node %s", n.ID)
-				state := input.state
-				newState, err := n.execute(state)
+func (g StateGraph[T]) executeAll(input stepInput[T], channel chan nodeResult[T]) {
+	var wg sync.WaitGroup
+	utils.Each(input.nodes, func(n StateNode[T]) {
+		wg.Go(func() {
+			log.Printf("Executing node %s", n.ID)
+			state := input.state
+			newState, err := n.execute(state)
 
-				if err != nil {
-					log.Printf("Error executing node %s: %v", n.ID, err)
-					channel <- nodeResult[T]{
-						id:    n.ID,
-						state: state, // Return the original state in case of error
-						err:   err,
-					}
-					return
+			if err != nil {
+				log.Printf("Error executing node %s: %v", n.ID, err)
+				channel <- nodeResult[T]{
+					id:    n.ID,
+					state: state, // Return the original state in case of error
+					err:   err,
 				}
-
+				return
+			} else {
 				log.Printf("Node %s executed, new state: %v", n.ID, newState)
 				channel <- nodeResult[T]{
 					id:    n.ID,
 					state: newState,
 				}
-			})
+			}
 		})
+	})
 
-		wg.Wait()
-		close(channel)
-	}()
+	wg.Wait()
+	close(channel)
+}
 
+func (g StateGraph[T]) execute(input stepInput[T]) map[ID]nodeResult[T] {
+	channel := make(chan nodeResult[T], len(input.nodes))
 	result := make(map[ID]nodeResult[T])
+
+	go g.executeAll(input, channel)
+
 	log.Printf("Waiting for results from %d nodes", len(input.nodes))
 	for r := range channel {
 		log.Printf("Received result from node %s: %v", r.id, r.state)
@@ -148,7 +151,7 @@ func (g StateGraph[T]) reduce(state T, result map[ID]nodeResult[T]) (T, error) {
 	return reducedState, nil
 }
 
-func (g StateGraph[T]) route(state T, result map[ID]nodeResult[T]) (map[ID][]ID, *RouterExecutionError) {
+func (g StateGraph[T]) route(state T, result map[ID]nodeResult[T]) ([]StateNode[T], *RouterExecutionError) {
 	nodes := make(map[ID][]ID)
 	for _, r := range result {
 		edge := g.edges[r.id]
@@ -161,7 +164,7 @@ func (g StateGraph[T]) route(state T, result map[ID]nodeResult[T]) (map[ID][]ID,
 
 		routedNodes, err := edge.route(state)
 		if err != nil {
-			return map[ID][]ID{}, err
+			return []StateNode[T]{}, err
 		}
 
 		log.Printf("Routing from node %s with state %v to nodes: %v", r.id, r.state, routedNodes)
@@ -171,7 +174,12 @@ func (g StateGraph[T]) route(state T, result map[ID]nodeResult[T]) (map[ID][]ID,
 		})
 	}
 
-	return nodes, nil
+	return utils.Map(
+		utils.Keys(nodes),
+		func(id ID) StateNode[T] {
+			return g.nodes[id]
+		},
+	), nil
 }
 
 func (g StateGraph[T]) barrier(state T, result map[ID]nodeResult[T]) (stepInput[T], error) {
@@ -194,12 +202,7 @@ func (g StateGraph[T]) barrier(state T, result map[ID]nodeResult[T]) (stepInput[
 	}
 
 	return stepInput[T]{
-		nodes: utils.Map(
-			utils.Keys(nodes),
-			func(id ID) StateNode[T] {
-				return g.nodes[id]
-			},
-		),
+		nodes: nodes,
 		state: newState,
 	}, nil
 }
