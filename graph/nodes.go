@@ -5,8 +5,8 @@ const (
 	END   ID = "end"
 )
 
-func bypassFn[T any](state T) (T, error) {
-	return state, nil
+func bypassFn[T any](state T) T {
+	return state
 }
 
 func newStartNode[T any]() StateNode[T] {

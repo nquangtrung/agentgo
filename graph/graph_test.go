@@ -8,8 +8,8 @@ import (
 )
 
 func TestNewGraph(t *testing.T) {
-	g := New[int](func(a, b int) (int, error) {
-		return a + b, nil
+	g := New[int](func(a, b int) int {
+		return a + b
 	})
 
 	assert.NotNil(t, g.reducer, "Expected reducer to be not nil")
@@ -22,12 +22,12 @@ func TestNewGraph(t *testing.T) {
 }
 
 func TestAddNode(t *testing.T) {
-	g := New[int](func(a, b int) (int, error) {
-		return a + b, nil
+	g := New[int](func(a, b int) int {
+		return a + b
 	})
 
-	fn := func(state int) (int, error) {
-		return state + 1, nil
+	fn := func(state int) int {
+		return state + 1
 	}
 	id := "inc"
 	g.AddNode(id, fn)
@@ -36,12 +36,12 @@ func TestAddNode(t *testing.T) {
 }
 
 func TestAddNodePanic(t *testing.T) {
-	g := New[int](func(a, b int) (int, error) {
-		return a + b, nil
+	g := New[int](func(a, b int) int {
+		return a + b
 	})
 
-	fn := func(state int) (int, error) {
-		return state + 1, nil
+	fn := func(state int) int {
+		return state + 1
 	}
 
 	assert.Panics(t, func() {
@@ -59,8 +59,8 @@ func TestAddNodePanic(t *testing.T) {
 }
 
 func TestAddEdge(t *testing.T) {
-	g := New[int](func(a, b int) (int, error) {
-		return a + b, nil
+	g := New[int](func(a, b int) int {
+		return a + b
 	})
 
 	g.AddEdge(START, END)
@@ -70,8 +70,8 @@ func TestAddEdge(t *testing.T) {
 }
 
 func TestAddEdgePanic(t *testing.T) {
-	g := New[int](func(a, b int) (int, error) {
-		return a + b, nil
+	g := New[int](func(a, b int) int {
+		return a + b
 	})
 
 	assert.Panics(t, func() {
@@ -84,8 +84,8 @@ func TestAddEdgePanic(t *testing.T) {
 }
 
 func TestFanOutPanic(t *testing.T) {
-	g := New[int](func(a, b int) (int, error) {
-		return a + b, nil
+	g := New[int](func(a, b int) int {
+		return a + b
 	})
 
 	assert.Panics(t, func() {
@@ -98,45 +98,47 @@ func TestFanOutPanic(t *testing.T) {
 }
 
 func TestAddConditionalEdge(t *testing.T) {
-	g := New[int](func(a, b int) (int, error) {
-		return a + b, nil
+	g := New[int](func(a, b int) int {
+		return a + b
 	})
 
-	condition := func(state int) ([]ID, error) {
+	condition := func(state int) []ID {
 		if state > 0 {
-			return []ID{"positive"}, nil
+			return []ID{"positive"}
 		}
-		return []ID{"nonpositive"}, nil
+		return []ID{"nonpositive"}
 	}
 
-	g.AddNode("positive", func(state int) (int, error) {
-		return state + 1, nil
+	g.AddNode("positive", func(state int) int {
+		return state + 1
 	})
-	g.AddNode("nonpositive", func(state int) (int, error) {
-		return state - 1, nil
+	g.AddNode("nonpositive", func(state int) int {
+		return state - 1
 	})
 
 	g.AddConditionalEdge(START, condition, []ID{"positive", "nonpositive"})
 	g.AddEdge("positive", END)
 	g.AddEdge("nonpositive", END)
 
-	result := g.Invoke(1)
+	result, err := g.Invoke(1)
 	assert.Equal(t, 3, result, "Expected final state to be 2 after running the graph with positive input")
+	assert.NoError(t, err, "Expect result without error")
 
-	result = g.Invoke(-1)
+	result, err = g.Invoke(-1)
+	assert.NoError(t, err, "Expect result without error")
 	assert.Equal(t, -3, result, "Expected final state to be -2 after running the graph with non-positive input")
 }
 
 func TestAddConditionalEdgePanic(t *testing.T) {
-	g := New[int](func(a, b int) (int, error) {
-		return a + b, nil
+	g := New[int](func(a, b int) int {
+		return a + b
 	})
 
-	condition := func(state int) ([]ID, error) {
+	condition := func(state int) []ID {
 		if state > 0 {
-			return []ID{"positive"}, nil
+			return []ID{"positive"}
 		}
-		return []ID{"nonpositive"}, nil
+		return []ID{"nonpositive"}
 	}
 
 	assert.Panics(t, func() {
@@ -149,73 +151,77 @@ func TestAddConditionalEdgePanic(t *testing.T) {
 }
 
 func TestSimpleGraph(t *testing.T) {
-	g := New(func(a, b int) (int, error) {
-		return a + b, nil
+	g := New(func(a, b int) int {
+		return a + b
 	})
 
-	g.AddNode("inc", func(state int) (int, error) {
-		return state + 1, nil
+	g.AddNode("inc", func(state int) int {
+		return state + 1
 	})
 	g.AddEdge(START, "inc")
 	g.AddEdge("inc", END)
 
-	result := g.Invoke(0)
+	result, err := g.Invoke(0)
+	assert.NoError(t, err, "Expect result without error")
 	assert.Equal(t, 1, result, "Expected final state to be 1 after running the graph")
 }
 
 func TestGraphWithMultipleNodes(t *testing.T) {
-	g := New(func(a, b int) (int, error) {
-		return a + b, nil
+	g := New(func(a, b int) int {
+		return a + b
 	})
 
-	g.AddNode("inc", func(state int) (int, error) {
-		return state + 1, nil
+	g.AddNode("inc", func(state int) int {
+		return state + 1
 	})
-	g.AddNode("double", func(state int) (int, error) {
-		return state * 2, nil
+	g.AddNode("double", func(state int) int {
+		return state * 2
 	})
 
 	g.AddEdge(START, "inc")
 	g.AddEdge("inc", "double")
 	g.AddEdge("double", END)
 
-	result := g.Invoke(0)
+	result, err := g.Invoke(0)
 	assert.Equal(t, 3, result, "Expected final state to be 2 after running the graph")
+	assert.NoError(t, err, "Expect result without error")
 }
 
 func TestGraphWithFanOut(t *testing.T) {
-	g := New(func(a, b int) (int, error) {
-		return a + b, nil
+	g := New(func(a, b int) int {
+		return a + b
 	})
 
-	g.AddNode("inc", func(state int) (int, error) {
-		return state + 1, nil
+	g.AddNode("inc", func(state int) int {
+		return state + 1
 	})
-	g.AddNode("double", func(state int) (int, error) {
-		return state * 2, nil
+	g.AddNode("double", func(state int) int {
+		return state * 2
 	})
 
 	g.FanOut(START, []ID{"inc", "double"})
 	g.AddEdge("inc", END)
 	g.AddEdge("double", END)
 
-	result := g.Invoke(1)
+	result, err := g.Invoke(1)
+
+	assert.NoError(t, err, "Expect result without error")
 	assert.Equal(t, 5, result, "Expected final state to be 3 after running the graph")
 }
 
 func TestGraphWithImbalanceNodes(t *testing.T) {
-	g := New(func(a, b int) (int, error) {
-		return a + b, nil
+	g := New(func(a, b int) int {
+		return a + b
 	})
 
-	g.AddNode("inc", func(state int) (int, error) {
-		return state + 1, nil
+	g.AddNode("inc", func(state int) int {
+		return state + 1
 	})
-	g.AddNode("inc2", func(state int) (int, error) {
-		return state + 2, nil
+	g.AddNode("inc2", func(state int) int {
+		return state + 2
 	})
-	g.AddNode("double", func(state int) (int, error) {
-		return state * 2, nil
+	g.AddNode("double", func(state int) int {
+		return state * 2
 	})
 
 	g.FanOut(START, []ID{"inc", "inc2"})
@@ -223,6 +229,97 @@ func TestGraphWithImbalanceNodes(t *testing.T) {
 	g.AddEdge("inc", END)
 	g.AddEdge("double", END)
 
-	result := g.Invoke(1)
+	result, err := g.Invoke(1)
+	assert.NoError(t, err, "Expect result without error")
 	assert.Equal(t, 18, result, "Expected final state to be 4 after running the graph")
+}
+
+func TestGraphWithErrorInNode(t *testing.T) {
+	g := New(func(a, b int) int {
+		return a + b
+	})
+
+	g.AddNode("inc", func(state int) int {
+		return state + 1
+	})
+	g.AddNode("errorNode1", func(state int) int {
+		panic("intentional error 1")
+	})
+	g.AddNode("errorNode2", func(state int) int {
+		panic("intentional error 2")
+	})
+
+	g.FanOut(START, []ID{"inc", "errorNode1", "errorNode2"})
+	g.AddEdge("inc", END)
+	g.AddEdge("errorNode1", END)
+	g.AddEdge("errorNode2", END)
+
+	result, err := g.Invoke(1)
+	assert.Error(t, err, "Expected an error due to the intentional panic in errorNode")
+	assert.IsType(t, &SuperStepExecutionError{}, err, "Expected error to be of type SuperStepExecutionError")
+
+	superStepErr, _ := err.(*SuperStepExecutionError)
+	assert.Len(t, superStepErr.Errs, 2, "Expected one error in the super step execution error")
+
+	errorNodes := []string{"errorNode1", "errorNode2"}
+	assert.ElementsMatch(t, errorNodes, utils.Map(superStepErr.Errs, func(err *NodeExecutionError) string { return err.ID }))
+
+	assert.Equal(t, 1, result, "Expected final state to be 2 after running the graph with error in one node")
+}
+
+func TestGraphWithErrorInReducer(t *testing.T) {
+	g := New(func(a, b int) int {
+		if b == 0 {
+			panic("intentional error in reducer")
+		}
+		return a + b
+	})
+
+	g.AddNode("inc", func(state int) int {
+		return state + 1
+	})
+	g.AddNode("zero", func(state int) int {
+		return 0
+	})
+
+	g.FanOut(START, []ID{"inc", "zero"})
+	g.AddEdge("inc", END)
+	g.AddEdge("zero", END)
+
+	result, err := g.Invoke(1)
+	assert.Error(t, err, "Expected an error due to the intentional panic in reducer")
+	assert.IsType(t, &ReducerExecutionError{}, err, "Expected error to be of type ReducerExecutionError")
+
+	reducerErr, _ := err.(*ReducerExecutionError)
+	assert.Equal(t, "panic in reducer execution: intentional error in reducer", reducerErr.Err.Error(), "Expected error message to match the intentional panic message")
+	assert.Equal(t, 1, result, "Expected final state to be 2 after running the graph with error in reducer")
+}
+
+func TestGraphWithErrorInRouter(t *testing.T) {
+	g := New(func(a, b int) int {
+		return a + b
+	})
+
+	router := func(state int) []ID {
+		if state < 0 {
+			panic("intentional error in router")
+		}
+		return []ID{"inc"}
+	}
+
+	g.AddNode("inc", func(state int) int {
+		return state + 1
+	})
+
+	g.AddConditionalEdge(START, router, []ID{"inc"})
+	g.AddEdge("inc", END)
+
+	result, err := g.Invoke(-1)
+	assert.Error(t, err, "Expected an error due to the intentional panic in router")
+	assert.IsType(t, &RouterExecutionError{}, err, "Expected error to be of type RouterExecutionError")
+
+	routerErr, _ := err.(*RouterExecutionError)
+	assert.Equal(t, START, routerErr.ID, "Expected error ID to match the START node ID")
+	assert.Equal(t, "panic in router execution: intentional error in router", routerErr.Err.Error(), "Expected error message to match the intentional panic message")
+	assert.Equal(t, -1, result, "Expected final state to be -1 after running the graph with error in router")
 }
