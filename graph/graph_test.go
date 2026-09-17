@@ -97,6 +97,57 @@ func TestFanOutPanic(t *testing.T) {
 	}, "Expected panic when fan-out to a non-existent end node")
 }
 
+func TestAddConditionalEdge(t *testing.T) {
+	g := New[int](func(a, b int) (int, error) {
+		return a + b, nil
+	})
+
+	condition := func(state int) ([]ID, error) {
+		if state > 0 {
+			return []ID{"positive"}, nil
+		}
+		return []ID{"nonpositive"}, nil
+	}
+
+	g.AddNode("positive", func(state int) (int, error) {
+		return state + 1, nil
+	})
+	g.AddNode("nonpositive", func(state int) (int, error) {
+		return state - 1, nil
+	})
+
+	g.AddConditionalEdge(START, condition, []ID{"positive", "nonpositive"})
+	g.AddEdge("positive", END)
+	g.AddEdge("nonpositive", END)
+
+	result := g.Invoke(1)
+	assert.Equal(t, 3, result, "Expected final state to be 2 after running the graph with positive input")
+
+	result = g.Invoke(-1)
+	assert.Equal(t, -3, result, "Expected final state to be -2 after running the graph with non-positive input")
+}
+
+func TestAddConditionalEdgePanic(t *testing.T) {
+	g := New[int](func(a, b int) (int, error) {
+		return a + b, nil
+	})
+
+	condition := func(state int) ([]ID, error) {
+		if state > 0 {
+			return []ID{"positive"}, nil
+		}
+		return []ID{"nonpositive"}, nil
+	}
+
+	assert.Panics(t, func() {
+		g.AddConditionalEdge("nonexistent", condition, []ID{"positive", "nonpositive"})
+	}, "Expected panic when adding a conditional edge from a non-existent start node")
+
+	assert.Panics(t, func() {
+		g.AddConditionalEdge(START, condition, []ID{"nonexistent", "nonexistent2"})
+	}, "Expected panic when adding a conditional edge to a non-existent end node")
+}
+
 func TestSimpleGraph(t *testing.T) {
 	g := New(func(a, b int) (int, error) {
 		return a + b, nil

@@ -10,12 +10,14 @@ import (
 
 type NodeFn[T any] = func(state T) (T, error)
 type Reducer[T any] = func(state1 T, state2 T) (T, error)
+type Router[T any] = func(state T) ([]ID, error)
 
 type ID = string
 
 type StateEdge[T any] struct {
-	Start ID
-	End   []ID
+	Start  ID
+	End    []ID
+	Router Router[T]
 }
 
 type StateNode[T any] struct {
@@ -30,6 +32,10 @@ type nodeResult[T any] struct {
 type stepInput[T any] struct {
 	nodes []StateNode[T]
 	state T
+}
+type step[T any] struct {
+	input  stepInput[T]
+	result map[ID]nodeResult[T]
 }
 
 type StateGraph[T any] struct {
@@ -74,6 +80,19 @@ func (g *StateGraph[T]) AddEdge(start ID, end ID) {
 	}
 }
 
+func (g *StateGraph[T]) AddConditionalEdge(start ID, router Router[T], ends []ID) {
+	g.panicIfNodeNotExists(start)
+	for _, end := range ends {
+		g.panicIfNodeNotExists(end)
+	}
+
+	g.edges[start] = StateEdge[T]{
+		Start:  start,
+		End:    ends,
+		Router: router,
+	}
+}
+
 func (g *StateGraph[T]) FanOut(start ID, ends []ID) {
 	g.panicIfNodeNotExists(start)
 	for _, end := range ends {
@@ -106,6 +125,7 @@ func (g StateGraph[T]) executeSuperStep(input stepInput[T]) map[ID]nodeResult[T]
 				}
 			})
 		})
+
 		wg.Wait()
 		close(channel)
 	}()
@@ -141,7 +161,20 @@ func (g StateGraph[T]) reduce(state T, result map[ID]nodeResult[T]) T {
 func (g StateGraph[T]) createStepInput(state T, result map[ID]nodeResult[T]) stepInput[T] {
 	nodes := make(map[ID][]ID)
 	for _, r := range result {
-		utils.Each(g.edges[r.id].End, func(nextNodeId ID) {
+		edge := g.edges[r.id]
+		if edge.Router == nil {
+			utils.Each(g.edges[r.id].End, func(nextNodeId ID) {
+				nodes[nextNodeId] = append(nodes[nextNodeId], r.id)
+			})
+			continue
+		}
+
+		routedNodes, err := edge.Router(r.state)
+		log.Printf("Routing from node %s with state %v to nodes: %v", r.id, r.state, routedNodes)
+		if err != nil {
+			// TODO handle error
+		}
+		utils.Each(routedNodes, func(nextNodeId ID) {
 			nodes[nextNodeId] = append(nodes[nextNodeId], r.id)
 		})
 	}
@@ -155,11 +188,6 @@ func (g StateGraph[T]) createStepInput(state T, result map[ID]nodeResult[T]) ste
 		),
 		state: g.reduce(state, result),
 	}
-}
-
-type step[T any] struct {
-	input  stepInput[T]
-	result map[ID]nodeResult[T]
 }
 
 func (g StateGraph[T]) Invoke(initial T) T {
@@ -180,7 +208,7 @@ func (g StateGraph[T]) Invoke(initial T) T {
 		lastStep.result = result
 		log.Printf("Step %d executed, results: %v", len(steps), result)
 		input := g.createStepInput(lastStep.input.state, result)
-		log.Printf("Step %d created next step input with nodes: %v", len(steps), lastStep.input.nodes)
+		log.Printf("Step %d created next step input with nodes: %v", len(steps), utils.Map(lastStep.input.nodes, func(n StateNode[T]) ID { return n.ID }))
 
 		lastStep = step[T]{
 			input:  input,
