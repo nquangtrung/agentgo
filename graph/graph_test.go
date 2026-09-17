@@ -323,3 +323,24 @@ func TestGraphWithErrorInRouter(t *testing.T) {
 	assert.Equal(t, "panic in router execution: intentional error in router", routerErr.Err.Error(), "Expected error message to match the intentional panic message")
 	assert.Equal(t, -1, result, "Expected final state to be -1 after running the graph with error in router")
 }
+
+func TestCycleGraphWithCondition(t *testing.T) {
+	g := New(func(a, b int) int {
+		return a + b
+	})
+	g.AddNode("inc", func(state int) int {
+		return state + 1
+	})
+
+	g.AddEdge(START, "inc")
+	g.AddConditionalEdge("inc", func(state int) []ID {
+		if state < 10 {
+			return []ID{"inc"}
+		}
+		return []ID{END}
+	}, []ID{"inc", END})
+
+	result, err := g.Invoke(0)
+	assert.NoError(t, err, "Expect result without error")
+	assert.Equal(t, 15, result, "Expected final state to be 1 after running the graph with a cycle")
+}
