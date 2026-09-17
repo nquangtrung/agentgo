@@ -56,3 +56,11 @@ func Keys[T any](input map[string]T) []string {
 	}
 	return result
 }
+
+func Values[T any](input map[string]T) []T {
+	result := make([]T, 0, len(input))
+	for _, v := range input {
+		result = append(result, v)
+	}
+	return result
+}

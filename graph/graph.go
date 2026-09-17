@@ -1,6 +1,7 @@
 package graph
 
 import (
+	"fmt"
 	"log"
 	"sync"
 
@@ -28,13 +29,25 @@ type nodeResult[T any] struct {
 }
 type stepInput[T any] struct {
 	nodes []StateNode[T]
-	state map[ID]T
+	state T
 }
 
 type StateGraph[T any] struct {
 	nodes   map[ID]StateNode[T]
 	edges   map[ID]StateEdge[T]
 	reducer Reducer[T]
+}
+
+func (g StateGraph[T]) panicIfNodeExists(id ID) {
+	if _, exists := g.nodes[id]; exists {
+		panic(fmt.Errorf("Node %s exists", id))
+	}
+}
+
+func (g StateGraph[T]) panicIfNodeNotExists(id ID) {
+	if _, exists := g.nodes[id]; !exists {
+		panic(fmt.Errorf("Node %s does not exist", id))
+	}
 }
 
 func (g *StateGraph[T]) AddNode(name ID, fn NodeFn[T]) {
@@ -48,10 +61,13 @@ func (g *StateGraph[T]) AddNode(name ID, fn NodeFn[T]) {
 }
 
 func (g *StateGraph[T]) add(node StateNode[T]) {
+	g.panicIfNodeExists(node.ID)
 	g.nodes[node.ID] = node
 }
 
 func (g *StateGraph[T]) AddEdge(start ID, end ID) {
+	g.panicIfNodeNotExists(start)
+	g.panicIfNodeNotExists(end)
 	g.edges[start] = StateEdge[T]{
 		Start: start,
 		End:   []ID{end},
@@ -59,20 +75,24 @@ func (g *StateGraph[T]) AddEdge(start ID, end ID) {
 }
 
 func (g *StateGraph[T]) FanOut(start ID, ends []ID) {
+	g.panicIfNodeNotExists(start)
+	for _, end := range ends {
+		g.panicIfNodeNotExists(end)
+	}
 	g.edges[start] = StateEdge[T]{
 		Start: start,
 		End:   ends,
 	}
 }
 
-func (g *StateGraph[T]) executeSuperStep(input stepInput[T]) map[ID]nodeResult[T] {
+func (g StateGraph[T]) executeSuperStep(input stepInput[T]) map[ID]nodeResult[T] {
 	channel := make(chan nodeResult[T], len(input.nodes))
 	func() {
 		var wg sync.WaitGroup
 		utils.Each(input.nodes, func(n StateNode[T]) {
 			wg.Go(func() {
 				log.Printf("Executing node %s", n.ID)
-				state := input.state[n.ID]
+				state := input.state
 				newState, err := n.fn(state)
 				if err != nil {
 					// TODO handle error
@@ -100,24 +120,25 @@ func (g *StateGraph[T]) executeSuperStep(input stepInput[T]) map[ID]nodeResult[T
 	return result
 }
 
-func (g *StateGraph[T]) reduce(result map[ID]nodeResult[T], reduceFrom []ID) T {
-	state := result[reduceFrom[0]].state
-	for i := 1; i < len(reduceFrom); i++ {
-		state, _ = g.reducer(state, result[reduceFrom[i]].state)
-	}
-	return state
-}
+func (g StateGraph[T]) reduce(state T, result map[ID]nodeResult[T]) T {
+	reducedState := state
+	for key, value := range result {
+		if key == END || key == START {
+			// terminal node, does not contribute to the state
+			continue
+		}
 
-func (g *StateGraph[T]) reduceAll(result map[ID]nodeResult[T], reduceFrom map[ID][]ID) map[ID]T {
-	reducedState := make(map[ID]T)
-	for id, from := range reduceFrom {
-		log.Printf("Reducing result from nodes %v as input for node [%s]", from, id)
-		reducedState[id] = g.reduce(result, from)
+		newState, err := g.reducer(reducedState, value.state)
+		if err != nil {
+			// TODO handle error
+		}
+
+		reducedState = newState
 	}
 	return reducedState
 }
 
-func (g *StateGraph[T]) createStepInput(result map[ID]nodeResult[T]) stepInput[T] {
+func (g StateGraph[T]) createStepInput(state T, result map[ID]nodeResult[T]) stepInput[T] {
 	nodes := make(map[ID][]ID)
 	for _, r := range result {
 		utils.Each(g.edges[r.id].End, func(nextNodeId ID) {
@@ -132,7 +153,7 @@ func (g *StateGraph[T]) createStepInput(result map[ID]nodeResult[T]) stepInput[T
 				return g.nodes[id]
 			},
 		),
-		state: g.reduceAll(result, nodes),
+		state: g.reduce(state, result),
 	}
 }
 
@@ -141,14 +162,12 @@ type step[T any] struct {
 	result map[ID]nodeResult[T]
 }
 
-func (g *StateGraph[T]) Invoke(initial T) T {
+func (g StateGraph[T]) Invoke(initial T) T {
 	steps := []step[T]{
 		step[T]{
 			input: stepInput[T]{
+				state: initial,
 				nodes: []StateNode[T]{g.nodes[START]},
-				state: map[ID]T{
-					START: initial,
-				},
 			},
 			result: make(map[ID]nodeResult[T]),
 		},
@@ -160,7 +179,7 @@ func (g *StateGraph[T]) Invoke(initial T) T {
 		result := g.executeSuperStep(lastStep.input)
 		lastStep.result = result
 		log.Printf("Step %d executed, results: %v", len(steps), result)
-		input := g.createStepInput(result)
+		input := g.createStepInput(lastStep.input.state, result)
 		log.Printf("Step %d created next step input with nodes: %v", len(steps), lastStep.input.nodes)
 
 		lastStep = step[T]{

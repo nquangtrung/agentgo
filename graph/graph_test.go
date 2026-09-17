@@ -35,6 +35,29 @@ func TestAddNode(t *testing.T) {
 	assert.Contains(t, g.nodes, id, "Expected node to be added to the graph")
 }
 
+func TestAddNodePanic(t *testing.T) {
+	g := New[int](func(a, b int) (int, error) {
+		return a + b, nil
+	})
+
+	fn := func(state int) (int, error) {
+		return state + 1, nil
+	}
+
+	assert.Panics(t, func() {
+		g.AddNode(START, fn)
+	}, "Expected panic when adding a node with START ID")
+	assert.Panics(t, func() {
+		g.AddNode(END, fn)
+	}, "Expected panic when adding a node with END ID")
+
+	id := "inc"
+	g.AddNode(id, fn)
+	assert.Panics(t, func() {
+		g.AddNode(id, fn)
+	}, "Expected panic when adding a duplicate node")
+}
+
 func TestAddEdge(t *testing.T) {
 	g := New[int](func(a, b int) (int, error) {
 		return a + b, nil
@@ -44,6 +67,34 @@ func TestAddEdge(t *testing.T) {
 
 	assert.Contains(t, g.edges, START, "Expected edge to be added to the graph")
 	assert.Equal(t, []ID{END}, g.edges[START].End, "Expected edge end to match the provided end ID")
+}
+
+func TestAddEdgePanic(t *testing.T) {
+	g := New[int](func(a, b int) (int, error) {
+		return a + b, nil
+	})
+
+	assert.Panics(t, func() {
+		g.AddEdge("nonexistent", END)
+	}, "Expected panic when adding an edge with a non-existent start node")
+
+	assert.Panics(t, func() {
+		g.AddEdge(START, "nonexistent")
+	}, "Expected panic when adding an edge with a non-existent end node")
+}
+
+func TestFanOutPanic(t *testing.T) {
+	g := New[int](func(a, b int) (int, error) {
+		return a + b, nil
+	})
+
+	assert.Panics(t, func() {
+		g.FanOut("nonexistent", []ID{END})
+	}, "Expected panic when fan-out from a non-existent start node")
+
+	assert.Panics(t, func() {
+		g.FanOut(START, []ID{"nonexistent", "nonexistent2"})
+	}, "Expected panic when fan-out to a non-existent end node")
 }
 
 func TestSimpleGraph(t *testing.T) {
@@ -78,7 +129,7 @@ func TestGraphWithMultipleNodes(t *testing.T) {
 	g.AddEdge("double", END)
 
 	result := g.Invoke(0)
-	assert.Equal(t, 2, result, "Expected final state to be 2 after running the graph")
+	assert.Equal(t, 3, result, "Expected final state to be 2 after running the graph")
 }
 
 func TestGraphWithFanOut(t *testing.T) {
@@ -98,7 +149,7 @@ func TestGraphWithFanOut(t *testing.T) {
 	g.AddEdge("double", END)
 
 	result := g.Invoke(1)
-	assert.Equal(t, 4, result, "Expected final state to be 3 after running the graph")
+	assert.Equal(t, 5, result, "Expected final state to be 3 after running the graph")
 }
 
 func TestGraphWithImbalanceNodes(t *testing.T) {
@@ -122,5 +173,5 @@ func TestGraphWithImbalanceNodes(t *testing.T) {
 	g.AddEdge("double", END)
 
 	result := g.Invoke(1)
-	assert.Equal(t, 6, result, "Expected final state to be 4 after running the graph")
+	assert.Equal(t, 18, result, "Expected final state to be 4 after running the graph")
 }
