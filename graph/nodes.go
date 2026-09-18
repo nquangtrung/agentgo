@@ -9,15 +9,15 @@ func bypassFn[T any](state T) T {
 	return state
 }
 
-func newStartNode[T any]() StateNode[T] {
-	return StateNode[T]{
+func newStartNode[T any]() stateNode[T] {
+	return stateNode[T]{
 		ID: START,
 		fn: bypassFn[T],
 	}
 }
 
-func newEndNode[T any]() StateNode[T] {
-	return StateNode[T]{
+func newEndNode[T any]() stateNode[T] {
+	return stateNode[T]{
 		ID: END,
 		fn: bypassFn[T],
 	}

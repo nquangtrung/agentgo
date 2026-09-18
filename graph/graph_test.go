@@ -102,11 +102,11 @@ func TestAddConditionalEdge(t *testing.T) {
 		return a + b
 	})
 
-	condition := func(state int) []ID {
+	condition := func(state int) []Target {
 		if state > 0 {
-			return []ID{"positive"}
+			return IDs("positive")
 		}
-		return []ID{"nonpositive"}
+		return IDs("nonpositive")
 	}
 
 	g.AddNode("positive", func(state int) int {
@@ -134,11 +134,11 @@ func TestAddConditionalEdgePanic(t *testing.T) {
 		return a + b
 	})
 
-	condition := func(state int) []ID {
+	condition := func(state int) []Target {
 		if state > 0 {
-			return []ID{"positive"}
+			return IDs("positive")
 		}
-		return []ID{"nonpositive"}
+		return IDs("nonpositive")
 	}
 
 	assert.Panics(t, func() {
@@ -300,11 +300,11 @@ func TestGraphWithErrorInRouter(t *testing.T) {
 		return a + b
 	})
 
-	router := func(state int) []ID {
+	router := func(state int) []Target {
 		if state < 0 {
 			panic("intentional error in router")
 		}
-		return []ID{"inc"}
+		return IDs("inc")
 	}
 
 	g.AddNode("inc", func(state int) int {
@@ -333,11 +333,11 @@ func TestCycleGraphWithCondition(t *testing.T) {
 	})
 
 	g.AddEdge(START, "inc")
-	g.AddConditionalEdge("inc", func(state int) []ID {
+	g.AddConditionalEdge("inc", func(state int) []Target {
 		if state < 10 {
-			return []ID{"inc"}
+			return IDs("inc")
 		}
-		return []ID{END}
+		return IDs(END)
 	}, []ID{"inc", END})
 
 	result, err := g.Invoke(0, InvocationConfig{})
@@ -354,11 +354,38 @@ func TestInfiniteLoopGraph(t *testing.T) {
 	})
 
 	g.AddEdge(START, "inc")
-	g.AddConditionalEdge("inc", func(state int) []ID {
-		return []ID{"inc"}
+	g.AddConditionalEdge("inc", func(state int) []Target {
+		return IDs("inc")
 	}, []ID{"inc"})
 
 	_, err := g.Invoke(0, InvocationConfig{})
 	assert.Error(t, err, "Expected an error due to infinite loop in the graph")
 	assert.IsType(t, &InvocationError{}, err, "Expected error to be of type RouterExecutionError")
+}
+
+func TestGraphWithWorkerNode(t *testing.T) {
+	g := New(func(a, b int) int {
+		return a + b
+	})
+
+	g.AddWorkerNode("worker", func(params any) int {
+		if p, ok := params.(int); ok {
+			return p * 2
+		}
+		return 0
+	})
+
+	g.AddConditionalEdge(START, func(state int) []Target {
+		return []Target{
+			Send("worker", 1),
+			Send("worker", 2),
+			Send("worker", 3),
+		}
+	}, []ID{"worker"})
+
+	g.AddEdge("worker", END)
+
+	result, err := g.Invoke(5, InvocationConfig{})
+	assert.NoError(t, err, "Expect result without error")
+	assert.Equal(t, 17, result, "Expected final state to be 10 after running the graph with worker node")
 }
