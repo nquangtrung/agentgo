@@ -15,14 +15,25 @@ type stepInput[T any] struct {
 	state T
 }
 type step[T any] struct {
-	input  stepInput[T]
-	result map[ID]nodeResult[T]
+	input        stepInput[T]
+	result       []nodeResult[T]
+	reducedState T
 }
 
 type StateGraph[T any] struct {
 	nodes   map[ID]StateNode[T]
 	edges   map[ID]StateEdge[T]
 	reducer Reducer[T]
+}
+
+type InvocationConfig struct {
+	RecursonLimit int
+	StartNode     ID
+}
+
+type StateGraphConfig[T any] struct {
+	RecursonLimit int
+	StartNode     ID
 }
 
 func (g StateGraph[T]) panicIfNodeExists(id ID) {
@@ -115,25 +126,25 @@ func (g StateGraph[T]) executeAll(input stepInput[T], channel chan nodeResult[T]
 	close(channel)
 }
 
-func (g StateGraph[T]) execute(input stepInput[T]) map[ID]nodeResult[T] {
+func (g StateGraph[T]) execute(input stepInput[T]) []nodeResult[T] {
 	channel := make(chan nodeResult[T], len(input.nodes))
-	result := make(map[ID]nodeResult[T])
+	result := []nodeResult[T]{}
 
 	go g.executeAll(input, channel)
 
 	log.Printf("Waiting for results from %d nodes", len(input.nodes))
 	for r := range channel {
 		log.Printf("Received result from node %s: %v", r.id, r.state)
-		result[r.id] = r
+		result = append(result, r)
 	}
 
 	return result
 }
 
-func (g StateGraph[T]) reduce(state T, result map[ID]nodeResult[T]) (T, error) {
+func (g StateGraph[T]) reduce(state T, result []nodeResult[T]) (T, error) {
 	reducedState := state
-	for key, value := range result {
-		if key == END || key == START {
+	for _, value := range result {
+		if value.id == END || value.id == START {
 			// terminal node, does not contribute to the state
 			continue
 		}
@@ -148,10 +159,12 @@ func (g StateGraph[T]) reduce(state T, result map[ID]nodeResult[T]) (T, error) {
 		reducedState = newState
 	}
 
+	log.Printf("reduced state %v", reducedState)
+
 	return reducedState, nil
 }
 
-func (g StateGraph[T]) route(state T, result map[ID]nodeResult[T]) ([]StateNode[T], *RouterExecutionError) {
+func (g StateGraph[T]) route(state T, result []nodeResult[T]) ([]StateNode[T], *RouterExecutionError) {
 	nodes := make(map[ID][]ID)
 	for _, r := range result {
 		edge := g.edges[r.id]
@@ -182,7 +195,7 @@ func (g StateGraph[T]) route(state T, result map[ID]nodeResult[T]) ([]StateNode[
 	), nil
 }
 
-func (g StateGraph[T]) barrier(state T, result map[ID]nodeResult[T]) (stepInput[T], error) {
+func (g StateGraph[T]) barrier(state T, result []nodeResult[T]) (stepInput[T], error) {
 	// check for errors in the results
 	executionError := NewSuperStepExecutionErrorFromResults(result)
 	if executionError != nil {
@@ -207,41 +220,74 @@ func (g StateGraph[T]) barrier(state T, result map[ID]nodeResult[T]) (stepInput[
 	}, nil
 }
 
-func (g StateGraph[T]) Invoke(initial T) (T, error) {
-	steps := []step[T]{
-		step[T]{
-			input: stepInput[T]{
-				state: initial,
-				nodes: []StateNode[T]{g.nodes[START]},
-			},
-			result: make(map[ID]nodeResult[T]),
-		},
+func (g StateGraph[T]) resolveStartNode(config InvocationConfig) StateNode[T] {
+	if config.StartNode == "" {
+		return g.nodes[START]
 	}
 
-	lastStep := steps[0]
-	for len(lastStep.input.nodes) > 0 {
-		log.Printf("Executing step %d with nodes: %v", len(steps), utils.Map(lastStep.input.nodes, func(n StateNode[T]) ID { return n.ID }))
-		result := g.execute(lastStep.input)
-		lastStep.result = result
+	g.panicIfNodeNotExists(config.StartNode)
+	return g.nodes[config.StartNode]
+}
+
+func (g StateGraph[T]) resolveRecursionLimit(config InvocationConfig) int {
+	if config.RecursonLimit <= 0 {
+		return 25
+	}
+
+	return config.RecursonLimit
+}
+
+func (g StateGraph[T]) detectInvocationError(steps []step[T], config InvocationConfig) *InvocationError {
+	if len(steps) > g.resolveRecursionLimit(config) {
+		return &InvocationError{
+			fmt.Errorf("Recursion limit exceeded: %d", len(steps)),
+		}
+	}
+
+	return nil
+}
+
+func (g StateGraph[T]) Invoke(initial T, config InvocationConfig) (T, error) {
+	currentStep := step[T]{
+		input: stepInput[T]{
+			state: initial,
+			nodes: []StateNode[T]{g.resolveStartNode(config)},
+		},
+		result: []nodeResult[T]{},
+	}
+	steps := []step[T]{
+		currentStep,
+	}
+
+	for len(currentStep.input.nodes) > 0 {
+		invocationError := g.detectInvocationError(steps, config)
+		if invocationError != nil {
+			log.Printf("Invocation error detected: %v", invocationError)
+			return currentStep.input.state, invocationError
+		}
+
+		log.Printf("Executing step %d with nodes: %v", len(steps), utils.Map(currentStep.input.nodes, func(n StateNode[T]) ID { return n.ID }))
+		result := g.execute(currentStep.input)
+		currentStep.result = result
 
 		log.Printf("Step %d executed, results: %v", len(steps), result)
-		input, err := g.barrier(lastStep.input.state, result)
+		input, err := g.barrier(currentStep.input.state, result)
 		if err != nil {
 			// If we can't create the next step input,
 			// we return the last valid state and the error
 			log.Printf("Error creating next step input: %v", err)
-			return lastStep.input.state, err
+			return currentStep.input.state, err
 		}
 
-		log.Printf("Step %d created next step input with nodes: %v", len(steps), utils.Map(lastStep.input.nodes, func(n StateNode[T]) ID { return n.ID }))
-		lastStep = step[T]{
+		log.Printf("Step %d created next step input with nodes: %v", len(steps), utils.Map(currentStep.input.nodes, func(n StateNode[T]) ID { return n.ID }))
+		currentStep = step[T]{
 			input:  input,
 			result: result,
 		}
-		steps = append(steps, lastStep)
+		steps = append(steps, currentStep)
 	}
 
-	return lastStep.result[END].state, nil
+	return currentStep.input.state, nil
 }
 
 func (g *StateGraph[T]) Compile() {

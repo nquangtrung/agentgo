@@ -57,7 +57,7 @@ func NewNodeExecutionErrorFromResult[T any](r nodeResult[T]) *NodeExecutionError
 	}
 }
 
-func NewSuperStepExecutionErrorFromResults[T any](results map[ID]nodeResult[T]) *SuperStepExecutionError {
+func NewSuperStepExecutionErrorFromResults[T any](results []nodeResult[T]) *SuperStepExecutionError {
 	errors := []*NodeExecutionError{}
 	for _, r := range results {
 		if r.err != nil {
@@ -108,6 +108,24 @@ func (e *RouterExecutionError) Unwrap() error {
 func NewRouterExecutionError(id ID, err error) *RouterExecutionError {
 	return &RouterExecutionError{
 		ID:  id,
+		Err: err,
+	}
+}
+
+type InvocationError struct {
+	Err error
+}
+
+func (e *InvocationError) Error() string {
+	return fmt.Sprintf("InvocationError: Err=%v", e.Err)
+}
+
+func (e *InvocationError) Unwrap() error {
+	return e.Err
+}
+
+func NewInvocationError(err error) *InvocationError {
+	return &InvocationError{
 		Err: err,
 	}
 }

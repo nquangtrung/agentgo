@@ -120,11 +120,11 @@ func TestAddConditionalEdge(t *testing.T) {
 	g.AddEdge("positive", END)
 	g.AddEdge("nonpositive", END)
 
-	result, err := g.Invoke(1)
+	result, err := g.Invoke(1, InvocationConfig{})
 	assert.Equal(t, 3, result, "Expected final state to be 2 after running the graph with positive input")
 	assert.NoError(t, err, "Expect result without error")
 
-	result, err = g.Invoke(-1)
+	result, err = g.Invoke(-1, InvocationConfig{})
 	assert.NoError(t, err, "Expect result without error")
 	assert.Equal(t, -3, result, "Expected final state to be -2 after running the graph with non-positive input")
 }
@@ -161,7 +161,7 @@ func TestSimpleGraph(t *testing.T) {
 	g.AddEdge(START, "inc")
 	g.AddEdge("inc", END)
 
-	result, err := g.Invoke(0)
+	result, err := g.Invoke(0, InvocationConfig{})
 	assert.NoError(t, err, "Expect result without error")
 	assert.Equal(t, 1, result, "Expected final state to be 1 after running the graph")
 }
@@ -182,7 +182,7 @@ func TestGraphWithMultipleNodes(t *testing.T) {
 	g.AddEdge("inc", "double")
 	g.AddEdge("double", END)
 
-	result, err := g.Invoke(0)
+	result, err := g.Invoke(0, InvocationConfig{})
 	assert.Equal(t, 3, result, "Expected final state to be 2 after running the graph")
 	assert.NoError(t, err, "Expect result without error")
 }
@@ -203,7 +203,7 @@ func TestGraphWithFanOut(t *testing.T) {
 	g.AddEdge("inc", END)
 	g.AddEdge("double", END)
 
-	result, err := g.Invoke(1)
+	result, err := g.Invoke(1, InvocationConfig{})
 
 	assert.NoError(t, err, "Expect result without error")
 	assert.Equal(t, 5, result, "Expected final state to be 3 after running the graph")
@@ -229,7 +229,7 @@ func TestGraphWithImbalanceNodes(t *testing.T) {
 	g.AddEdge("inc", END)
 	g.AddEdge("double", END)
 
-	result, err := g.Invoke(1)
+	result, err := g.Invoke(1, InvocationConfig{})
 	assert.NoError(t, err, "Expect result without error")
 	assert.Equal(t, 18, result, "Expected final state to be 4 after running the graph")
 }
@@ -254,7 +254,7 @@ func TestGraphWithErrorInNode(t *testing.T) {
 	g.AddEdge("errorNode1", END)
 	g.AddEdge("errorNode2", END)
 
-	result, err := g.Invoke(1)
+	result, err := g.Invoke(1, InvocationConfig{})
 	assert.Error(t, err, "Expected an error due to the intentional panic in errorNode")
 	assert.IsType(t, &SuperStepExecutionError{}, err, "Expected error to be of type SuperStepExecutionError")
 
@@ -286,7 +286,7 @@ func TestGraphWithErrorInReducer(t *testing.T) {
 	g.AddEdge("inc", END)
 	g.AddEdge("zero", END)
 
-	result, err := g.Invoke(1)
+	result, err := g.Invoke(1, InvocationConfig{})
 	assert.Error(t, err, "Expected an error due to the intentional panic in reducer")
 	assert.IsType(t, &ReducerExecutionError{}, err, "Expected error to be of type ReducerExecutionError")
 
@@ -314,7 +314,7 @@ func TestGraphWithErrorInRouter(t *testing.T) {
 	g.AddConditionalEdge(START, router, []ID{"inc"})
 	g.AddEdge("inc", END)
 
-	result, err := g.Invoke(-1)
+	result, err := g.Invoke(-1, InvocationConfig{})
 	assert.Error(t, err, "Expected an error due to the intentional panic in router")
 	assert.IsType(t, &RouterExecutionError{}, err, "Expected error to be of type RouterExecutionError")
 
@@ -340,7 +340,25 @@ func TestCycleGraphWithCondition(t *testing.T) {
 		return []ID{END}
 	}, []ID{"inc", END})
 
-	result, err := g.Invoke(0)
+	result, err := g.Invoke(0, InvocationConfig{})
 	assert.NoError(t, err, "Expect result without error")
 	assert.Equal(t, 15, result, "Expected final state to be 1 after running the graph with a cycle")
+}
+
+func TestInfiniteLoopGraph(t *testing.T) {
+	g := New(func(a, b int) int {
+		return a + b
+	})
+	g.AddNode("inc", func(state int) int {
+		return state + 1
+	})
+
+	g.AddEdge(START, "inc")
+	g.AddConditionalEdge("inc", func(state int) []ID {
+		return []ID{"inc"}
+	}, []ID{"inc"})
+
+	_, err := g.Invoke(0, InvocationConfig{})
+	assert.Error(t, err, "Expected an error due to infinite loop in the graph")
+	assert.IsType(t, &InvocationError{}, err, "Expected error to be of type RouterExecutionError")
 }
