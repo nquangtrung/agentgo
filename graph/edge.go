@@ -21,26 +21,29 @@ func Send(id ID, params any) Target {
 }
 
 type Router[T any] = func(state T) []Target
+type NamedRouter[T any] = func(state T) string
+type NamedRouterMap = map[string][]Target
 
 type stateEdge[T any] struct {
-	Start  ID
-	End    []ID
-	Router Router[T]
+	start  ID
+	end    []ID
+	endMap NamedRouterMap
+	router Router[T]
 }
 
 func (e stateEdge[T]) route(state T) (target []Target, err *RouterExecutionError) {
 	defer func() {
 		if r := recover(); r != nil {
-			err = NewRouterExecutionError(e.Start, fmt.Errorf("panic in router execution: %v", r))
+			err = NewRouterExecutionError(e.start, fmt.Errorf("panic in router execution: %v", r))
 		}
 	}()
 
-	if e.Router != nil {
+	if e.router != nil {
 		// Expect the router to handle errors internally and return a valid list
 		// of next nodes, we handle panics here to avoid crashing the entire
 		// graph execution
-		return e.Router(state), nil
+		return e.router(state), nil
 	}
 
-	return IDs(e.End...), nil
+	return IDs(e.end...), nil
 }

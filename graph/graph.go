@@ -6,6 +6,7 @@ import (
 	"sync"
 
 	"github.com/nquangtrung/agentgo/utils"
+	"github.com/nquangtrung/agentgo/visualizer"
 )
 
 type ID = string
@@ -20,10 +21,17 @@ type step[T any] struct {
 	reducedState T
 }
 
+type Visualizer interface {
+	Visualize() string
+	AddState(state string, description string, conditional bool)
+	AddEdge(start string, end string, label string)
+}
+
 type StateGraph[T any] struct {
-	nodes   map[ID]node[T]
-	edges   map[ID]stateEdge[T]
-	reducer Reducer[T]
+	nodes      map[ID]node[T]
+	edges      map[ID]stateEdge[T]
+	reducer    Reducer[T]
+	visualizer Visualizer
 }
 
 type InvocationConfig struct {
@@ -77,11 +85,8 @@ func (g *StateGraph[T]) AddEdge(start ID, end ID) {
 	g.panicIfNodeNotExists(start)
 	g.panicIfNodeNotExists(end)
 	g.edges[start] = stateEdge[T]{
-		Start: start,
-		End:   []ID{end},
-		Router: func(state T) []Target {
-			return IDs(end)
-		},
+		start: start,
+		end:   []ID{end},
 	}
 }
 
@@ -92,9 +97,33 @@ func (g *StateGraph[T]) AddConditionalEdge(start ID, router Router[T], ends []ID
 	}
 
 	g.edges[start] = stateEdge[T]{
-		Start:  start,
-		End:    ends,
-		Router: router,
+		start:  start,
+		end:    ends,
+		router: router,
+	}
+}
+
+func (g *StateGraph[T]) AddNamedConditionalEdge(start ID, NamedRouter NamedRouter[T], ends NamedRouterMap) {
+	g.panicIfNodeNotExists(start)
+	for _, endList := range ends {
+		for _, end := range endList {
+			g.panicIfNodeNotExists(end.id)
+		}
+	}
+
+	router := func(state T) []Target {
+		name := NamedRouter(state)
+		if targetList, exists := ends[name]; exists {
+			return targetList
+		}
+		return []Target{}
+	}
+
+	g.edges[start] = stateEdge[T]{
+		start:  start,
+		end:    []ID{},
+		endMap: ends,
+		router: router,
 	}
 }
 
@@ -104,8 +133,8 @@ func (g *StateGraph[T]) FanOut(start ID, ends []ID) {
 		g.panicIfNodeNotExists(end)
 	}
 	g.edges[start] = stateEdge[T]{
-		Start: start,
-		End:   ends,
+		start: start,
+		end:   ends,
 	}
 }
 
@@ -289,14 +318,48 @@ func (g StateGraph[T]) Invoke(initial T, config InvocationConfig) (T, error) {
 	return currentStep.input.state, nil
 }
 
+// Generate a mermaid diagram of the state graph.
+func (g StateGraph[T]) Visualize() string {
+	for _, node := range g.nodes {
+		g.visualizer.AddState(node.id(), node.id(), false)
+	}
+
+	for _, edge := range g.edges {
+		if edge.endMap != nil {
+			for name, targetList := range edge.endMap {
+				for _, target := range targetList {
+					g.visualizer.AddEdge(edge.start, target.id, name)
+				}
+			}
+		} else if edge.router != nil {
+			routerName := fmt.Sprintf("router_%s", edge.start)
+			g.visualizer.AddState(
+				routerName,
+				fmt.Sprintf("Router for %s", edge.start),
+				true,
+			)
+			g.visualizer.AddEdge(edge.start, routerName, "")
+			for _, end := range edge.end {
+				g.visualizer.AddEdge(routerName, end, "")
+			}
+		} else {
+			for _, end := range edge.end {
+				g.visualizer.AddEdge(edge.start, end, "")
+			}
+		}
+	}
+	return g.visualizer.Visualize()
+}
+
 func (g *StateGraph[T]) Compile() {
 }
 
 func New[T any](reducer Reducer[T]) StateGraph[T] {
 	graph := StateGraph[T]{
-		nodes:   make(map[ID]node[T]),
-		edges:   make(map[ID]stateEdge[T]),
-		reducer: reducer,
+		nodes:      make(map[ID]node[T]),
+		edges:      make(map[ID]stateEdge[T]),
+		reducer:    reducer,
+		visualizer: visualizer.NewMermaidVisualizer(),
 	}
 	graph.add(newStartNode[T]())
 	graph.add(newEndNode[T]())

@@ -1,6 +1,9 @@
 package graph
 
 import (
+	"fmt"
+	"log"
+	"os"
 	"testing"
 
 	"github.com/nquangtrung/agentgo/utils"
@@ -66,7 +69,7 @@ func TestAddEdge(t *testing.T) {
 	g.AddEdge(START, END)
 
 	assert.Contains(t, g.edges, START, "Expected edge to be added to the graph")
-	assert.Equal(t, []ID{END}, g.edges[START].End, "Expected edge end to match the provided end ID")
+	assert.Equal(t, []ID{END}, g.edges[START].end, "Expected edge end to match the provided end ID")
 }
 
 func TestAddEdgePanic(t *testing.T) {
@@ -388,4 +391,63 @@ func TestGraphWithWorkerNode(t *testing.T) {
 	result, err := g.Invoke(5, InvocationConfig{})
 	assert.NoError(t, err, "Expect result without error")
 	assert.Equal(t, 17, result, "Expected final state to be 10 after running the graph with worker node")
+}
+
+func TestGraphVisualize(t *testing.T) {
+	g := New(func(a, b int) int {
+		return a + b
+	})
+
+	g.AddNode("inc", func(state int) int {
+		return state + 1
+	})
+	g.AddNode("double", func(state int) int {
+		return state * 2
+	})
+	g.AddNode("end_orphaned", func(state int) int {
+		return state * 3
+	})
+	g.AddNode("orphaned", func(state int) int {
+		return state * 3
+	})
+	g.AddNode("start_orphaned", func(state int) int {
+		return state * 3
+	})
+
+	condition := func(state int) []Target {
+		if state > 0 {
+			return IDs("inc", "double")
+		}
+		return IDs("triple")
+	}
+
+	g.AddConditionalEdge(START, condition, []ID{"inc", "double", "end_orphaned"})
+
+	g.FanOut("double", []ID{"end_orphaned", END})
+	g.AddEdge("start_orphaned", END)
+	g.AddNamedConditionalEdge("inc", func(state int) string {
+		if state < 10 {
+			return "too_small"
+		}
+		return "large_enough"
+	}, NamedRouterMap{
+		"too_small":    IDs("inc"),
+		"large_enough": IDs(END),
+	})
+
+	visualization := g.Visualize()
+	toBeSaved := fmt.Sprintf("```mermaid\n%s\n```", visualization)
+	err := os.WriteFile(
+		"test.md",
+		[]byte(toBeSaved),
+		0644,
+	)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	result, err := g.Invoke(1, InvocationConfig{})
+
+	assert.NoError(t, err, "Expect result without error")
+	assert.Equal(t, 26, result, "Expected final state to be 26 after running the graph with visualization")
 }
