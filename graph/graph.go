@@ -7,6 +7,7 @@ import (
 	"sync"
 
 	"github.com/google/uuid"
+	"github.com/nquangtrung/agentgo/fsm"
 	"github.com/nquangtrung/agentgo/utils"
 	"github.com/nquangtrung/agentgo/visualizer"
 )
@@ -335,58 +336,34 @@ func (g StateGraph[T]) Invoke(ctx context.Context, initial T, config InvocationC
 	threadId := g.resolveThreadId(config)
 	checkpointer := g.resolveCheckpointer(config)
 
-	currentStep := step[T]{
+	initialStep := step[T]{
 		input: stepInput[T]{
 			state:   initial,
 			targets: g.resolveStartNode(config),
 		},
 		result: []nodeResult[T]{},
 	}
-	steps := []step[T]{
-		currentStep,
+
+	ic := &invokeCtx[T]{
+		graph:        g,
+		config:       config,
+		checkpointer: checkpointer,
+		threadId:     threadId,
+		currentStep:  initialStep,
+		steps:        []step[T]{initialStep},
 	}
 
-	for len(currentStep.input.targets) > 0 {
-		invocationError := g.detectInvocationError(ctx, steps, config)
-		if invocationError != nil {
-			log.Printf("Invocation error detected: %v", invocationError)
-			cpErr := checkpointer.Checkpoint(threadId, currentStep.ToCheckpoint())
-			invocationError.WithCpError(cpErr)
-			return currentStep.input.state, invocationError
-		}
-
-		log.Printf("Executing step %d with nodes: %v", len(steps), utils.Map(currentStep.input.targets, func(n Target) ID { return n.id }))
-		result := g.execute(ctx, currentStep.input)
-		currentStep.result = result
-
-		log.Printf("Step %d executed, results: %v", len(steps), result)
-		input, err := g.barrier(ctx, currentStep.input.state, result)
-		if err != nil {
-			// If we can't create the next step input,
-			// we return the last valid state and the error
-			log.Printf("Error creating next step input: %v", err)
-
-			cpErr := checkpointer.Checkpoint(threadId, currentStep.ToCheckpoint())
-			err.(WithCpError).WithCpError(cpErr)
-			return currentStep.input.state, err
-		}
-
-		cpErr := checkpointer.Checkpoint(threadId, currentStep.ToCheckpoint())
-		if cpErr != nil {
-			log.Printf("Error checkpointing step %d: %v", len(steps), cpErr)
-			return currentStep.input.state, NewInvocationError(fmt.Errorf("Failed to checkpoint: %v", cpErr))
-		}
-
-		log.Printf("Step %d created next step input with nodes: %v", len(steps), utils.Map(currentStep.input.targets, func(n Target) ID { return n.id }))
-		currentStep = step[T]{
-			input:  input,
-			result: result,
-		}
-		steps = append(steps, currentStep)
+	machine := fsm.New[invokeCtx[T]]()
+	if fsmErr := machine.Run(ctx, executeState[T]{}, ic); fsmErr != nil {
+		return ic.currentStep.input.state, fsmErr
 	}
 
-	err := checkpointer.Checkpoint(threadId, currentStep.ToCheckpoint())
-	return currentStep.input.state, err
+	if ic.err != nil {
+		return ic.currentStep.input.state, ic.err
+	}
+
+	err := checkpointer.Checkpoint(threadId, ic.currentStep.ToCheckpoint())
+	return ic.currentStep.input.state, err
 }
 
 // Generate a mermaid diagram of the state graph.
