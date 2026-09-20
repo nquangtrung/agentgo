@@ -1,3 +1,4 @@
+// Visualize graph
 package visualizer
 
 import (
@@ -18,6 +19,7 @@ type visualizerState struct {
 	conditional bool
 }
 
+// Visualize the state graph using Mermaid syntax
 type MermaidVisualizer struct {
 	states []visualizerState
 	edges  []visualizerEdge

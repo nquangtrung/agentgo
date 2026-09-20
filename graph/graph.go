@@ -1,25 +1,17 @@
 package graph
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"sync"
 
+	"github.com/google/uuid"
 	"github.com/nquangtrung/agentgo/utils"
 	"github.com/nquangtrung/agentgo/visualizer"
 )
 
 type ID = string
-
-type stepInput[T any] struct {
-	targets []Target
-	state   T
-}
-type step[T any] struct {
-	input        stepInput[T]
-	result       []nodeResult[T]
-	reducedState T
-}
 
 type Visualizer interface {
 	Visualize() string
@@ -32,11 +24,15 @@ type StateGraph[T any] struct {
 	edges      map[ID]stateEdge[T]
 	reducer    Reducer[T]
 	visualizer Visualizer
+
+	interrupts map[string]InterruptResult
 }
 
-type InvocationConfig struct {
+type InvocationConfig[T any] struct {
 	RecursonLimit int
-	StartNode     ID
+	StartNodes    []ID
+	ThreadId      string
+	Checkpointer  Checkpointer[T]
 }
 
 type StateGraphConfig[T any] struct {
@@ -138,14 +134,14 @@ func (g *StateGraph[T]) FanOut(start ID, ends []ID) {
 	}
 }
 
-func (g StateGraph[T]) executeAll(input stepInput[T], channel chan nodeResult[T]) {
+func (g StateGraph[T]) executeAll(ctx context.Context, input stepInput[T], channel chan nodeResult[T]) {
 	var wg sync.WaitGroup
 	utils.Each(input.targets, func(target Target) {
 		wg.Go(func() {
 			log.Printf("Executing node %s", target.id)
 			state := input.state
 			node := g.nodes[target.id]
-			newState, err := node.execute(state, target)
+			newState, err := node.execute(ctx, state, target)
 
 			if err != nil {
 				log.Printf("Error executing node %s: %v", target.id, err)
@@ -169,19 +165,28 @@ func (g StateGraph[T]) executeAll(input stepInput[T], channel chan nodeResult[T]
 	close(channel)
 }
 
-func (g StateGraph[T]) execute(input stepInput[T]) []nodeResult[T] {
+func (g StateGraph[T]) execute(ctx context.Context, input stepInput[T]) []nodeResult[T] {
 	channel := make(chan nodeResult[T], len(input.targets))
 	result := []nodeResult[T]{}
 
-	go g.executeAll(input, channel)
+	go g.executeAll(ctx, input, channel)
 
 	log.Printf("Waiting for results from %d nodes", len(input.targets))
-	for r := range channel {
-		log.Printf("Received result from node %s: %v", r.id, r.state)
-		result = append(result, r)
+	for {
+		select {
+		case r, ok := <-channel:
+			if !ok {
+				log.Printf("Channel closed, all results received")
+				return result
+			}
+			log.Printf("Received result from node %s: %v", r.id, r.state)
+			result = append(result, r)
+		case <-ctx.Done():
+			// The context error will be handled in the caller, we just return the results received so far
+			log.Printf("Context done, returning results received so far, the context error: %v", ctx.Err())
+			return result
+		}
 	}
-
-	return result
 }
 
 func (g StateGraph[T]) reduce(state T, result []nodeResult[T]) (T, error) {
@@ -223,7 +228,7 @@ func (g StateGraph[T]) route(state T, result []nodeResult[T]) ([]Target, *Router
 	return newTargets, nil
 }
 
-func (g StateGraph[T]) barrier(state T, result []nodeResult[T]) (stepInput[T], error) {
+func (g StateGraph[T]) barrier(_ context.Context, state T, result []nodeResult[T]) (stepInput[T], error) {
 	// check for errors in the results
 	executionError := NewSuperStepExecutionErrorFromResults(result)
 	if executionError != nil {
@@ -248,16 +253,20 @@ func (g StateGraph[T]) barrier(state T, result []nodeResult[T]) (stepInput[T], e
 	}, nil
 }
 
-func (g StateGraph[T]) resolveStartNode(config InvocationConfig) []Target {
-	if config.StartNode == "" {
+func (g StateGraph[T]) resolveStartNode(config InvocationConfig[T]) []Target {
+	if len(config.StartNodes) == 0 {
 		return IDs(START)
 	}
 
-	g.panicIfNodeNotExists(config.StartNode)
-	return IDs(config.StartNode)
+	for _, startNode := range config.StartNodes {
+		if _, exists := g.nodes[startNode]; !exists {
+			panic(fmt.Errorf("Start node %s does not exist", startNode))
+		}
+	}
+	return IDs(config.StartNodes...)
 }
 
-func (g StateGraph[T]) resolveRecursionLimit(config InvocationConfig) int {
+func (g StateGraph[T]) resolveRecursionLimit(config InvocationConfig[T]) int {
 	if config.RecursonLimit <= 0 {
 		return 25
 	}
@@ -265,17 +274,67 @@ func (g StateGraph[T]) resolveRecursionLimit(config InvocationConfig) int {
 	return config.RecursonLimit
 }
 
-func (g StateGraph[T]) detectInvocationError(steps []step[T], config InvocationConfig) *InvocationError {
+func (g StateGraph[T]) detectInvocationError(ctx context.Context, steps []step[T], config InvocationConfig[T]) *InvocationError {
+	if ctx.Err() != nil {
+		return NewInvocationError(fmt.Errorf("Context error: %v", ctx.Err()))
+	}
+
 	if len(steps) > g.resolveRecursionLimit(config) {
-		return &InvocationError{
-			fmt.Errorf("Recursion limit exceeded: %d", len(steps)),
-		}
+		return NewInvocationError(fmt.Errorf("Recursion limit exceeded: %d", len(steps)))
 	}
 
 	return nil
 }
 
-func (g StateGraph[T]) Invoke(initial T, config InvocationConfig) (T, error) {
+func (g StateGraph[T]) Resume(ctx context.Context, threadId string, interruptResults map[string]any, config InvocationConfig[T]) (T, error) {
+	checkpointer := g.resolveCheckpointer(config)
+
+	for interruptName, result := range interruptResults {
+		if existingInterrupt, exists := g.interrupts[interruptName]; exists {
+			existingInterrupt.Result = result
+			g.interrupts[interruptName] = existingInterrupt
+		} else {
+			return *new(T), NewInvocationError(fmt.Errorf("Interrupt %s does not exist", interruptName))
+		}
+	}
+
+	cp, err := checkpointer.Restore(threadId)
+	if err != nil {
+		return *new(T), NewInvocationError(fmt.Errorf("Failed to restore checkpoint: %v", err))
+	}
+
+	invocationConfig := InvocationConfig[T]{
+		RecursonLimit: config.RecursonLimit,
+		StartNodes:    cp.Steps,
+		ThreadId:      threadId,
+		Checkpointer:  checkpointer,
+	}
+	state := cp.State
+	return g.Invoke(ctx, state, invocationConfig)
+}
+
+func (g StateGraph[T]) resolveThreadId(config InvocationConfig[T]) string {
+	if config.ThreadId == "" {
+		return uuid.New().String()
+	}
+
+	return config.ThreadId
+}
+
+func (g StateGraph[T]) resolveCheckpointer(config InvocationConfig[T]) Checkpointer[T] {
+	if config.Checkpointer == nil {
+		return NewInMemoryCheckpointer[T]()
+	}
+
+	return config.Checkpointer
+}
+
+func (g StateGraph[T]) Invoke(ctx context.Context, initial T, config InvocationConfig[T]) (T, error) {
+	ctx = context.WithValue(ctx, "graph", g)
+
+	threadId := g.resolveThreadId(config)
+	checkpointer := g.resolveCheckpointer(config)
+
 	currentStep := step[T]{
 		input: stepInput[T]{
 			state:   initial,
@@ -288,23 +347,34 @@ func (g StateGraph[T]) Invoke(initial T, config InvocationConfig) (T, error) {
 	}
 
 	for len(currentStep.input.targets) > 0 {
-		invocationError := g.detectInvocationError(steps, config)
+		invocationError := g.detectInvocationError(ctx, steps, config)
 		if invocationError != nil {
 			log.Printf("Invocation error detected: %v", invocationError)
+			cpErr := checkpointer.Checkpoint(threadId, currentStep.ToCheckpoint())
+			invocationError.WithCpError(cpErr)
 			return currentStep.input.state, invocationError
 		}
 
 		log.Printf("Executing step %d with nodes: %v", len(steps), utils.Map(currentStep.input.targets, func(n Target) ID { return n.id }))
-		result := g.execute(currentStep.input)
+		result := g.execute(ctx, currentStep.input)
 		currentStep.result = result
 
 		log.Printf("Step %d executed, results: %v", len(steps), result)
-		input, err := g.barrier(currentStep.input.state, result)
+		input, err := g.barrier(ctx, currentStep.input.state, result)
 		if err != nil {
 			// If we can't create the next step input,
 			// we return the last valid state and the error
 			log.Printf("Error creating next step input: %v", err)
+
+			cpErr := checkpointer.Checkpoint(threadId, currentStep.ToCheckpoint())
+			err.(WithCpError).WithCpError(cpErr)
 			return currentStep.input.state, err
+		}
+
+		cpErr := checkpointer.Checkpoint(threadId, currentStep.ToCheckpoint())
+		if cpErr != nil {
+			log.Printf("Error checkpointing step %d: %v", len(steps), cpErr)
+			return currentStep.input.state, NewInvocationError(fmt.Errorf("Failed to checkpoint: %v", cpErr))
 		}
 
 		log.Printf("Step %d created next step input with nodes: %v", len(steps), utils.Map(currentStep.input.targets, func(n Target) ID { return n.id }))
@@ -315,7 +385,8 @@ func (g StateGraph[T]) Invoke(initial T, config InvocationConfig) (T, error) {
 		steps = append(steps, currentStep)
 	}
 
-	return currentStep.input.state, nil
+	err := checkpointer.Checkpoint(threadId, currentStep.ToCheckpoint())
+	return currentStep.input.state, err
 }
 
 // Generate a mermaid diagram of the state graph.
@@ -360,6 +431,7 @@ func New[T any](reducer Reducer[T]) StateGraph[T] {
 		edges:      make(map[ID]stateEdge[T]),
 		reducer:    reducer,
 		visualizer: visualizer.NewMermaidVisualizer(),
+		interrupts: make(map[string]InterruptResult),
 	}
 	graph.add(newStartNode[T]())
 	graph.add(newEndNode[T]())

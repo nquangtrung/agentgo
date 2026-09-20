@@ -1,6 +1,9 @@
 package graph
 
-import "fmt"
+import (
+	"context"
+	"fmt"
+)
 
 type nodeResult[T any] struct {
 	id    ID
@@ -15,7 +18,7 @@ type stateNode[T any] struct {
 	fn NodeFn[T]
 }
 
-func (n stateNode[T]) execute(state T, target Target) (delta T, err *NodeExecutionError) {
+func (n stateNode[T]) execute(ctx context.Context, state T, target Target) (delta T, err *NodeExecutionError) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = NewNodeExecutionError(n.ID, fmt.Errorf("panic in node execution: %v", r))
@@ -39,7 +42,7 @@ type workerNode[T any] struct {
 	fn WorkerNodeFn[T]
 }
 
-func (n workerNode[T]) execute(state T, target Target) (delta T, err *NodeExecutionError) {
+func (n workerNode[T]) execute(context context.Context, state T, target Target) (delta T, err *NodeExecutionError) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = NewNodeExecutionError(n.ID, fmt.Errorf("panic in node execution: %v", r))
@@ -54,6 +57,6 @@ func (n workerNode[T]) id() ID {
 }
 
 type node[T any] interface {
-	execute(state T, target Target) (delta T, err *NodeExecutionError)
+	execute(ctx context.Context, state T, target Target) (delta T, err *NodeExecutionError)
 	id() ID
 }

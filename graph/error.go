@@ -6,6 +6,10 @@ import (
 	"github.com/nquangtrung/agentgo/utils"
 )
 
+type WithCpError interface {
+	WithCpError(err error)
+}
+
 type NodeExecutionError struct {
 	ID  string
 	Err error
@@ -113,11 +117,16 @@ func NewRouterExecutionError(id ID, err error) *RouterExecutionError {
 }
 
 type InvocationError struct {
-	Err error
+	Err     error
+	cpError error
 }
 
 func (e *InvocationError) Error() string {
 	return fmt.Sprintf("InvocationError: Err=%v", e.Err)
+}
+
+func (e *InvocationError) WithCpError(err error) {
+	e.cpError = err
 }
 
 func (e *InvocationError) Unwrap() error {
