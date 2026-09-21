@@ -206,3 +206,24 @@ func NewInvocationError(err error) *InvocationError {
 		Err: err,
 	}
 }
+
+type InterruptRejectedError struct {
+	Name    string
+	Message string
+	NodeExecutionError
+}
+
+func (e *InterruptRejectedError) Error() string {
+	return fmt.Sprintf("InterruptRejectedError: %s Thread: %s Node: %s Message: %s", e.Name, e.ThreadID, e.ID, e.Message)
+}
+
+func NewInterruptRejectedError(name, message string) *InterruptRejectedError {
+	return &InterruptRejectedError{
+		Name:    name,
+		Message: message,
+		NodeExecutionError: NodeExecutionError{
+			withIDBase:       withIDBase{},
+			withThreadIDBase: withThreadIDBase{},
+		},
+	}
+}
