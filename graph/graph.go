@@ -1,9 +1,10 @@
+// Implementation of a Pregel-like state graph for managing state transitions and node executions in a concurrent environment.
 package graph
 
 import (
 	"context"
 	"fmt"
-	"log"
+	"log/slog"
 	"sync"
 
 	"github.com/google/uuid"
@@ -11,6 +12,8 @@ import (
 	"github.com/nquangtrung/agentgo/utils"
 	"github.com/nquangtrung/agentgo/visualizer"
 )
+
+const TAG string = "[Graph]"
 
 type ID = string
 
@@ -139,13 +142,13 @@ func (g StateGraph[T]) executeAll(ctx context.Context, input stepInput[T], chann
 	var wg sync.WaitGroup
 	utils.Each(input.targets, func(target Target) {
 		wg.Go(func() {
-			log.Printf("Executing node %s", target.id)
+			logger.Info("Executing node", slog.String("id", target.id))
 			state := input.state
 			node := g.nodes[target.id]
 			newState, err := node.execute(ctx, state, target)
 
 			if err != nil {
-				log.Printf("Error executing node %s: %v", target.id, err)
+				slog.Warn(TAG, "Error executing node", slog.String("node", target.id), slog.String("err", err.Error()))
 				channel <- nodeResult[T]{
 					id:    target.id,
 					state: state, // Return the original state in case of error
@@ -153,7 +156,7 @@ func (g StateGraph[T]) executeAll(ctx context.Context, input stepInput[T], chann
 				}
 				return
 			} else {
-				log.Printf("Node %s executed, new state: %v", target.id, newState)
+				logger.Info("Node executed", slog.String("node", target.id), slog.Any("state", newState))
 				channel <- nodeResult[T]{
 					id:    target.id,
 					state: newState,
@@ -172,19 +175,19 @@ func (g StateGraph[T]) execute(ctx context.Context, input stepInput[T]) []nodeRe
 
 	go g.executeAll(ctx, input, channel)
 
-	log.Printf("Waiting for results from %d nodes", len(input.targets))
+	logger.Info("Waiting for results from nodes", slog.Int("len", len(input.targets)))
 	for {
 		select {
 		case r, ok := <-channel:
 			if !ok {
-				log.Printf("Channel closed, all results received")
+				logger.Debug("Channel closed, all results received", slog.Bool("ok", ok))
 				return result
 			}
-			log.Printf("Received result from node %s: %v", r.id, r.state)
+			logger.Info("Received result from node", slog.String("id", r.id), slog.Any("state", r.state))
 			result = append(result, r)
 		case <-ctx.Done():
 			// The context error will be handled in the caller, we just return the results received so far
-			log.Printf("Context done, returning results received so far, the context error: %v", ctx.Err())
+			logger.Info("Context done, returning results received so far", slog.Any("error", ctx.Err()))
 			return result
 		}
 	}
@@ -208,7 +211,7 @@ func (g StateGraph[T]) reduce(state T, result []nodeResult[T]) (T, error) {
 		reducedState = newState
 	}
 
-	log.Printf("reduced state %v", reducedState)
+	logger.Debug("Reduced state", slog.Any("state", reducedState))
 
 	return reducedState, nil
 }
@@ -222,7 +225,7 @@ func (g StateGraph[T]) route(state T, result []nodeResult[T]) ([]Target, *Router
 			return []Target{}, err
 		}
 
-		log.Printf("Routing from node %s with state %v to nodes: %v", r.id, r.state, targets)
+		logger.Debug("Routing from node", slog.String("id", r.id), slog.Any("state", r.state), slog.Any("targets", targets))
 		newTargets = append(newTargets, targets...)
 	}
 
@@ -359,11 +362,17 @@ func (g StateGraph[T]) Invoke(ctx context.Context, initial T, config InvocationC
 	}
 
 	if ic.err != nil {
+		slog.Error(TAG, "Invocation error", slog.Any("error", ic.err))
 		return ic.currentStep.input.state, ic.err
 	}
 
 	err := checkpointer.Checkpoint(threadId, ic.currentStep.ToCheckpoint())
-	return ic.currentStep.input.state, err
+	if err != nil {
+		slog.Error(TAG, "Checkpoint error", slog.Any("error", err))
+		return ic.currentStep.input.state, err
+	}
+
+	return ic.currentStep.input.state, nil
 }
 
 // Generate a mermaid diagram of the state graph.

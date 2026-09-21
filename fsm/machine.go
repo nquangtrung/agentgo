@@ -2,8 +2,10 @@ package fsm
 
 import (
 	"context"
-	"log"
+	"log/slog"
 )
+
+const TAG string = "[FSM]"
 
 type State[T any] interface {
 	Execute(ctx context.Context, fsmCtx *T) (State[T], error)
@@ -18,11 +20,11 @@ func (fsm *FSM[T]) SetState(state State[T]) {
 }
 
 func (fsm *FSM[T]) Run(ctx context.Context, initialState State[T], fsmCtx *T) error {
-	log.Printf("Starting FSM with initial state: %T and context ", initialState)
+	logger.Info("Starting FSM with initial state", slog.Any("state", initialState))
 	fsm.currentState = initialState
 
 	for fsm.currentState != nil {
-		log.Printf("Executing state: %T", fsm.currentState)
+		logger.Info("Executing state", slog.Any("state", fsm.currentState))
 		if err := ctx.Err(); err != nil {
 			return ctx.Err()
 		}

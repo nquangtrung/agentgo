@@ -8,17 +8,17 @@ import (
 type nodeResult[T any] struct {
 	id    ID
 	state T
-	err   *NodeExecutionError
+	err   error
 }
 
-type NodeFn[T any] = func(state T) T
+type NodeFn[T any] = func(ctx context.Context, state T) (T, error)
 
 type stateNode[T any] struct {
 	ID ID
 	fn NodeFn[T]
 }
 
-func (n stateNode[T]) execute(ctx context.Context, state T, target Target) (delta T, err *NodeExecutionError) {
+func (n stateNode[T]) execute(ctx context.Context, state T, target Target) (delta T, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = NewNodeExecutionError(n.ID, fmt.Errorf("panic in node execution: %v", r))
@@ -28,28 +28,28 @@ func (n stateNode[T]) execute(ctx context.Context, state T, target Target) (delt
 	// expect the node to handle errors internally and return a
 	// valid state, we handle panics here to avoid crashing the
 	// entire graph execution
-	return n.fn(state), nil
+	return n.fn(ctx, state)
 }
 
 func (n stateNode[T]) id() ID {
 	return n.ID
 }
 
-type WorkerNodeFn[T any] = func(params any) T
+type WorkerNodeFn[T any] = func(params any) (T, error)
 
 type workerNode[T any] struct {
 	ID ID
 	fn WorkerNodeFn[T]
 }
 
-func (n workerNode[T]) execute(context context.Context, state T, target Target) (delta T, err *NodeExecutionError) {
+func (n workerNode[T]) execute(context context.Context, state T, target Target) (delta T, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = NewNodeExecutionError(n.ID, fmt.Errorf("panic in node execution: %v", r))
 		}
 	}()
 
-	return n.fn(target.params), nil
+	return n.fn(target.params)
 }
 
 func (n workerNode[T]) id() ID {
@@ -57,6 +57,6 @@ func (n workerNode[T]) id() ID {
 }
 
 type node[T any] interface {
-	execute(ctx context.Context, state T, target Target) (delta T, err *NodeExecutionError)
+	execute(ctx context.Context, state T, target Target) (delta T, err error)
 	id() ID
 }

@@ -1,12 +1,14 @@
 package graph
 
+import "context"
+
 const (
 	START ID = "start"
 	END   ID = "end"
 )
 
-func bypassFn[T any](state T) T {
-	return state
+func bypassFn[T any](_ context.Context, state T) (T, error) {
+	return state, nil
 }
 
 func newStartNode[T any]() stateNode[T] {

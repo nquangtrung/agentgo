@@ -2,6 +2,7 @@ package graph
 
 import (
 	"fmt"
+	"log/slog"
 
 	"github.com/nquangtrung/agentgo/utils"
 )
@@ -31,13 +32,18 @@ func NewNodeExecutionError(id string, err error) *NodeExecutionError {
 }
 
 type SuperStepExecutionError struct {
-	Errs []*NodeExecutionError
+	Errs []error
 }
 
 func (e *SuperStepExecutionError) Error() string {
 	return fmt.Sprintf(
 		"Super step execution failed with multiple node errors. Affected nodes: %v",
-		utils.Map(e.Errs, func(err *NodeExecutionError) string { return err.ID }),
+		utils.Map(e.Errs, func(err error) string {
+			if nodeErr, ok := err.(*NodeExecutionError); ok {
+				return nodeErr.ID
+			}
+			return "unknown"
+		}),
 	)
 }
 
@@ -48,7 +54,28 @@ func (e *SuperStepExecutionError) Unwrap() error {
 	return nil
 }
 
-func NewSuperStepExecutionError(errs []*NodeExecutionError) *SuperStepExecutionError {
+func (e *SuperStepExecutionError) Interrupts() []*InterruptError {
+	logger.Debug("Finding interrupts", slog.Any("error", e))
+	interrupts := []*InterruptError{}
+	for _, err := range e.Errs {
+		if _, ok := err.(*NodeExecutionError); !ok {
+			continue
+		}
+
+		err := err.(*NodeExecutionError)
+		logger.Debug("Checking NodeExecutionError for interrupts", slog.String("id", err.ID), slog.Any("error", err.Err))
+		if invocationErr, ok := err.Err.(*InvocationError); ok {
+			if interrupt, ok := invocationErr.Err.(*InterruptError); ok {
+				interrupts = append(interrupts, interrupt)
+			}
+		} else if interrupt, ok := err.Err.(*InterruptError); ok {
+			interrupts = append(interrupts, interrupt)
+		}
+	}
+	return interrupts
+}
+
+func NewSuperStepExecutionError(errs []error) *SuperStepExecutionError {
 	return &SuperStepExecutionError{
 		Errs: errs,
 	}
@@ -62,7 +89,7 @@ func NewNodeExecutionErrorFromResult[T any](r nodeResult[T]) *NodeExecutionError
 }
 
 func NewSuperStepExecutionErrorFromResults[T any](results []nodeResult[T]) *SuperStepExecutionError {
-	errors := []*NodeExecutionError{}
+	errors := []error{}
 	for _, r := range results {
 		if r.err != nil {
 			errors = append(errors, r.err)

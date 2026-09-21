@@ -3,7 +3,7 @@ package graph
 import (
 	"context"
 	"fmt"
-	"log"
+	"log/slog"
 
 	"github.com/nquangtrung/agentgo/fsm"
 	"github.com/nquangtrung/agentgo/utils"
@@ -35,11 +35,11 @@ type invokeErrorState[T any] struct {
 }
 
 func (s invokeErrorState[T]) Execute(ctx context.Context, ic *invokeCtx[T]) (fsm.State[invokeCtx[T]], error) {
-	log.Printf("Invoke FSM error state: %v", s.err)
+	slog.Error(TAG, "Invoke FSM error state", slog.Any("error", s.err))
 
 	cpErr := ic.checkpointer.Checkpoint(ic.threadId, ic.currentStep.ToCheckpoint())
 	if cpErr != nil {
-		log.Printf("Additionally, checkpointing failed: %v", cpErr)
+		slog.Error(TAG, "Additionally, checkpointing failed", slog.Any("error", cpErr))
 	}
 	if withCp, ok := s.err.(WithCpError); ok {
 		withCp.WithCpError(cpErr)
@@ -65,12 +65,12 @@ func (s executeState[T]) Execute(ctx context.Context, ic *invokeCtx[T]) (fsm.Sta
 		return invokeErrorState[T]{err: invocationError}, nil
 	}
 
-	log.Printf("Executing step %d with nodes: %v", len(ic.steps),
-		utils.Map(ic.currentStep.input.targets, func(n Target) ID { return n.id }))
+	logger.Info("Executing step", slog.Int("step", len(ic.steps)), slog.Any("nodes",
+		utils.Map(ic.currentStep.input.targets, func(n Target) ID { return n.id })))
 
 	ic.currentStep.result = ic.graph.execute(ctx, ic.currentStep.input)
 
-	log.Printf("Step %d executed, results: %v", len(ic.steps), ic.currentStep.result)
+	logger.Info("Step executed", slog.Int("step", len(ic.steps)), slog.Any("results", ic.currentStep.result))
 
 	return barrierState[T]{}, nil
 }
@@ -83,7 +83,7 @@ type barrierState[T any] struct{}
 func (s barrierState[T]) Execute(ctx context.Context, ic *invokeCtx[T]) (fsm.State[invokeCtx[T]], error) {
 	input, err := ic.graph.barrier(ctx, ic.currentStep.input.state, ic.currentStep.result)
 	if err != nil {
-		log.Printf("Error in barrier: %v", err)
+		slog.Error(TAG, "Error in barrier", slog.Any("error", err))
 		return invokeErrorState[T]{err: err}, nil
 	}
 	return checkpointState[T]{nextInput: input}, nil
@@ -101,8 +101,8 @@ func (s checkpointState[T]) Execute(ctx context.Context, ic *invokeCtx[T]) (fsm.
 		return invokeErrorState[T]{err: NewInvocationError(fmt.Errorf("failed to checkpoint: %w", cpErr))}, nil
 	}
 
-	log.Printf("Step %d checkpointed, advancing to nodes: %v", len(ic.steps),
-		utils.Map(s.nextInput.targets, func(n Target) ID { return n.id }))
+	logger.Info("Step checkpointed, advancing to nodes", slog.Int("step", len(ic.steps)), slog.Any("nodes",
+		utils.Map(s.nextInput.targets, func(n Target) ID { return n.id })))
 
 	ic.currentStep = step[T]{
 		input:  s.nextInput,

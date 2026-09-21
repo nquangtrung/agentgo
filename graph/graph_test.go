@@ -30,8 +30,8 @@ func TestAddNode(t *testing.T) {
 		return a + b
 	})
 
-	fn := func(state int) int {
-		return state + 1
+	fn := func(ctx context.Context, state int) (int, error) {
+		return state + 1, nil
 	}
 	id := "inc"
 	g.AddNode(id, fn)
@@ -44,8 +44,8 @@ func TestAddNodePanic(t *testing.T) {
 		return a + b
 	})
 
-	fn := func(state int) int {
-		return state + 1
+	fn := func(ctx context.Context, state int) (int, error) {
+		return state + 1, nil
 	}
 
 	assert.Panics(t, func() {
@@ -113,11 +113,11 @@ func TestAddConditionalEdge(t *testing.T) {
 		return IDs("nonpositive")
 	}
 
-	g.AddNode("positive", func(state int) int {
-		return state + 1
+	g.AddNode("positive", func(ctx context.Context, state int) (int, error) {
+		return state + 1, nil
 	})
-	g.AddNode("nonpositive", func(state int) int {
-		return state - 1
+	g.AddNode("nonpositive", func(ctx context.Context, state int) (int, error) {
+		return state - 1, nil
 	})
 
 	g.AddConditionalEdge(START, condition, []ID{"positive", "nonpositive"})
@@ -160,8 +160,8 @@ func TestSimpleGraph(t *testing.T) {
 		return a + b
 	})
 
-	g.AddNode("inc", func(state int) int {
-		return state + 1
+	g.AddNode("inc", func(ctx context.Context, state int) (int, error) {
+		return state + 1, nil
 	})
 	g.AddEdge(START, "inc")
 	g.AddEdge("inc", END)
@@ -177,11 +177,11 @@ func TestGraphWithMultipleNodes(t *testing.T) {
 		return a + b
 	})
 
-	g.AddNode("inc", func(state int) int {
-		return state + 1
+	g.AddNode("inc", func(ctx context.Context, state int) (int, error) {
+		return state + 1, nil
 	})
-	g.AddNode("double", func(state int) int {
-		return state * 2
+	g.AddNode("double", func(ctx context.Context, state int) (int, error) {
+		return state * 2, nil
 	})
 
 	g.AddEdge(START, "inc")
@@ -199,11 +199,11 @@ func TestGraphWithFanOut(t *testing.T) {
 		return a + b
 	})
 
-	g.AddNode("inc", func(state int) int {
-		return state + 1
+	g.AddNode("inc", func(ctx context.Context, state int) (int, error) {
+		return state + 1, nil
 	})
-	g.AddNode("double", func(state int) int {
-		return state * 2
+	g.AddNode("double", func(ctx context.Context, state int) (int, error) {
+		return state * 2, nil
 	})
 
 	g.FanOut(START, []ID{"inc", "double"})
@@ -222,14 +222,14 @@ func TestGraphWithImbalanceNodes(t *testing.T) {
 		return a + b
 	})
 
-	g.AddNode("inc", func(state int) int {
-		return state + 1
+	g.AddNode("inc", func(ctx context.Context, state int) (int, error) {
+		return state + 1, nil
 	})
-	g.AddNode("inc2", func(state int) int {
-		return state + 2
+	g.AddNode("inc2", func(ctx context.Context, state int) (int, error) {
+		return state + 2, nil
 	})
-	g.AddNode("double", func(state int) int {
-		return state * 2
+	g.AddNode("double", func(ctx context.Context, state int) (int, error) {
+		return state * 2, nil
 	})
 
 	g.FanOut(START, []ID{"inc", "inc2"})
@@ -248,13 +248,13 @@ func TestGraphWithErrorInNode(t *testing.T) {
 		return a + b
 	})
 
-	g.AddNode("inc", func(state int) int {
-		return state + 1
+	g.AddNode("inc", func(ctx context.Context, state int) (int, error) {
+		return state + 1, nil
 	})
-	g.AddNode("errorNode1", func(state int) int {
+	g.AddNode("errorNode1", func(ctx context.Context, state int) (int, error) {
 		panic("intentional error 1")
 	})
-	g.AddNode("errorNode2", func(state int) int {
+	g.AddNode("errorNode2", func(ctx context.Context, state int) (int, error) {
 		panic("intentional error 2")
 	})
 
@@ -272,7 +272,12 @@ func TestGraphWithErrorInNode(t *testing.T) {
 	assert.Len(t, superStepErr.Errs, 2, "Expected one error in the super step execution error")
 
 	errorNodes := []string{"errorNode1", "errorNode2"}
-	assert.ElementsMatch(t, errorNodes, utils.Map(superStepErr.Errs, func(err *NodeExecutionError) string { return err.ID }))
+	assert.ElementsMatch(t, errorNodes, utils.Map(superStepErr.Errs, func(err error) string {
+		if nodeErr, ok := err.(*NodeExecutionError); ok {
+			return nodeErr.ID
+		}
+		return "unknown"
+	}))
 
 	assert.Equal(t, 1, result, "Expected final state to be 2 after running the graph with error in one node")
 }
@@ -285,11 +290,11 @@ func TestGraphWithErrorInReducer(t *testing.T) {
 		return a + b
 	})
 
-	g.AddNode("inc", func(state int) int {
-		return state + 1
+	g.AddNode("inc", func(ctx context.Context, state int) (int, error) {
+		return state + 1, nil
 	})
-	g.AddNode("zero", func(state int) int {
-		return 0
+	g.AddNode("zero", func(ctx context.Context, state int) (int, error) {
+		return 0, nil
 	})
 
 	g.FanOut(START, []ID{"inc", "zero"})
@@ -318,8 +323,8 @@ func TestGraphWithErrorInRouter(t *testing.T) {
 		return IDs("inc")
 	}
 
-	g.AddNode("inc", func(state int) int {
-		return state + 1
+	g.AddNode("inc", func(ctx context.Context, state int) (int, error) {
+		return state + 1, nil
 	})
 
 	g.AddConditionalEdge(START, router, []ID{"inc"})
@@ -340,8 +345,8 @@ func TestCycleGraphWithCondition(t *testing.T) {
 	g := New(func(a, b int) int {
 		return a + b
 	})
-	g.AddNode("inc", func(state int) int {
-		return state + 1
+	g.AddNode("inc", func(ctx context.Context, state int) (int, error) {
+		return state + 1, nil
 	})
 
 	g.AddEdge(START, "inc")
@@ -362,8 +367,8 @@ func TestInfiniteLoopGraph(t *testing.T) {
 	g := New(func(a, b int) int {
 		return a + b
 	})
-	g.AddNode("inc", func(state int) int {
-		return state + 1
+	g.AddNode("inc", func(ctx context.Context, state int) (int, error) {
+		return state + 1, nil
 	})
 
 	g.AddEdge(START, "inc")
@@ -382,11 +387,11 @@ func TestGraphWithWorkerNode(t *testing.T) {
 		return a + b
 	})
 
-	g.AddWorkerNode("worker", func(params any) int {
+	g.AddWorkerNode("worker", func(params any) (int, error) {
 		if p, ok := params.(int); ok {
-			return p * 2
+			return p * 2, nil
 		}
-		return 0
+		return 0, nil
 	})
 
 	g.AddConditionalEdge(START, func(state int) []Target {
@@ -410,20 +415,20 @@ func TestGraphVisualize(t *testing.T) {
 		return a + b
 	})
 
-	g.AddNode("inc", func(state int) int {
-		return state + 1
+	g.AddNode("inc", func(ctx context.Context, state int) (int, error) {
+		return state + 1, nil
 	})
-	g.AddNode("double", func(state int) int {
-		return state * 2
+	g.AddNode("double", func(ctx context.Context, state int) (int, error) {
+		return state * 2, nil
 	})
-	g.AddNode("end_orphaned", func(state int) int {
-		return state * 3
+	g.AddNode("end_orphaned", func(ctx context.Context, state int) (int, error) {
+		return state * 3, nil
 	})
-	g.AddNode("orphaned", func(state int) int {
-		return state * 3
+	g.AddNode("orphaned", func(ctx context.Context, state int) (int, error) {
+		return state * 3, nil
 	})
-	g.AddNode("start_orphaned", func(state int) int {
-		return state * 3
+	g.AddNode("start_orphaned", func(ctx context.Context, state int) (int, error) {
+		return state * 3, nil
 	})
 
 	condition := func(state int) []Target {
