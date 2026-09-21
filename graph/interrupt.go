@@ -2,21 +2,27 @@ package graph
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/google/uuid"
 )
 
 type InterruptError struct {
 	Name string
+	NodeExecutionError
 }
 
 func (e *InterruptError) Error() string {
-	return "InterruptError: " + e.Name
+	return fmt.Sprintf("InterruptError: %s Thread: %s Node: %s", e.Name, e.ThreadID, e.ID)
 }
 
 func NewInterruptError(name string) *InterruptError {
 	return &InterruptError{
 		Name: name,
+		NodeExecutionError: NodeExecutionError{
+			withIDBase:       withIDBase{},
+			withThreadIDBase: withThreadIDBase{},
+		},
 	}
 }
 
@@ -35,6 +41,7 @@ func Interrupt[T any](ctx context.Context, payload any) (any, error) {
 
 	interruptUid := uuid.New().String()
 	if _, exists := graph.interrupts[interruptUid]; !exists {
+		logger.Debug("Interrupt does not exists", "id", interruptUid)
 		graph.interrupts[interruptUid] = InterruptResult{
 			Name:    interruptUid,
 			Payload: payload,
@@ -47,6 +54,7 @@ func Interrupt[T any](ctx context.Context, payload any) (any, error) {
 
 	existingInterrupt := graph.interrupts[interruptUid]
 	if existingInterrupt.Result == nil {
+		logger.Debug("Interrupt exists but expecting result", "id", interruptUid)
 		// The user has not set the result yet, we should wait for the result to be set
 		return nil, NewInterruptError(interruptUid)
 	}

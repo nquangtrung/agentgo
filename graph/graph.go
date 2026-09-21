@@ -142,13 +142,13 @@ func (g StateGraph[T]) executeAll(ctx context.Context, input stepInput[T], chann
 	var wg sync.WaitGroup
 	utils.Each(input.targets, func(target Target) {
 		wg.Go(func() {
-			logger.Info("Executing node", slog.String("id", target.id))
+			logger.Debug("Executing node", slog.String("id", target.id))
 			state := input.state
 			node := g.nodes[target.id]
 			newState, err := node.execute(ctx, state, target)
 
 			if err != nil {
-				slog.Warn(TAG, "Error executing node", slog.String("node", target.id), slog.String("err", err.Error()))
+				logger.Warn("Error executing node", slog.String("node", target.id), slog.String("err", err.Error()))
 				channel <- nodeResult[T]{
 					id:    target.id,
 					state: state, // Return the original state in case of error
@@ -156,7 +156,7 @@ func (g StateGraph[T]) executeAll(ctx context.Context, input stepInput[T], chann
 				}
 				return
 			} else {
-				logger.Info("Node executed", slog.String("node", target.id), slog.Any("state", newState))
+				logger.Debug("Node executed", slog.String("node", target.id), slog.Any("state", newState))
 				channel <- nodeResult[T]{
 					id:    target.id,
 					state: newState,
@@ -175,7 +175,10 @@ func (g StateGraph[T]) execute(ctx context.Context, input stepInput[T]) []nodeRe
 
 	go g.executeAll(ctx, input, channel)
 
-	logger.Info("Waiting for results from nodes", slog.Int("len", len(input.targets)))
+	ids := utils.Map(input.targets, func(target Target) ID {
+		return target.id
+	})
+	logger.Debug("Waiting for results from nodes", slog.Any("ids", ids))
 	for {
 		select {
 		case r, ok := <-channel:
@@ -183,11 +186,11 @@ func (g StateGraph[T]) execute(ctx context.Context, input stepInput[T]) []nodeRe
 				logger.Debug("Channel closed, all results received", slog.Bool("ok", ok))
 				return result
 			}
-			logger.Info("Received result from node", slog.String("id", r.id), slog.Any("state", r.state))
+			logger.Debug("Received result from node", slog.String("id", r.id), slog.Any("state", r.state))
 			result = append(result, r)
 		case <-ctx.Done():
 			// The context error will be handled in the caller, we just return the results received so far
-			logger.Info("Context done, returning results received so far", slog.Any("error", ctx.Err()))
+			logger.Debug("Context done, returning results received so far", slog.Any("error", ctx.Err()))
 			return result
 		}
 	}
@@ -216,11 +219,11 @@ func (g StateGraph[T]) reduce(state T, result []nodeResult[T]) (T, error) {
 	return reducedState, nil
 }
 
-func (g StateGraph[T]) route(state T, result []nodeResult[T]) ([]Target, *RouterExecutionError) {
+func (g StateGraph[T]) route(threadId ID, state T, result []nodeResult[T]) ([]Target, *RouterExecutionError) {
 	newTargets := []Target{}
 	for _, r := range result {
 		edge := g.edges[r.id]
-		targets, err := edge.route(state)
+		targets, err := edge.route(threadId, state)
 		if err != nil {
 			return []Target{}, err
 		}
@@ -232,7 +235,9 @@ func (g StateGraph[T]) route(state T, result []nodeResult[T]) ([]Target, *Router
 	return newTargets, nil
 }
 
-func (g StateGraph[T]) barrier(_ context.Context, state T, result []nodeResult[T]) (stepInput[T], error) {
+func (g StateGraph[T]) barrier(ctx context.Context, state T, result []nodeResult[T]) (stepInput[T], error) {
+	threadId := ctx.Value("threadId").(ID)
+
 	// check for errors in the results
 	executionError := NewSuperStepExecutionErrorFromResults(result)
 	if executionError != nil {
@@ -246,7 +251,7 @@ func (g StateGraph[T]) barrier(_ context.Context, state T, result []nodeResult[T
 	}
 
 	// route to next nodes
-	nodes, routerError := g.route(newState, result)
+	nodes, routerError := g.route(threadId, newState, result)
 	if routerError != nil {
 		return stepInput[T]{}, routerError
 	}
@@ -291,6 +296,7 @@ func (g StateGraph[T]) detectInvocationError(ctx context.Context, steps []step[T
 }
 
 func (g StateGraph[T]) Resume(ctx context.Context, threadId string, interruptResults map[string]any, config InvocationConfig[T]) (T, error) {
+	logger.Debug("Resuming graph execution", slog.String("threadId", threadId), slog.Any("interruptResults", interruptResults))
 	checkpointer := g.resolveCheckpointer(config)
 
 	for interruptName, result := range interruptResults {
@@ -303,6 +309,7 @@ func (g StateGraph[T]) Resume(ctx context.Context, threadId string, interruptRes
 	}
 
 	cp, err := checkpointer.Restore(threadId)
+	logger.Debug("Restored checkpoint", slog.String("threadId", threadId), slog.Any("checkpoint", cp))
 	if err != nil {
 		return *new(T), NewInvocationError(fmt.Errorf("Failed to restore checkpoint: %v", err))
 	}
@@ -334,8 +341,6 @@ func (g StateGraph[T]) resolveCheckpointer(config InvocationConfig[T]) Checkpoin
 }
 
 func (g StateGraph[T]) Invoke(ctx context.Context, initial T, config InvocationConfig[T]) (T, error) {
-	ctx = context.WithValue(ctx, "graph", g)
-
 	threadId := g.resolveThreadId(config)
 	checkpointer := g.resolveCheckpointer(config)
 
@@ -357,18 +362,20 @@ func (g StateGraph[T]) Invoke(ctx context.Context, initial T, config InvocationC
 	}
 
 	machine := fsm.New[invokeCtx[T]]()
+
+	ctx = context.WithValue(ctx, "graph", g)
+	ctx = context.WithValue(ctx, "threadId", threadId)
 	if fsmErr := machine.Run(ctx, executeState[T]{}, ic); fsmErr != nil {
 		return ic.currentStep.input.state, fsmErr
 	}
 
 	if ic.err != nil {
-		slog.Error(TAG, "Invocation error", slog.Any("error", ic.err))
 		return ic.currentStep.input.state, ic.err
 	}
 
 	err := checkpointer.Checkpoint(threadId, ic.currentStep.ToCheckpoint())
 	if err != nil {
-		slog.Error(TAG, "Checkpoint error", slog.Any("error", err))
+		logger.Error("Checkpoint error", slog.Any("error", err))
 		return ic.currentStep.input.state, err
 	}
 

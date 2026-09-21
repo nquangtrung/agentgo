@@ -20,11 +20,11 @@ func (fsm *FSM[T]) SetState(state State[T]) {
 }
 
 func (fsm *FSM[T]) Run(ctx context.Context, initialState State[T], fsmCtx *T) error {
-	logger.Info("Starting FSM with initial state", slog.Any("state", initialState))
+	logger.Debug("Starting FSM with initial state", slog.Any("state", initialState))
 	fsm.currentState = initialState
 
 	for fsm.currentState != nil {
-		logger.Info("Executing state", slog.Any("state", fsm.currentState))
+		logger.Debug("Executing state", slog.Any("state", fsm.currentState))
 		if err := ctx.Err(); err != nil {
 			return ctx.Err()
 		}

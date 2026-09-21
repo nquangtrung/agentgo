@@ -31,10 +31,10 @@ type stateEdge[T any] struct {
 	router Router[T]
 }
 
-func (e stateEdge[T]) route(state T) (target []Target, err *RouterExecutionError) {
+func (e stateEdge[T]) route(threadId ID, state T) (target []Target, err *RouterExecutionError) {
 	defer func() {
 		if r := recover(); r != nil {
-			err = NewRouterExecutionError(e.start, fmt.Errorf("panic in router execution: %v", r))
+			err = NewRouterExecutionError(threadId, e.start, fmt.Errorf("panic in router execution: %v", r))
 		}
 	}()
 

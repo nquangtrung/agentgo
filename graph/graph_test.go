@@ -387,7 +387,7 @@ func TestGraphWithWorkerNode(t *testing.T) {
 		return a + b
 	})
 
-	g.AddWorkerNode("worker", func(params any) (int, error) {
+	g.AddWorkerNode("worker", func(_ context.Context, params any) (int, error) {
 		if p, ok := params.(int); ok {
 			return p * 2, nil
 		}

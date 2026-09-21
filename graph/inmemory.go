@@ -13,12 +13,14 @@ func NewInMemoryCheckpointer[T any]() *InMemoryCheckpointer[T] {
 }
 
 func (c *InMemoryCheckpointer[T]) Checkpoint(threadId string, cp Checkpoint[T]) error {
+	logger.Debug("Checkpoint thread", "threadId", threadId, "state", cp.State, "steps", cp.Steps)
 	c.states[threadId] = cp.State
 	c.steps[threadId] = cp.Steps
 	return nil
 }
 
 func (c *InMemoryCheckpointer[T]) Restore(threadId string) (Checkpoint[T], error) {
+	logger.Debug("Restoring checkpoint", "threadId", threadId)
 	if _, exists := c.states[threadId]; !exists {
 		return Checkpoint[T]{
 			State: *new(T),

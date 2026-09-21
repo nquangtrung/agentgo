@@ -7,13 +7,62 @@ import (
 	"github.com/nquangtrung/agentgo/utils"
 )
 
-type WithCpError interface {
-	WithCpError(err error)
+type withCpError interface {
+	SetCpError(err error)
+	GetCpError() error
+}
+type withCpErrorBase struct {
+	cpErr error
+}
+
+func (cp *withCpErrorBase) SetCpError(err error) {
+	cp.cpErr = err
+}
+
+func (cp *withCpErrorBase) GetCpError() error {
+	return cp.cpErr
+}
+
+type withID interface {
+	SetID(id ID)
+	GetID() ID
+}
+
+type withIDBase struct {
+	ID string
+}
+
+func (e *withIDBase) SetID(id ID) {
+	e.ID = id
+}
+
+func (e withIDBase) GetID() ID {
+	return e.ID
+}
+
+type withThreadID interface {
+	SetThreadID(id ID)
+	GetThreadID() ID
+}
+
+type withThreadIDBase struct {
+	ThreadID string
+}
+
+func (e *withThreadIDBase) SetThreadID(id ID) {
+	e.ThreadID = id
+}
+
+func (e withThreadIDBase) GetThreadID() ID {
+	return e.ThreadID
 }
 
 type NodeExecutionError struct {
-	ID  string
 	Err error
+
+	withCpErrorBase
+	withIDBase
+	withThreadIDBase
 }
 
 func (e *NodeExecutionError) Error() string {
@@ -24,23 +73,32 @@ func (e *NodeExecutionError) Unwrap() error {
 	return e.Err
 }
 
-func NewNodeExecutionError(id string, err error) *NodeExecutionError {
+func NewNodeExecutionError(threadId ID, nodeId ID, err error) *NodeExecutionError {
 	return &NodeExecutionError{
-		ID:  id,
 		Err: err,
+		withIDBase: withIDBase{
+			ID: nodeId,
+		},
+		withThreadIDBase: withThreadIDBase{
+			ThreadID: threadId,
+		},
 	}
 }
 
 type SuperStepExecutionError struct {
 	Errs []error
+	withCpErrorBase
 }
 
 func (e *SuperStepExecutionError) Error() string {
 	return fmt.Sprintf(
 		"Super step execution failed with multiple node errors. Affected nodes: %v",
 		utils.Map(e.Errs, func(err error) string {
-			if nodeErr, ok := err.(*NodeExecutionError); ok {
-				return nodeErr.ID
+			if nodeErr, ok := err.(withID); ok {
+				if nodeErr.GetID() != "" {
+					return nodeErr.GetID()
+				}
+				return "unknown"
 			}
 			return "unknown"
 		}),
@@ -58,18 +116,8 @@ func (e *SuperStepExecutionError) Interrupts() []*InterruptError {
 	logger.Debug("Finding interrupts", slog.Any("error", e))
 	interrupts := []*InterruptError{}
 	for _, err := range e.Errs {
-		if _, ok := err.(*NodeExecutionError); !ok {
-			continue
-		}
-
-		err := err.(*NodeExecutionError)
-		logger.Debug("Checking NodeExecutionError for interrupts", slog.String("id", err.ID), slog.Any("error", err.Err))
-		if invocationErr, ok := err.Err.(*InvocationError); ok {
-			if interrupt, ok := invocationErr.Err.(*InterruptError); ok {
-				interrupts = append(interrupts, interrupt)
-			}
-		} else if interrupt, ok := err.Err.(*InterruptError); ok {
-			interrupts = append(interrupts, interrupt)
+		if itr, ok := err.(*InterruptError); ok {
+			interrupts = append(interrupts, itr)
 		}
 	}
 	return interrupts
@@ -83,7 +131,9 @@ func NewSuperStepExecutionError(errs []error) *SuperStepExecutionError {
 
 func NewNodeExecutionErrorFromResult[T any](r nodeResult[T]) *NodeExecutionError {
 	return &NodeExecutionError{
-		ID:  r.id,
+		withIDBase: withIDBase{
+			ID: r.id,
+		},
 		Err: r.err,
 	}
 }
@@ -124,36 +174,27 @@ func NewReducerExecutionError(err error) *ReducerExecutionError {
 }
 
 type RouterExecutionError struct {
-	ID  ID
-	Err error
+	NodeExecutionError
 }
 
 func (e *RouterExecutionError) Error() string {
 	return fmt.Sprintf("RouterExecutionError: ID=%s, Err=%v", e.ID, e.Err)
 }
 
-func (e *RouterExecutionError) Unwrap() error {
-	return e.Err
-}
-
-func NewRouterExecutionError(id ID, err error) *RouterExecutionError {
+func NewRouterExecutionError(threadId ID, nodeId ID, err error) *RouterExecutionError {
 	return &RouterExecutionError{
-		ID:  id,
-		Err: err,
+		NodeExecutionError: *NewNodeExecutionError(threadId, nodeId, err),
 	}
 }
 
 type InvocationError struct {
-	Err     error
-	cpError error
+	Err error
+	withCpErrorBase
+	withThreadIDBase
 }
 
 func (e *InvocationError) Error() string {
 	return fmt.Sprintf("InvocationError: Err=%v", e.Err)
-}
-
-func (e *InvocationError) WithCpError(err error) {
-	e.cpError = err
 }
 
 func (e *InvocationError) Unwrap() error {
