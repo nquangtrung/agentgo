@@ -48,7 +48,7 @@ func (v *MermaidVisualizer) AddEdge(start string, end string, label string) {
 	})
 }
 
-func (v MermaidVisualizer) Visualize() string {
+func (v MermaidVisualizer) Visualize() []byte {
 	var sb strings.Builder
 	graphType := "stateDiagram-v2"
 
@@ -65,5 +65,5 @@ func (v MermaidVisualizer) Visualize() string {
 		fmt.Fprintf(&sb, "    %s --> %s : %s\n", edge.start, edge.end, edge.label)
 	}
 
-	return sb.String()
+	return []byte(sb.String())
 }

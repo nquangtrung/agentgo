@@ -18,7 +18,7 @@ const TAG string = "[Graph]"
 type ID = string
 
 type Visualizer interface {
-	Visualize() string
+	Visualize() []byte
 	AddState(state string, description string, conditional bool)
 	AddEdge(start string, end string, label string)
 }
@@ -421,7 +421,7 @@ func (g StateGraph[T]) Invoke(ctx context.Context, initial T, config InvocationC
 }
 
 // Generate a mermaid diagram of the state graph.
-func (g StateGraph[T]) Visualize() string {
+func (g StateGraph[T]) Visualize() []byte {
 	for _, node := range g.nodes {
 		g.visualizer.AddState(node.id(), node.id(), false)
 	}
@@ -450,6 +450,7 @@ func (g StateGraph[T]) Visualize() string {
 			}
 		}
 	}
+
 	return g.visualizer.Visualize()
 }
 
