@@ -36,7 +36,7 @@ type invokeErrorState[T any] struct {
 
 func (s invokeErrorState[T]) Execute(ctx context.Context, ic *invokeCtx[T]) (fsm.State[invokeCtx[T]], error) {
 	logger.Debug("ErrorState", slog.Any("error", s.err))
-	cpErr := ic.checkpointer.Checkpoint(ic.threadId, ic.currentStep.ToCheckpoint())
+	cpErr := ic.checkpointer.Checkpoint(ic.threadId, ic.currentStep.toCheckpoint())
 	if cpErr != nil {
 		logger.Error("Checkpointing failed", slog.Any("error", cpErr))
 	}
@@ -96,7 +96,7 @@ type checkpointState[T any] struct {
 }
 
 func (s checkpointState[T]) Execute(ctx context.Context, ic *invokeCtx[T]) (fsm.State[invokeCtx[T]], error) {
-	if cpErr := ic.checkpointer.Checkpoint(ic.threadId, ic.currentStep.ToCheckpoint()); cpErr != nil {
+	if cpErr := ic.checkpointer.Checkpoint(ic.threadId, ic.currentStep.toCheckpoint()); cpErr != nil {
 		return invokeErrorState[T]{err: NewInvocationError(fmt.Errorf("failed to checkpoint: %w", cpErr))}, nil
 	}
 

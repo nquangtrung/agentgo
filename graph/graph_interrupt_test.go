@@ -17,7 +17,9 @@ func createGraph() StateGraph[int] {
 	g.AddNode("inc", func(ctx context.Context, state int) (int, error) {
 		return state + 1, nil
 	})
-
+	g.AddNode("inc2", func(ctx context.Context, state int) (int, error) {
+		return state + 2, nil
+	})
 	g.AddNode("double", func(ctx context.Context, state int) (int, error) {
 		fromUser, err := Interrupt[int](ctx, "double-itr", map[string]any{"message": "triple the state"})
 		if err != nil {
@@ -31,6 +33,7 @@ func createGraph() StateGraph[int] {
 
 		return state * 2, nil
 	})
+
 	g.AddNode("triple", func(ctx context.Context, state int) (int, error) {
 		fromUser, err := Interrupt[int](ctx, "triple-itr", map[string]any{"message": "Should I triple the state?"})
 		if err != nil {
@@ -46,7 +49,7 @@ func createGraph() StateGraph[int] {
 	})
 
 	g.AddEdge(START, "inc")
-	g.FanOut("inc", []ID{"double", "triple"})
+	g.FanOut("inc", []ID{"inc2", "double", "triple"})
 	g.AddEdge("double", END)
 
 	return g
@@ -132,7 +135,7 @@ func TestGraphInterruptAllApproved(t *testing.T) {
 	}, config)
 
 	assert.NoError(t, err, "Expected no error after resuming with all interrupts approved")
-	assert.Equal(t, 6, result, "The state should be fully updated (0 + 1 + 2 + 3)")
+	assert.Equal(t, 9, result, "The state should be fully updated (0 + 1 + 2 + 3 + 3)")
 }
 
 func TestGraphInterruptAllRejectedTogether(t *testing.T) {

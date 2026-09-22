@@ -41,6 +41,21 @@ func (c *SerializableCheckpointer[T]) Checkpoint(threadId string, cp Checkpoint[
 		return err
 	}
 
+	serializedResults := make(map[ID][]byte)
+	for id, result := range cp.Results {
+		resultData, err := result.Serialize()
+		if err != nil {
+			return err
+		}
+		serializedResults[id] = resultData
+	}
+	jsonResults, err := json.Marshal(cp.Results)
+
+	err = c.persister.Save(threadId, "results", jsonResults)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 func (c *SerializableCheckpointer[T]) restoreState(threadId string) (T, error) {
@@ -73,6 +88,32 @@ func (c *SerializableCheckpointer[T]) restoreSteps(threadId string) ([]ID, error
 	return steps, nil
 }
 
+func (c *SerializableCheckpointer[T]) restoreResults(threadId string) (map[ID]T, error) {
+	var results map[ID]T = make(map[ID]T)
+	data, err := c.persister.Load(threadId, "results")
+
+	if err != nil {
+		return results, err
+	}
+
+	jsonResults := make(map[ID][]byte)
+	err = json.Unmarshal(data, &jsonResults)
+	if err != nil {
+		return results, err
+	}
+
+	for id, resultData := range jsonResults {
+		var result T = *new(T)
+		err := result.Deserialize(resultData)
+		if err != nil {
+			return results, err
+		}
+		results[id] = result
+	}
+
+	return results, nil
+}
+
 func (c *SerializableCheckpointer[T]) Restore(threadId string) (Checkpoint[T], error) {
 	var cp Checkpoint[T]
 	state, err := c.restoreState(threadId)
@@ -86,6 +127,12 @@ func (c *SerializableCheckpointer[T]) Restore(threadId string) (Checkpoint[T], e
 		return cp, err
 	}
 	cp.Steps = steps
+
+	results, err := c.restoreResults(threadId)
+	if err != nil {
+		return cp, err
+	}
+	cp.Results = results
 
 	return cp, nil
 }

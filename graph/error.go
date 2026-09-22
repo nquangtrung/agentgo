@@ -123,6 +123,17 @@ func (e *SuperStepExecutionError) Interrupts() []*InterruptError {
 	return interrupts
 }
 
+func (e *SuperStepExecutionError) IsAllInterrupts() bool {
+	logger.Debug("Checking if all errors are interrupts", slog.Any("error", e))
+	for _, err := range e.Errs {
+		if itr, ok := err.(*InterruptError); !ok || itr == nil {
+			return false
+		}
+	}
+
+	return true
+}
+
 func NewSuperStepExecutionError(errs []error) *SuperStepExecutionError {
 	return &SuperStepExecutionError{
 		Errs: errs,

@@ -42,7 +42,7 @@ func Interrupt[T any](ctx context.Context, name string, payload any) (InterruptR
 	}
 
 	if _, exists := graph.interrupts[name]; !exists {
-		logger.Info("Interrupt does not exists", "id", name)
+		logger.Info("New interrupt:", "id", name)
 		graph.interrupts[name] = InterruptResult{
 			name:    name,
 			payload: payload,

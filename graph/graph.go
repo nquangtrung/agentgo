@@ -37,6 +37,8 @@ type InvocationConfig[T any] struct {
 	StartNodes    []ID
 	ThreadId      string
 	Checkpointer  Checkpointer[T]
+
+	partialResults map[ID]T
 }
 
 type StateGraphConfig[T any] struct {
@@ -142,7 +144,16 @@ func (g StateGraph[T]) executeAll(ctx context.Context, input stepInput[T], chann
 	var wg sync.WaitGroup
 	utils.Each(input.targets, func(target Target) {
 		wg.Go(func() {
-			logger.Debug("Executing node", slog.String("id", target.id))
+			cachedResult, found := utils.Find(input.lastResult, func(result nodeResult[T]) bool {
+				return result.err != nil && result.id == target.id
+			})
+			if found {
+				logger.Info("Using cached result for node", slog.String("id", target.id), slog.Any("state", cachedResult.state))
+				channel <- cachedResult
+				return
+			}
+
+			logger.Info("Executing node", slog.String("id", target.id))
 			state := input.state
 			node := g.nodes[target.id]
 			newState, err := node.execute(ctx, state, target)
@@ -241,24 +252,32 @@ func (g StateGraph[T]) barrier(ctx context.Context, state T, result []nodeResult
 	// check for errors in the results
 	executionError := NewSuperStepExecutionErrorFromResults(result)
 	if executionError != nil {
-		return stepInput[T]{}, executionError
+		// Some errors are not interrupt
+		return stepInput[T]{
+			lastResult: result,
+		}, executionError
 	}
 
 	// reduce result at barrier
 	newState, reducerErr := g.reduce(state, result)
 	if reducerErr != nil {
-		return stepInput[T]{}, reducerErr
+		return stepInput[T]{
+			lastResult: result,
+		}, reducerErr
 	}
 
 	// route to next nodes
 	nodes, routerError := g.route(threadId, newState, result)
 	if routerError != nil {
-		return stepInput[T]{}, routerError
+		return stepInput[T]{
+			lastResult: result,
+		}, routerError
 	}
 
 	return stepInput[T]{
-		targets: nodes,
-		state:   newState,
+		targets:    nodes,
+		state:      newState,
+		lastResult: result,
 	}, nil
 }
 
@@ -296,7 +315,7 @@ func (g StateGraph[T]) detectInvocationError(ctx context.Context, steps []step[T
 }
 
 func (g StateGraph[T]) Resume(ctx context.Context, threadId string, interruptResults map[string]any, config InvocationConfig[T]) (T, error) {
-	logger.Debug("Resuming graph execution", slog.String("threadId", threadId), slog.Any("interruptResults", interruptResults))
+	logger.Info("Resuming graph execution", slog.String("threadId", threadId), slog.Any("interruptResults", interruptResults))
 	checkpointer := g.resolveCheckpointer(config)
 
 	for interruptName, result := range interruptResults {
@@ -309,16 +328,17 @@ func (g StateGraph[T]) Resume(ctx context.Context, threadId string, interruptRes
 	}
 
 	cp, err := checkpointer.Restore(threadId)
-	logger.Debug("Restored checkpoint", slog.String("threadId", threadId), slog.Any("checkpoint", cp))
+	logger.Info("Restored checkpoint", slog.String("threadId", threadId), slog.Any("checkpoint", cp))
 	if err != nil {
 		return *new(T), NewInvocationError(fmt.Errorf("Failed to restore checkpoint: %v", err))
 	}
 
 	invocationConfig := InvocationConfig[T]{
-		RecursonLimit: config.RecursonLimit,
-		StartNodes:    cp.Steps,
-		ThreadId:      threadId,
-		Checkpointer:  checkpointer,
+		RecursonLimit:  config.RecursonLimit,
+		StartNodes:     cp.Steps,
+		ThreadId:       threadId,
+		Checkpointer:   checkpointer,
+		partialResults: cp.Results,
 	}
 	state := cp.State
 	return g.Invoke(ctx, state, invocationConfig)
@@ -340,14 +360,32 @@ func (g StateGraph[T]) resolveCheckpointer(config InvocationConfig[T]) Checkpoin
 	return config.Checkpointer
 }
 
+func (g StateGraph[T]) resolveNodeResultFromPartial(config InvocationConfig[T]) []nodeResult[T] {
+	if config.partialResults == nil {
+		return []nodeResult[T]{}
+	}
+
+	partialResults := []nodeResult[T]{}
+	for key, value := range config.partialResults {
+		partialResults = append(partialResults, nodeResult[T]{
+			id:    key,
+			state: value,
+		})
+	}
+
+	return partialResults
+}
+
 func (g StateGraph[T]) Invoke(ctx context.Context, initial T, config InvocationConfig[T]) (T, error) {
+	logger.Info("Invoking graph execution", slog.Any("initialState", initial), slog.Any("config", config))
 	threadId := g.resolveThreadId(config)
 	checkpointer := g.resolveCheckpointer(config)
 
 	initialStep := step[T]{
 		input: stepInput[T]{
-			state:   initial,
-			targets: g.resolveStartNode(config),
+			state:      initial,
+			targets:    g.resolveStartNode(config),
+			lastResult: g.resolveNodeResultFromPartial(config),
 		},
 		result: []nodeResult[T]{},
 	}
@@ -373,7 +411,7 @@ func (g StateGraph[T]) Invoke(ctx context.Context, initial T, config InvocationC
 		return ic.currentStep.input.state, ic.err
 	}
 
-	err := checkpointer.Checkpoint(threadId, ic.currentStep.ToCheckpoint())
+	err := checkpointer.Checkpoint(threadId, ic.currentStep.toCheckpoint())
 	if err != nil {
 		logger.Error("Checkpoint error", slog.Any("error", err))
 		return ic.currentStep.input.state, err
