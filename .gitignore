@@ -6,3 +6,5 @@ examples/playground.go
 builds/*
 
 *test.md
+
+graphify-out/cache
