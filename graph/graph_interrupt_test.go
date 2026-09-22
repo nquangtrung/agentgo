@@ -2,189 +2,327 @@ package graph
 
 import (
 	"context"
-	"log/slog"
+	"fmt"
 	"testing"
 
 	"github.com/nquangtrung/agentgo/utils"
 	"github.com/stretchr/testify/assert"
 )
 
-func createGraph() StateGraph[int] {
-	g := New[int](func(a, b int) int {
-		return a + b
-	})
+func TestGraphInterruptSameSuperStep(t *testing.T) {
+	type expected struct {
+		itrs   []string
+		error  bool
+		result int
+	}
+	type test struct {
+		ops      []map[string]any
+		expected []expected
+		error    bool
+		result   int
+	}
 
-	g.AddNode("inc", func(ctx context.Context, state int) (int, error) {
-		return state + 1, nil
-	})
-	g.AddNode("inc2", func(ctx context.Context, state int) (int, error) {
-		return state + 2, nil
-	})
-	g.AddNode("double", func(ctx context.Context, state int) (int, error) {
-		fromUser, err := Interrupt[int](ctx, "double-itr", map[string]any{"message": "triple the state"})
-		if err != nil {
-			return 0, err
+	tt := []test{
+		{
+			ops: []map[string]any{
+				{"double-itr": "approved"},
+				{"triple-itr": "approved"},
+			},
+			expected: []expected{
+				{itrs: []string{"double-itr", "triple-itr"}, error: true, result: 1},
+				{itrs: []string{"triple-itr"}, error: true, result: 1},
+			},
+			result: 9,
+			error:  false,
+		},
+		{
+			ops: []map[string]any{
+				{"triple-itr": "approved"},
+				{"double-itr": "approved"},
+			},
+			expected: []expected{
+				{itrs: []string{"double-itr", "triple-itr"}, error: true, result: 1},
+				{itrs: []string{"double-itr"}, error: true, result: 1},
+			},
+			result: 9,
+			error:  false,
+		},
+		{
+			ops: []map[string]any{
+				{"triple-itr": "rejected"},
+				{"double-itr": "approved"},
+			},
+			expected: []expected{
+				{itrs: []string{"double-itr", "triple-itr"}, error: true, result: 1},
+				{itrs: []string{"double-itr"}, error: true, result: 1},
+			},
+			result: 1,
+			error:  true,
+		},
+		{
+			ops: []map[string]any{
+				{"double-itr": "approved"},
+				{"triple-itr": "rejected"},
+			},
+			expected: []expected{
+				{itrs: []string{"double-itr", "triple-itr"}, error: true, result: 1},
+				{itrs: []string{"triple-itr"}, error: true, result: 1},
+			},
+			result: 1,
+			error:  true,
+		},
+		{
+			ops: []map[string]any{
+				{"double-itr": "rejected"},
+				{"triple-itr": "approved"},
+			},
+			expected: []expected{
+				{itrs: []string{"double-itr", "triple-itr"}, error: true, result: 1},
+				{itrs: []string{"triple-itr"}, error: true, result: 1},
+			},
+			result: 1,
+			error:  true,
+		},
+		{
+			ops: []map[string]any{
+				{"double-itr": "rejected"},
+				{"triple-itr": "rejected"},
+			},
+			expected: []expected{
+				{itrs: []string{"double-itr", "triple-itr"}, error: true, result: 1},
+				{itrs: []string{"triple-itr"}, error: true, result: 1},
+			},
+			result: 1,
+			error:  true,
+		},
+		{
+			ops: []map[string]any{
+				{"double-itr": "approved", "triple-itr": "approved"},
+			},
+			expected: []expected{
+				{itrs: []string{"double-itr", "triple-itr"}, error: true, result: 1},
+			},
+			result: 9,
+			error:  false,
+		},
+		{
+			ops: []map[string]any{
+				{"double-itr": "approved", "triple-itr": "rejected"},
+			},
+			expected: []expected{
+				{itrs: []string{"double-itr", "triple-itr"}, error: true, result: 1},
+			},
+			result: 1,
+			error:  true,
+		},
+		{
+			ops: []map[string]any{
+				{"double-itr": "rejected", "triple-itr": "approved"},
+			},
+			expected: []expected{
+				{itrs: []string{"double-itr", "triple-itr"}, error: true, result: 1},
+			},
+			result: 1,
+			error:  true,
+		},
+		{
+			ops: []map[string]any{
+				{"double-itr": "rejected", "triple-itr": "rejected"},
+			},
+			expected: []expected{
+				{itrs: []string{"double-itr", "triple-itr"}, error: true, result: 1},
+			},
+			result: 1,
+			error:  true,
+		},
+	}
+
+	for _, tc := range tt {
+		g := createMockGraphWith2InterruptInSameSuperStep()
+
+		checkpointer := NewInMemoryCheckpointer[int]()
+		config := InvocationConfig[int]{
+			Checkpointer: checkpointer,
+		}
+		ctx := context.Background()
+		result, err := g.Invoke(ctx, 0, config)
+
+		for i := range tc.ops {
+			assert.Equal(t, tc.expected[i].result, result, "The state should be the last valid state before the interrupt")
+			if !tc.expected[i].error {
+				assert.NoError(t, err, "Expected no error")
+				continue
+			}
+
+			assert.Equal(t, tc.expected[i].result, result, "The state should be the last valid state before the interrupt")
+			assert.Error(t, err, "Expected an error due to interrupt")
+			superStepErr, _ := err.(*SuperStepExecutionError)
+			interrupts := superStepErr.Interrupts()
+			assert.Len(t, interrupts, len(tc.expected[i].itrs), fmt.Sprintf("Expected exact %d interrupt", len(tc.expected[i].itrs)))
+			names := utils.Map(interrupts, func(itr *InterruptError) string {
+				return itr.Name
+			})
+			assert.ElementsMatch(t, tc.expected[i].itrs, names, fmt.Sprintf("Expected interrupts to be from %v", tc.expected[i].itrs))
+
+			result, err = g.Resume(ctx, interrupts[0].ThreadID, tc.ops[i], config)
 		}
 
-		if fromUser.Result != "approved" {
-			logger.Info("Interrupt returned", slog.Any("result", fromUser))
-			return 0, fromUser.Reject("User rejected double nod")
+		if !tc.error {
+			assert.NoError(t, err, "Expected no error")
+		} else {
+			assert.Error(t, err, "Expected an error due to interrupt rejection")
+		}
+		assert.Equal(t, tc.result, result, "The state should be the last valid state before the interrupt")
+	}
+}
+
+func TestGraph2InterruptSameNode(t *testing.T) {
+	type expected struct {
+		itr   string
+		error bool
+	}
+	type test struct {
+		ops      []string
+		expected []expected
+		error    bool
+		result   int
+	}
+	tt := []test{
+		{
+			ops: []string{"approved", "approved"},
+			expected: []expected{
+				{itr: "inc1-itr", error: true},
+				{itr: "inc2-itr", error: true},
+			},
+			result: 1,
+			error:  false,
+		},
+		{
+			ops: []string{"approved", "rejected"},
+			expected: []expected{
+				{itr: "inc1-itr", error: true},
+				{itr: "inc2-itr", error: true},
+			},
+			result: 0,
+			error:  true,
+		},
+		{
+			ops: []string{"rejected"},
+			expected: []expected{
+				{itr: "inc1-itr", error: true},
+			},
+			result: 0,
+			error:  true,
+		},
+	}
+
+	for _, tc := range tt {
+		g := createMockGraphWith2InterruptInSingleNode()
+		ctx := context.Background()
+		checkpointer := NewInMemoryCheckpointer[int]()
+		config := InvocationConfig[int]{
+			Checkpointer: checkpointer,
+		}
+		result, err := g.Invoke(ctx, 0, config)
+
+		for i := range tc.ops {
+			if !tc.expected[i].error {
+				assert.NoError(t, err, "Expected no error")
+				continue
+			}
+
+			assert.Equal(t, 0, result, "The state should be the last valid state before the interrupt")
+			assert.Error(t, err, "Expected an error due to interrupt")
+			superStepErr, _ := err.(*SuperStepExecutionError)
+			interrupts := superStepErr.Interrupts()
+			assert.Len(t, interrupts, 1, "Expected exact 1 interrupt")
+			assert.Equal(t, tc.expected[i].itr, interrupts[0].Name, "Expected interrupt from 'inc' node")
+
+			result, err = g.Resume(ctx, interrupts[0].ThreadID, map[string]any{
+				interrupts[0].Name: tc.ops[i],
+			}, config)
 		}
 
-		return state * 2, nil
-	})
+		if !tc.error {
+			assert.NoError(t, err, "Expected no error")
+		} else {
+			assert.Error(t, err, "Expected an error due to interrupt rejection")
+		}
+		assert.Equal(t, tc.result, result, "The state should be the last valid state before the interrupt")
+	}
+}
 
-	g.AddNode("triple", func(ctx context.Context, state int) (int, error) {
-		fromUser, err := Interrupt[int](ctx, "triple-itr", map[string]any{"message": "Should I triple the state?"})
-		if err != nil {
-			return 0, err
+func TestGraph2InterruptIn2Node(t *testing.T) {
+	type expected struct {
+		itr   string
+		error bool
+	}
+	type test struct {
+		ops      []string
+		expected []expected
+		error    bool
+		result   int
+	}
+	tt := []test{
+		{
+			ops: []string{"approved", "approved"},
+			expected: []expected{
+				{itr: "inc-itr", error: true},
+				{itr: "double-itr", error: true},
+			},
+			result: 3,
+			error:  false,
+		},
+		{
+			ops: []string{"approved", "rejected"},
+			expected: []expected{
+				{itr: "inc-itr", error: true},
+				{itr: "double-itr", error: true},
+			},
+			result: 1,
+			error:  true,
+		},
+		{
+			ops: []string{"rejected"},
+			expected: []expected{
+				{itr: "inc-itr", error: true},
+			},
+			result: 0,
+			error:  true,
+		},
+	}
+
+	for _, tc := range tt {
+		g := createMockGraphWith2InterruptIn2Node()
+		ctx := context.Background()
+		checkpointer := NewInMemoryCheckpointer[int]()
+		config := InvocationConfig[int]{
+			Checkpointer: checkpointer,
+		}
+		result, err := g.Invoke(ctx, 0, config)
+
+		for i := range tc.ops {
+			if !tc.expected[i].error {
+				assert.NoError(t, err, "Expected no error")
+				continue
+			}
+
+			assert.Error(t, err, "Expected an error due to interrupt")
+			superStepErr, _ := err.(*SuperStepExecutionError)
+			interrupts := superStepErr.Interrupts()
+			assert.Len(t, interrupts, 1, "Expected exact 1 interrupt")
+			assert.Equal(t, tc.expected[i].itr, interrupts[0].Name, fmt.Sprintf("Expected interrupt from '%s' node", tc.expected[i].itr))
+
+			result, err = g.Resume(ctx, interrupts[0].ThreadID, map[string]any{
+				interrupts[0].Name: tc.ops[i],
+			}, config)
 		}
 
-		if fromUser.Result != "approved" {
-			logger.Info("Interrupt returned", slog.Any("result", fromUser))
-			return 0, fromUser.Reject("User rejected triple nod")
+		if !tc.error {
+			assert.NoError(t, err, "Expected no error")
+		} else {
+			assert.Error(t, err, "Expected an error due to interrupt rejection")
 		}
-
-		return state * 3, nil
-	})
-
-	g.AddEdge(START, "inc")
-	g.FanOut("inc", []ID{"inc2", "double", "triple"})
-	g.AddEdge("double", END)
-
-	return g
-}
-
-func TestGraphInterrupt(t *testing.T) {
-	g := createGraph()
-
-	checkpointer := NewInMemoryCheckpointer[int]()
-	config := InvocationConfig[int]{
-		Checkpointer: checkpointer,
+		assert.Equal(t, tc.result, result, "The state should be the expected result after all interrupts")
 	}
-	ctx := context.Background()
-	result, err := g.Invoke(ctx, 0, config)
-
-	assert.Error(t, err, "Expected an error due to interrupt")
-	assert.IsType(t, &SuperStepExecutionError{}, err, "Expected an InterruptError")
-
-	superStepErr, _ := err.(*SuperStepExecutionError)
-	interrupts := superStepErr.Interrupts()
-	assert.Len(t, interrupts, 2, "Expected exact 2 interrupts")
-
-	ids := utils.Map(interrupts, func(itr *InterruptError) ID {
-		return itr.ID
-	})
-	assert.ElementsMatch(t, []ID{"double", "triple"}, ids, "Expected interrupts from 'double' and 'triple' nodes")
-	assert.NotEqual(t, "", interrupts[0].ThreadID, "Expected non-empty ThreadID for the 1st interrupt")
-	assert.NotEqual(t, "", interrupts[1].ThreadID, "Expected non-empty ThreadID for the 2nd interrupt")
-	assert.Equal(t, 1, result, "The state should be until before the interrupt, which is 1 (0 + 1)")
-}
-
-func TestGraphInterruptPartialReject(t *testing.T) {
-	g := createGraph()
-
-	checkpointer := NewInMemoryCheckpointer[int]()
-	config := InvocationConfig[int]{
-		Checkpointer: checkpointer,
-	}
-	ctx := context.Background()
-	result, err := g.Invoke(ctx, 0, config)
-
-	superStepErr, _ := err.(*SuperStepExecutionError)
-	interrupts := superStepErr.Interrupts()
-
-	logger.Info("Resuming graph execution with interrupt result", slog.Any(interrupts[0].Name, "approved"))
-	result, err = g.Resume(ctx, interrupts[0].ThreadID, map[string]any{
-		interrupts[0].Name: "approved",
-	}, config)
-
-	assert.Error(t, err, "Expected an error due to missing interrupts result")
-	superStepErr, _ = err.(*SuperStepExecutionError)
-	interrupts = superStepErr.Interrupts()
-	assert.Len(t, interrupts, 1, "Expected exact 1 interrupt after resuming")
-	assert.Equal(t, 1, result, "The state should not change after resuming with the first interrupt result, which is 1 (0 + 1)")
-
-	logger.Info("Resuming graph execution with interrupt result", slog.Any(interrupts[0].Name, "rejected"))
-	result, err = g.Resume(ctx, interrupts[0].ThreadID, map[string]any{
-		interrupts[0].Name: "rejected",
-	}, config)
-	assert.Error(t, err, "Expected an error due to interrupt rejection")
-	assert.Equal(t, 1, result, "The state should not change after resuming since 1 interrupt is rejected")
-	superStepErr, _ = err.(*SuperStepExecutionError)
-	assert.IsType(t, superStepErr.Errs[0], &InterruptRejectedError{}, "Error should be interrupt rejected")
-}
-
-func TestGraphInterruptAllApproved(t *testing.T) {
-	g := createGraph()
-
-	checkpointer := NewInMemoryCheckpointer[int]()
-	config := InvocationConfig[int]{
-		Checkpointer: checkpointer,
-	}
-	ctx := context.Background()
-	_, err := g.Invoke(ctx, 0, config)
-
-	superStepErr, _ := err.(*SuperStepExecutionError)
-	interrupts := superStepErr.Interrupts()
-
-	logger.Info("Resuming graph execution with interrupt result", slog.Any(interrupts[0].Name, "approved"))
-	result, err := g.Resume(ctx, interrupts[0].ThreadID, map[string]any{
-		interrupts[0].Name: "approved",
-		interrupts[1].Name: "approved",
-	}, config)
-
-	assert.NoError(t, err, "Expected no error after resuming with all interrupts approved")
-	assert.Equal(t, 9, result, "The state should be fully updated (0 + 1 + 2 + 3 + 3)")
-}
-
-func TestGraphInterruptAllRejectedTogether(t *testing.T) {
-	g := createGraph()
-
-	checkpointer := NewInMemoryCheckpointer[int]()
-	config := InvocationConfig[int]{
-		Checkpointer: checkpointer,
-	}
-	ctx := context.Background()
-	_, err := g.Invoke(ctx, 0, config)
-
-	superStepErr, _ := err.(*SuperStepExecutionError)
-	interrupts := superStepErr.Interrupts()
-
-	logger.Info("Resuming graph execution with interrupt result", slog.Any(interrupts[0].Name, "approved"))
-	result, err := g.Resume(ctx, interrupts[0].ThreadID, map[string]any{
-		interrupts[0].Name: "rejected",
-		interrupts[1].Name: "rejected",
-	}, config)
-
-	assert.Equal(t, 1, result, "The state should be the last valid state")
-	superStepErr, _ = err.(*SuperStepExecutionError)
-	assert.Len(t, superStepErr.Errs, 2, "Expected 2 errors due to interrupt rejection")
-	assert.IsType(t, superStepErr.Errs[0], &InterruptRejectedError{}, "Error should be interrupt rejected")
-	assert.IsType(t, superStepErr.Errs[1], &InterruptRejectedError{}, "Error should be interrupt rejected")
-}
-
-func TestGraphInterruptPartiallyRejectedTogether(t *testing.T) {
-	g := createGraph()
-
-	checkpointer := NewInMemoryCheckpointer[int]()
-	config := InvocationConfig[int]{
-		Checkpointer: checkpointer,
-	}
-	ctx := context.Background()
-	_, err := g.Invoke(ctx, 0, config)
-
-	superStepErr, _ := err.(*SuperStepExecutionError)
-	interrupts := superStepErr.Interrupts()
-
-	logger.Info("Resuming graph execution with interrupt result", slog.Any(interrupts[0].Name, "approved"))
-	result, err := g.Resume(ctx, interrupts[0].ThreadID, map[string]any{
-		interrupts[0].Name: "approved",
-		interrupts[1].Name: "rejected",
-	}, config)
-
-	assert.Equal(t, 1, result, "The state should be the last valid state")
-	superStepErr, _ = err.(*SuperStepExecutionError)
-	assert.Len(t, superStepErr.Errs, 1, "Expected 2 errors due to interrupt rejection")
-	assert.IsType(t, superStepErr.Errs[0], &InterruptRejectedError{}, "Error should be interrupt rejected")
 }
