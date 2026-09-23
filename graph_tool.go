@@ -17,10 +17,8 @@ func executeTool(ctx context.Context, params any) (agentStateDelta, error) {
 	logger.Debug("Tool executed", "tool", tool.Name(), "result", toolResult)
 
 	return agentStateDelta{
-		from: EXECUTE_TOOL,
-		// currentStep: step{
-		// 	toolResults: []models.ToolExecuteOutput{toolResult},
-		// },
+		from:              EXECUTE_TOOL,
+		archiveToolResult: &toolResult,
 	}, nil
 }
 
@@ -39,10 +37,8 @@ func resolveTool(ctx context.Context, state agentState) (agentStateDelta, error)
 		return agentStateDelta{}, err
 	}
 
-	currentStep := state.currentStep
-	currentStep.tools = resolveOutput.ToolCalls
 	return agentStateDelta{
-		from: RESOLVE_TOOL,
-		// currentStep: currentStep,
+		from:           RESOLVE_TOOL,
+		availableTools: resolveOutput.ToolCalls,
 	}, nil
 }

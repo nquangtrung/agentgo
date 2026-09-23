@@ -31,6 +31,15 @@ type agentState struct {
 
 type agentStateDelta struct {
 	from string
+
+	addStep    *step
+	stepAction string
+
+	availableTools    []models.ToolCall
+	archiveToolResult *models.ToolExecuteOutput
+
+	textGenerated bool
+	stream        bool
 }
 
 const (
@@ -61,24 +70,55 @@ func checkLoop(ctx context.Context, state agentState) (agentStateDelta, error) {
 		return true
 	}
 
-	currentStep := state.currentStep
+	var stepAction string = "end"
 	if state.textGenerated {
-		currentStep.action = "end"
+		stepAction = "end"
 	} else if len(endConditions) == 0 || len(tools) == 0 {
-		currentStep.action = "text"
+		stepAction = "text"
 	} else if canProceedToNextStep(state.toolExecutionsArchive, endConditions) {
-		currentStep.action = "tool"
+		stepAction = "tool"
 	} else {
-		currentStep.action = "end"
+		stepAction = "end"
 	}
 
 	return agentStateDelta{
-		from: LOOP_CHECK,
+		from:       LOOP_CHECK,
+		stepAction: stepAction,
 	}, nil
 }
 
 func accumulateAgentState(oldState agentState, delta agentStateDelta) agentState {
-	logger.Info("Accumulate state", slog.Any("old", oldState), slog.Any("new", delta))
+	logger.Info("Accumulate state", slog.String("delta", delta.from))
+
+	if delta.addStep != nil {
+		logger.Info("Adding new step", slog.Int("stepIndex", delta.addStep.index))
+		oldState.currentStep = *delta.addStep
+		oldState.steps = append(oldState.steps, *delta.addStep)
+	}
+
+	oldState.textGenerated = oldState.textGenerated || delta.textGenerated
+	oldState.currentStep.stream = oldState.currentStep.stream || delta.stream
+
+	if delta.archiveToolResult != nil {
+		logger.Info("Archiving tool result", slog.Int("stepIndex", oldState.currentStep.index))
+		// XXX Should not be mutable
+		models.AccumulateToolCallResult(oldState.toolExecutionsArchive, delta.archiveToolResult, oldState.messages)
+
+		currentStep := oldState.currentStep
+		currentStep.usage = models.AccumulateUsage(currentStep.usage, delta.archiveToolResult.Usage)
+		oldState.currentStep = currentStep
+		oldState.totalUsage = models.AccumulateUsage(oldState.totalUsage, delta.archiveToolResult.Usage)
+	}
+
+	if delta.availableTools != nil {
+		logger.Info("Updating available tools", slog.Int("stepIndex", oldState.currentStep.index))
+		oldState.currentStep.tools = delta.availableTools
+	}
+
+	if delta.stepAction != "" {
+		logger.Info("Updating step action", slog.Int("stepIndex", oldState.currentStep.index), slog.String("action", delta.stepAction))
+		oldState.currentStep.action = delta.stepAction
+	}
 
 	return oldState
 }

@@ -14,9 +14,6 @@ func prepareProcess(ctx context.Context, state agentState) (agentStateDelta, err
 
 	return agentStateDelta{
 		from: PREPARE_PROCESS,
-		// toolExecutionsArchive: &models.ToolExecutionsArchive{},
-		// messages:              &[]models.Message{},
-		// totalUsage:            models.LanguageModelUsage{},
 	}, nil
 }
 
@@ -39,8 +36,8 @@ func prepareStep(ctx context.Context, state agentState) (agentStateDelta, error)
 	}
 
 	return agentStateDelta{
-		from: PREPARE_STEP,
-		// currentStep: step,
+		from:    PREPARE_STEP,
+		addStep: &step,
 	}, nil
 }
 
