@@ -29,6 +29,10 @@ type agentState struct {
 	shouldEnd             bool
 }
 
+type agentStateDelta struct {
+	from string
+}
+
 const (
 	PREPARE_PROCESS = "prepare_process"
 	END_PROCESS     = "end_process"
@@ -43,7 +47,7 @@ const (
 	END_STEP        = "end_step"
 )
 
-func checkLoop(ctx context.Context, state agentState) (agentState, error) {
+func checkLoop(ctx context.Context, state agentState) (agentStateDelta, error) {
 	endConditions := ctx.Value(models.EndConditionsContextKey).([]models.EndCondition)
 	tools := ctx.Value(models.ToolsContextKey).([]models.BaseTool)
 	var canProceedToNextStep func(context *models.ToolExecutionsArchive, endConds []models.EndCondition) bool
@@ -68,18 +72,18 @@ func checkLoop(ctx context.Context, state agentState) (agentState, error) {
 		currentStep.action = "end"
 	}
 
-	return agentState{
-		currentStep: currentStep,
+	return agentStateDelta{
+		from: LOOP_CHECK,
 	}, nil
 }
 
-func accumulateAgentState(oldState agentState, newState agentState) agentState {
-	logger.Info("Accumulate state", slog.Any("old", oldState), slog.Any("new", newState))
+func accumulateAgentState(oldState agentState, delta agentStateDelta) agentState {
+	logger.Info("Accumulate state", slog.Any("old", oldState), slog.Any("new", delta))
 
-	return newState
+	return oldState
 }
 
-func createGenerateTextGraph() graph.StateGraph[agentState] {
+func createGenerateTextGraph() graph.StateGraph[agentState, agentStateDelta] {
 	g := graph.New(accumulateAgentState)
 
 	g.AddNode(PREPARE_PROCESS, prepareProcess)
@@ -89,12 +93,8 @@ func createGenerateTextGraph() graph.StateGraph[agentState] {
 	g.AddNode(RESOLVE_TOOL, resolveTool)
 	g.AddWorkerNode(EXECUTE_TOOL, executeTool)
 	g.AddNode(PREPARE_TEXT, prepareText)
-	g.AddNode(GENERATE_TEXT, func(ctx context.Context, state agentState) (agentState, error) {
-		return state, nil
-	})
-	g.AddNode(STREAM_TEXT, func(ctx context.Context, state agentState) (agentState, error) {
-		return state, nil
-	})
+	g.AddNode(GENERATE_TEXT, generateText)
+	g.AddNode(STREAM_TEXT, generateText)
 	g.AddNode(END_TEXT, endText)
 	g.AddNode(END_STEP, endStep)
 

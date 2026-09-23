@@ -7,19 +7,20 @@ import (
 	"github.com/nquangtrung/agentgo/providers"
 )
 
-func prepareProcess(ctx context.Context, state agentState) (agentState, error) {
+func prepareProcess(ctx context.Context, state agentState) (agentStateDelta, error) {
 	emitter := ctx.Value(models.PartEmitterContextKey).(*models.PartEmitter)
 	provider := ctx.Value(models.ProviderContextKey).(providers.AgentProvider)
 	emitter.Emit(models.NewProcessStartPart(provider.Context()))
 
-	return agentState{
-		toolExecutionsArchive: &models.ToolExecutionsArchive{},
-		messages:              &[]models.Message{},
-		totalUsage:            models.LanguageModelUsage{},
+	return agentStateDelta{
+		from: PREPARE_PROCESS,
+		// toolExecutionsArchive: &models.ToolExecutionsArchive{},
+		// messages:              &[]models.Message{},
+		// totalUsage:            models.LanguageModelUsage{},
 	}, nil
 }
 
-func prepareStep(ctx context.Context, state agentState) (agentState, error) {
+func prepareStep(ctx context.Context, state agentState) (agentStateDelta, error) {
 	provider := ctx.Value(models.ProviderContextKey).(providers.AgentProvider)
 	emitter := ctx.Value(models.PartEmitterContextKey).(*models.PartEmitter)
 	prepareStep := ctx.Value(models.PrepareStepFnContextKey).(PrepareStepFn)
@@ -37,20 +38,21 @@ func prepareStep(ctx context.Context, state agentState) (agentState, error) {
 		step.prepareStepResult = prepareStepResult
 	}
 
-	return agentState{
-		currentStep: step,
+	return agentStateDelta{
+		from: PREPARE_STEP,
+		// currentStep: step,
 	}, nil
 }
 
-func endProcess(ctx context.Context, state agentState) (agentState, error) {
+func endProcess(ctx context.Context, state agentState) (agentStateDelta, error) {
 	emitter := ctx.Value(models.PartEmitterContextKey).(*models.PartEmitter)
 	provider := ctx.Value(models.ProviderContextKey).(providers.AgentProvider)
 
 	emitter.Emit(models.NewProcessEndPart(provider.Context(), state.totalUsage, models.FinishReasonCompleted))
-	return state, nil
+	return agentStateDelta{}, nil
 }
 
-func endStep(ctx context.Context, state agentState) (agentState, error) {
+func endStep(ctx context.Context, state agentState) (agentStateDelta, error) {
 	provider := ctx.Value(models.ProviderContextKey).(providers.AgentProvider)
 	emitter := ctx.Value(models.PartEmitterContextKey).(*models.PartEmitter)
 	// TODO handle usage accumulate
@@ -59,5 +61,5 @@ func endStep(ctx context.Context, state agentState) (agentState, error) {
 		"step",
 		state.currentStep.usage,
 	))
-	return state, nil
+	return agentStateDelta{}, nil
 }

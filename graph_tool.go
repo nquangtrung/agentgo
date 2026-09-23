@@ -7,21 +7,24 @@ import (
 	"github.com/nquangtrung/agentgo/providers"
 )
 
-func executeTool(ctx context.Context, params any) (agentState, error) {
+func executeTool(ctx context.Context, params any) (agentStateDelta, error) {
 	toolCall := params.(models.ToolCall)
 	tool := toolCall.Tool
 	toolResult := tool.Execute(models.ToolExecuteParams{
 		Input: toolCall.Params,
 	})
 
-	return agentState{
-		currentStep: step{
-			toolResults: []models.ToolExecuteOutput{toolResult},
-		},
+	logger.Debug("Tool executed", "tool", tool.Name(), "result", toolResult)
+
+	return agentStateDelta{
+		from: EXECUTE_TOOL,
+		// currentStep: step{
+		// 	toolResults: []models.ToolExecuteOutput{toolResult},
+		// },
 	}, nil
 }
 
-func resolveTool(ctx context.Context, state agentState) (agentState, error) {
+func resolveTool(ctx context.Context, state agentState) (agentStateDelta, error) {
 	provider := ctx.Value(models.ProviderContextKey).(providers.AgentProvider)
 
 	// TODO Handle when prepare step return only a subset
@@ -33,12 +36,13 @@ func resolveTool(ctx context.Context, state agentState) (agentState, error) {
 
 	if err != nil {
 		// TODO Handle error
-		return state, err
+		return agentStateDelta{}, err
 	}
 
 	currentStep := state.currentStep
 	currentStep.tools = resolveOutput.ToolCalls
-	return agentState{
-		currentStep: currentStep,
+	return agentStateDelta{
+		from: RESOLVE_TOOL,
+		// currentStep: currentStep,
 	}, nil
 }

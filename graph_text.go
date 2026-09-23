@@ -7,25 +7,27 @@ import (
 	"github.com/nquangtrung/agentgo/providers"
 )
 
-func prepareText(ctx context.Context, state agentState) (agentState, error) {
+func prepareText(ctx context.Context, state agentState) (agentStateDelta, error) {
 	stream := ctx.Value(models.StreamContextKey).(bool)
 
 	currentStep := state.currentStep
 	currentStep.stream = stream
-	return agentState{
-		currentStep: currentStep,
+	return agentStateDelta{
+		from: PREPARE_TEXT,
+		// currentStep: currentStep,
 	}, nil
 }
 
-func endText(_ context.Context, state agentState) (agentState, error) {
+func endText(_ context.Context, state agentState) (agentStateDelta, error) {
 	// TODO handle usage accumulate
-	return agentState{
-		currentStep:   state.currentStep,
-		textGenerated: true,
+	return agentStateDelta{
+		from: END_TEXT,
+		// currentStep:   state.currentStep,
+		// textGenerated: true,
 	}, nil
 }
 
-func generateText(ctx context.Context, state agentState) (agentState, error) {
+func generateText(ctx context.Context, state agentState) (agentStateDelta, error) {
 	provider := ctx.Value(models.ProviderContextKey).(providers.AgentProvider)
 	messages := state.messages
 
@@ -35,7 +37,7 @@ func generateText(ctx context.Context, state agentState) (agentState, error) {
 
 	if err != nil {
 		// Handle error and retry
-		return state, err
+		return agentStateDelta{}, err
 	}
 
 	currentStep := state.currentStep
@@ -44,13 +46,14 @@ func generateText(ctx context.Context, state agentState) (agentState, error) {
 
 	outputAsToolExecuteOutput := resolveTextOutputAsToolExecuteOutput(output, err)
 	models.AccumulateToolCallResult(state.toolExecutionsArchive, &outputAsToolExecuteOutput, messages)
-	return agentState{
-		currentStep:           currentStep,
-		toolExecutionsArchive: state.toolExecutionsArchive,
+	return agentStateDelta{
+		from: GENERATE_TEXT,
+		// currentStep:           currentStep,
+		// toolExecutionsArchive: state.toolExecutionsArchive,
 	}, nil
 }
 
-func streamText(ctx context.Context, state agentState) (agentState, error) {
+func streamText(ctx context.Context, state agentState) (agentStateDelta, error) {
 	provider := ctx.Value(models.ProviderContextKey).(providers.AgentProvider)
 	emitter := ctx.Value(models.PartEmitterContextKey).(*models.PartEmitter)
 	messages := state.messages
@@ -63,7 +66,7 @@ func streamText(ctx context.Context, state agentState) (agentState, error) {
 
 	if err != nil {
 		// TODO Handle error and retry
-		return state, err
+		return agentStateDelta{}, err
 	}
 
 	currentStep := state.currentStep
@@ -72,8 +75,9 @@ func streamText(ctx context.Context, state agentState) (agentState, error) {
 
 	outputAsToolExecuteOutput := resolveTextOutputAsToolExecuteOutput(output, err)
 	models.AccumulateToolCallResult(state.toolExecutionsArchive, &outputAsToolExecuteOutput, messages)
-	return agentState{
-		currentStep:           currentStep,
-		toolExecutionsArchive: state.toolExecutionsArchive,
+	return agentStateDelta{
+		from: STREAM_TEXT,
+		// currentStep:           currentStep,
+		// toolExecutionsArchive: state.toolExecutionsArchive,
 	}, nil
 }

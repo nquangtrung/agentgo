@@ -24,7 +24,7 @@ func GenerateText(ctx context.Context, params Params) (models.LanguageModelOutpu
 
 	g := createGenerateTextGraph()
 
-	config := graph.InvocationConfig[agentState]{}
+	config := graph.InvocationConfig[agentState, agentStateDelta]{}
 	result, err := g.Invoke(ctx, agentState{
 		toolExecutionsArchive: execContext,
 		messages:              &messages,
