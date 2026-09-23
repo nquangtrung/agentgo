@@ -201,10 +201,7 @@ func TestGenerateTextWithTool(t *testing.T) {
 		nil,
 	)
 	output, err := GenerateText(ctx, params)
-	if err != nil {
-		panic(err)
-	}
-
+	assert.NoError(t, err, "should not return error")
 	assert.Equal(t, modelName, output.ModelName, "should have correct model name")
 	assert.Equal(t, result, output.Text, "should have correct output")
 	assert.Equal(t, int64(245+200), output.Usage.InputTokens, "should have correct input tokens")

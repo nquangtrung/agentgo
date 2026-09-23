@@ -3,6 +3,7 @@ package graph
 import (
 	"context"
 	"fmt"
+	"runtime/debug"
 )
 
 type nodeResult[T any, D any] struct {
@@ -23,6 +24,7 @@ func (n stateNode[T, D]) execute(ctx context.Context, state T, target Target) (d
 
 	defer func() {
 		if r := recover(); r != nil {
+			logger.Error(string(debug.Stack()))
 			err = NewNodeExecutionError(threadId, n.ID, fmt.Errorf("panic in node execution: %v", r))
 		}
 	}()
@@ -60,6 +62,7 @@ func (n workerNode[T, D]) execute(ctx context.Context, state T, target Target) (
 	threadId := ctx.Value("threadId").(ID)
 	defer func() {
 		if r := recover(); r != nil {
+			logger.Error(string(debug.Stack()))
 			err = NewNodeExecutionError(threadId, n.ID, fmt.Errorf("panic in node execution: %v", r))
 		}
 	}()
