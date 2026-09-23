@@ -24,14 +24,14 @@ type Router[T any] = func(state T) []Target
 type NamedRouter[T any] = func(state T) string
 type NamedRouterMap = map[string][]Target
 
-type stateEdge[T any] struct {
+type stateEdge[T any, D any] struct {
 	start  ID
 	end    []ID
 	endMap NamedRouterMap
 	router Router[T]
 }
 
-func (e stateEdge[T]) route(threadId ID, state T) (target []Target, err *RouterExecutionError) {
+func (e stateEdge[T, D]) route(threadId ID, state T) (target []Target, err *RouterExecutionError) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = NewRouterExecutionError(threadId, e.start, fmt.Errorf("panic in router execution: %v", r))

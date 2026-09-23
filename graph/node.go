@@ -5,20 +5,20 @@ import (
 	"fmt"
 )
 
-type nodeResult[T any] struct {
+type nodeResult[T any, D any] struct {
 	id    ID
-	state T
+	delta D
 	err   error
 }
 
-type NodeFn[T any] = func(ctx context.Context, state T) (T, error)
+type NodeFn[T any, D any] = func(ctx context.Context, state T) (D, error)
 
-type stateNode[T any] struct {
+type stateNode[T any, D any] struct {
 	ID ID
-	fn NodeFn[T]
+	fn NodeFn[T, D]
 }
 
-func (n stateNode[T]) execute(ctx context.Context, state T, target Target) (delta T, err error) {
+func (n stateNode[T, D]) execute(ctx context.Context, state T, target Target) (delta D, err error) {
 	threadId := ctx.Value("threadId").(ID)
 
 	defer func() {
@@ -45,18 +45,18 @@ func (n stateNode[T]) execute(ctx context.Context, state T, target Target) (delt
 	return result, err
 }
 
-func (n stateNode[T]) id() ID {
+func (n stateNode[T, D]) id() ID {
 	return n.ID
 }
 
-type WorkerNodeFn[T any] = func(ctx context.Context, params any) (T, error)
+type WorkerNodeFn[T any, D any] = func(ctx context.Context, params any) (D, error)
 
-type workerNode[T any] struct {
+type workerNode[T any, D any] struct {
 	ID ID
-	fn WorkerNodeFn[T]
+	fn WorkerNodeFn[T, D]
 }
 
-func (n workerNode[T]) execute(ctx context.Context, state T, target Target) (delta T, err error) {
+func (n workerNode[T, D]) execute(ctx context.Context, state T, target Target) (delta D, err error) {
 	threadId := ctx.Value("threadId").(ID)
 	defer func() {
 		if r := recover(); r != nil {
@@ -67,11 +67,11 @@ func (n workerNode[T]) execute(ctx context.Context, state T, target Target) (del
 	return n.fn(ctx, target.params)
 }
 
-func (n workerNode[T]) id() ID {
+func (n workerNode[T, D]) id() ID {
 	return n.ID
 }
 
-type node[T any] interface {
-	execute(ctx context.Context, state T, target Target) (delta T, err error)
+type node[T any, D any] interface {
+	execute(ctx context.Context, state T, target Target) (delta D, err error)
 	id() ID
 }

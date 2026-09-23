@@ -34,8 +34,8 @@ func (i InterruptResult) Reject(message string) *InterruptRejectedError {
 	return NewInterruptRejectedError(i.name, message)
 }
 
-func Interrupt[T any](ctx context.Context, name string, payload any) (InterruptResult, error) {
-	graph, ok := ctx.Value("graph").(StateGraph[T])
+func Interrupt[T any, D any](ctx context.Context, name string, payload any) (InterruptResult, error) {
+	graph, ok := ctx.Value("graph").(StateGraph[T, D])
 	if !ok {
 		// This should never happens
 		panic("graph not found in context")

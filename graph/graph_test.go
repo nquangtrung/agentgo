@@ -122,11 +122,11 @@ func TestAddConditionalEdge(t *testing.T) {
 	g.AddEdge("nonpositive", END)
 
 	ctx := context.Background()
-	result, err := g.Invoke(ctx, 1, InvocationConfig[int]{})
+	result, err := g.Invoke(ctx, 1, InvocationConfig[int, int]{})
 	assert.Equal(t, 3, result, "Expected final state to be 2 after running the graph with positive input")
 	assert.NoError(t, err, "Expect result without error")
 
-	result, err = g.Invoke(ctx, -1, InvocationConfig[int]{})
+	result, err = g.Invoke(ctx, -1, InvocationConfig[int, int]{})
 	assert.NoError(t, err, "Expect result without error")
 	assert.Equal(t, -3, result, "Expected final state to be -2 after running the graph with non-positive input")
 }

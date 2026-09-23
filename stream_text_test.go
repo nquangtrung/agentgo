@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	"github.com/nquangtrung/agentgo/endconditions"
-	"github.com/nquangtrung/agentgo/fsm"
 	"github.com/nquangtrung/agentgo/mocks"
 	"github.com/nquangtrung/agentgo/models"
 	"github.com/nquangtrung/agentgo/providers"
@@ -635,14 +634,14 @@ func TestStreamTextPrepareStepWithToolChoice(t *testing.T) {
 		}),
 	}
 
-	prepareStep := func(step fsm.Step, ctx fsm.AgentContext) (fsm.PrepareStepResult, error) {
+	prepareStep := func(step step, ctx agentState) (PrepareStepResult, error) {
 		// Only first step has tool choice override
-		if step.StepIndex == 1 {
-			return fsm.PrepareStepResult{
-				ToolChoice: &fsm.ToolChoice{Name: "tool_a"},
+		if step.index == 1 {
+			return PrepareStepResult{
+				ToolChoice: &ToolChoice{Name: "tool_a"},
 			}, nil
 		}
-		return fsm.PrepareStepResult{}, nil
+		return PrepareStepResult{}, nil
 	}
 
 	mockProvider.EXPECT().Context().AnyTimes().Return(models.LanguageModelContext{ModelName: modelName})
@@ -701,18 +700,18 @@ func TestStreamTextPrepareStepWithMessages(t *testing.T) {
 		}),
 	}
 
-	prepareStep := func(step fsm.Step, ctx fsm.AgentContext) (fsm.PrepareStepResult, error) {
-		if step.StepIndex == 1 {
+	prepareStep := func(step step, ctx agentState) (PrepareStepResult, error) {
+		if step.index == 1 {
 			// Override messages on first step
 			customMessages := []models.Message{
 				models.NewStringMessage("system", "You are a helpful assistant"),
 				models.NewStringMessage("user", "Modified prompt in prepare step"),
 			}
-			return fsm.PrepareStepResult{
+			return PrepareStepResult{
 				Messages: &customMessages,
 			}, nil
 		}
-		return fsm.PrepareStepResult{}, nil
+		return PrepareStepResult{}, nil
 	}
 
 	mockProvider.EXPECT().Context().AnyTimes().Return(models.LanguageModelContext{ModelName: modelName})
@@ -790,15 +789,15 @@ func TestStreamTextPrepareStepWithActiveTools(t *testing.T) {
 		}),
 	}
 
-	prepareStep := func(step fsm.Step, ctx fsm.AgentContext) (fsm.PrepareStepResult, error) {
-		if step.StepIndex == 1 {
+	prepareStep := func(step step, ctx agentState) (PrepareStepResult, error) {
+		if step.index == 1 {
 			// Restrict to only tool_1
 			activeTools := []string{"tool_1"}
-			return fsm.PrepareStepResult{
+			return PrepareStepResult{
 				ActiveTools: &activeTools,
 			}, nil
 		}
-		return fsm.PrepareStepResult{}, nil
+		return PrepareStepResult{}, nil
 	}
 
 	mockProvider.EXPECT().Context().AnyTimes().Return(models.LanguageModelContext{ModelName: modelName})
@@ -877,20 +876,20 @@ func TestStreamTextPrepareStepMultipleOverrides(t *testing.T) {
 		}),
 	}
 
-	prepareStep := func(step fsm.Step, ctx fsm.AgentContext) (fsm.PrepareStepResult, error) {
-		if step.StepIndex == 1 {
+	prepareStep := func(step step, ctx agentState) (PrepareStepResult, error) {
+		if step.index == 1 {
 			// Override all three options
 			activeTools := []string{"search"}
 			customMessages := []models.Message{
 				models.NewStringMessage("user", "Search for information"),
 			}
-			return fsm.PrepareStepResult{
-				ToolChoice:  &fsm.ToolChoice{Name: "search"},
+			return PrepareStepResult{
+				ToolChoice:  &ToolChoice{Name: "search"},
 				Messages:    &customMessages,
 				ActiveTools: &activeTools,
 			}, nil
 		}
-		return fsm.PrepareStepResult{}, nil
+		return PrepareStepResult{}, nil
 	}
 
 	mockProvider.EXPECT().Context().AnyTimes().Return(models.LanguageModelContext{ModelName: modelName})
@@ -968,21 +967,21 @@ func TestStreamTextPrepareStepPerStepOptions(t *testing.T) {
 		}),
 	}
 
-	prepareStep := func(step fsm.Step, ctx fsm.AgentContext) (fsm.PrepareStepResult, error) {
-		if step.StepIndex == 1 {
+	prepareStep := func(step step, ctx agentState) (PrepareStepResult, error) {
+		if step.index == 1 {
 			// First step: use only step1_tool
 			activeTools := []string{"step1_tool"}
-			return fsm.PrepareStepResult{
+			return PrepareStepResult{
 				ActiveTools: &activeTools,
 			}, nil
-		} else if step.StepIndex == 2 {
+		} else if step.index == 2 {
 			// Second step: use only step2_tool
 			activeTools := []string{"step2_tool"}
-			return fsm.PrepareStepResult{
+			return PrepareStepResult{
 				ActiveTools: &activeTools,
 			}, nil
 		}
-		return fsm.PrepareStepResult{}, nil
+		return PrepareStepResult{}, nil
 	}
 
 	mockProvider.EXPECT().Context().AnyTimes().Return(models.LanguageModelContext{ModelName: modelName})

@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-func saveGraph(g StateGraph[int], name string) {
+func saveGraph(g StateGraph[int, int], name string) {
 	visualization := g.Visualize()
 	toBeSaved := fmt.Sprintf("```mermaid\n%s\n```", visualization)
 	err := os.WriteFile(
@@ -23,7 +23,7 @@ func saveGraph(g StateGraph[int], name string) {
 func TestVisualize(t *testing.T) {
 	type test struct {
 		name       string
-		graphFunc  func() StateGraph[int]
+		graphFunc  func() StateGraph[int, int]
 		outputName string
 	}
 

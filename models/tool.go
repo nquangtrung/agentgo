@@ -14,6 +14,8 @@ type ToolExecuteOutput struct {
 type ToolCall struct {
 	ToolName string
 	Params   map[string]any
+	Tool     Tool
+	Messages []Message
 }
 
 //go:generate mockgen -destination=../mocks/mock_tool.go -package=mocks github.com/nquangtrung/agentgo/models Tool

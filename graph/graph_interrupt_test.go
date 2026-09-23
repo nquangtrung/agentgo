@@ -140,8 +140,8 @@ func TestGraphInterruptSameSuperStep(t *testing.T) {
 	for _, tc := range tt {
 		g := createMockGraphWith2InterruptInSameSuperStep()
 
-		checkpointer := NewInMemoryCheckpointer[int]()
-		config := InvocationConfig[int]{
+		checkpointer := NewInMemoryCheckpointer[int, int]()
+		config := InvocationConfig[int, int]{
 			Checkpointer: checkpointer,
 		}
 		ctx := context.Background()
@@ -219,8 +219,8 @@ func TestGraph2InterruptSameNode(t *testing.T) {
 	for _, tc := range tt {
 		g := createMockGraphWith2InterruptInSingleNode()
 		ctx := context.Background()
-		checkpointer := NewInMemoryCheckpointer[int]()
-		config := InvocationConfig[int]{
+		checkpointer := NewInMemoryCheckpointer[int, int]()
+		config := InvocationConfig[int, int]{
 			Checkpointer: checkpointer,
 		}
 		result, err := g.Invoke(ctx, 0, config)
@@ -295,8 +295,8 @@ func TestGraph2InterruptIn2Node(t *testing.T) {
 	for _, tc := range tt {
 		g := createMockGraphWith2InterruptIn2Node()
 		ctx := context.Background()
-		checkpointer := NewInMemoryCheckpointer[int]()
-		config := InvocationConfig[int]{
+		checkpointer := NewInMemoryCheckpointer[int, int]()
+		config := InvocationConfig[int, int]{
 			Checkpointer: checkpointer,
 		}
 		result, err := g.Invoke(ctx, 0, config)

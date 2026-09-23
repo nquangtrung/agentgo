@@ -55,6 +55,7 @@ g := graph.New[int](func(a, b int) int {
 ```
 
 **Key decisions:**
+
 - Type parameter `T` is your state type (can be struct, slice, map, etc.)
 - Reducer must be associative and commutative for deterministic results
 - Reducer panics are caught and wrapped in `ReducerExecutionError`
@@ -64,6 +65,7 @@ g := graph.New[int](func(a, b int) int {
 ### 2. Adding Nodes
 
 #### Simple State Node
+
 ```go
 g.AddNode("increment", func(ctx context.Context, state int) (int, error) {
     return state + 1, nil
@@ -73,6 +75,7 @@ g.AddNode("increment", func(ctx context.Context, state int) (int, error) {
 **Pattern:** Each node receives full state, returns transformed state + error
 
 #### Worker Node (Map/Reduce)
+
 ```go
 type State struct {
     Value int
@@ -92,6 +95,7 @@ g.AddWorkerNode("processItems", func(ctx context.Context, state State, item stri
 ### 3. Connecting Nodes
 
 #### Simple Edge (Linear Flow)
+
 ```go
 g.AddEdge(graph.START, "increment")
 g.AddEdge("increment", "double")
@@ -99,6 +103,7 @@ g.AddEdge("double", graph.END)
 ```
 
 #### Fan-Out (Parallel Execution)
+
 ```go
 g.FanOut(graph.START, []graph.ID{"inc", "double", "triple"})
 // All three run concurrently; results merged by reducer
@@ -108,6 +113,7 @@ g.AddEdge("triple", graph.END)
 ```
 
 #### Conditional Routing
+
 ```go
 router := func(state int) []graph.Target {
     if state > 0 {
@@ -122,10 +128,12 @@ g.AddEdge("nonpositive", graph.END)
 ```
 
 **Pattern:** Router decides which next node(s) to execute based on state
+
 - Router panics are caught and wrapped in `RouterExecutionError`
 - Must return one or more targets that exist in the graph
 
 #### Cycles & Loops
+
 ```go
 // Create a loop: START → inc → condition → [back to inc or END]
 g.AddEdge(graph.START, "inc")
@@ -145,7 +153,7 @@ g.AddConditionalEdge("inc", func(state int) []graph.Target {
 
 ```go
 ctx := context.Background()
-result, err := g.Invoke(ctx, initialState, graph.InvocationConfig[int]{
+result, err := g.Invoke(ctx, initialState, graph.InvocationConfig[int, int]{
     RecursonLimit: 100,  // optional: override default
     Checkpointer:  checkpointer,  // optional: for interrupts
 })
@@ -161,6 +169,7 @@ if err != nil {
 ```
 
 **Return values:**
+
 - `result`: Final state after all nodes execute
 - `err`: Non-nil if any node/reducer/router panics OR interrupts occur
 
@@ -169,27 +178,30 @@ if err != nil {
 ### 5. Interrupts & Checkpointing
 
 #### Triggering an Interrupt
+
 ```go
 func(ctx context.Context, state int) (int, error) {
-    itr, err := graph.Interrupt[int](ctx, "approval-required", map[string]any{
+    itr, err := graph.Interrupt[int, int](ctx, "approval-required", map[string]any{
         "reason": "manual review needed",
     })
     if err != nil {
         return state, err  // Interrupt was rejected
     }
-    
+
     // Approved: resume execution (itr.Result contains approval data)
     return state + 1, nil
 }
 ```
 
 **Pattern:**
+
 - Call `Interrupt()` with a unique name and payload
 - Execution pauses, returning `SuperStepExecutionError` with interrupt list
 - Caller inspects `err.Interrupts()` to decide approval/rejection
 - Call `g.Resume(ctx, threadID, decisions, config)` to continue
 
 #### Checkpointer Interface
+
 ```go
 type Checkpointer[T any] interface {
     SaveCheckpoint(ctx context.Context, threadID string, stepIndex int, state T) error
@@ -198,7 +210,8 @@ type Checkpointer[T any] interface {
 ```
 
 **Provided implementations:**
-- `NewInMemoryCheckpointer[T]()`: In-memory storage (tests, local only)
+
+- `NewInMemoryCheckpointer[T, D]()`: In-memory storage (tests, local only)
 - Database/Redis checkpoint implementations can be custom
 
 ---
@@ -206,6 +219,7 @@ type Checkpointer[T any] interface {
 ### 6. Error Handling
 
 #### Execution Error Hierarchy
+
 ```
 error
 ├── SuperStepExecutionError  // Multiple failures in one super step
@@ -220,6 +234,7 @@ error
 ```
 
 #### Error Inspection
+
 ```go
 result, err := g.Invoke(ctx, state, config)
 if err != nil {
@@ -260,6 +275,7 @@ fmt.Println(string(diagram))
 ```
 
 **Use cases:**
+
 - Debugging complex graphs
 - Documentation
 - Testing correctness of routing logic
@@ -269,6 +285,7 @@ fmt.Println(string(diagram))
 ## Testing Patterns
 
 ### Table-Driven Tests
+
 ```go
 tests := []struct {
     name          string
@@ -282,7 +299,7 @@ tests := []struct {
 
 for _, tc := range tests {
     t.Run(tc.name, func(t *testing.T) {
-        result, err := g.Invoke(context.Background(), tc.initialState, graph.InvocationConfig[int]{})
+        result, err := g.Invoke(context.Background(), tc.initialState, graph.InvocationConfig[int, int]{})
         assert.Equal(t, tc.expectedState, result)
         if tc.expectedError {
             assert.Error(t, err)
@@ -294,9 +311,10 @@ for _, tc := range tests {
 ```
 
 ### Testing Interrupts
+
 ```go
-checkpointer := graph.NewInMemoryCheckpointer[int]()
-config := graph.InvocationConfig[int]{Checkpointer: checkpointer}
+checkpointer := graph.NewInMemoryCheckpointer[int, int]()
+config := graph.InvocationConfig[int, int]{Checkpointer: checkpointer}
 
 result, err := g.Invoke(ctx, 0, config)
 assert.Error(t, err)
@@ -313,12 +331,13 @@ assert.NoError(t, err)
 ```
 
 ### Testing Error Paths
+
 ```go
 g.AddNode("willFail", func(ctx context.Context, state int) (int, error) {
     panic("intentional panic")
 })
 
-result, err := g.Invoke(ctx, 0, graph.InvocationConfig[int]{})
+result, err := g.Invoke(ctx, 0, graph.InvocationConfig[int, int]{})
 assert.Error(t, err)
 assert.IsType(t, &graph.SuperStepExecutionError{}, err)
 
@@ -332,25 +351,30 @@ assert.IsType(t, &graph.NodeExecutionError{}, superErr.Errs[0])
 ## Best Practices
 
 ### State Design
+
 - **Keep state immutable where possible**: Reduce side effects in nodes
 - **Use structs for complex state**: Type safety, easier to evolve
 - **Minimize state size**: Larger states = slower checkpointing
 
 ### Node Design
+
 - **Idempotent nodes**: Safe to retry if interrupted
 - **Handle context cancellation**: Respect `ctx.Done()`
 - **Return errors, not panics**: Panics are caught but complicate debugging
 
 ### Router Design
+
 - **Deterministic routing**: Same state = same route every time
 - **Never return empty slice**: At minimum, return `IDs(END)` or a default path
 
 ### Reducer Design
+
 - **Associative & commutative**: `(a ⊕ b) ⊕ c = a ⊕ (b ⊕ c)`
 - **Identity element**: e.g., `0` for sum, `1` for product, `[]T{}` for append
 - **No side effects**: Pure function, no I/O or state mutation
 
 ### Recursion & Loops
+
 - **Set `RecursionLimit`** if you expect deep recursion (default 25)
 - **Always provide exit condition** in routers
 - **Test loops thoroughly**: Infinite loops timeout the test
@@ -363,7 +387,7 @@ Nodes receive a `context.Context` with pre-populated values:
 
 ```go
 threadID := ctx.Value("threadId").(graph.ID)          // Invocation ID
-g := ctx.Value("graph").(graph.StateGraph[T])         // The graph itself (for Interrupt)
+g := ctx.Value("graph").(graph.StateGraph[T, D])         // The graph itself (for Interrupt)
 tools := ctx.Value("tools").(map[string]any)          // Optional tool registry
 ```
 
@@ -372,29 +396,35 @@ tools := ctx.Value("tools").(map[string]any)          // Optional tool registry
 ## Examples from Codebase
 
 ### Simple Graph (2 nodes)
+
 - Files: `graph_invoke_test.go:11-48`
 - Pattern: START → increment → END
 
 ### Fan-Out Graph (parallel execution)
+
 - Files: `graph_invoke_test.go:91-128`
 - Pattern: START → {inc, double} → END with reducer merging
 
 ### Conditional Routing
+
 - Files: `graph_test.go:101-132`
 - Pattern: START → (router: state > 0) → {positive, nonpositive} → END
 
 ### Worker Node
+
 - Files: `graph_invoke_test.go:431-462`
 - Pattern: Map over state.Items, reducer accumulates results
 
 ### Error Handling
+
 - Files: `graph_invoke_test.go:171-236` (node errors)
 - Files: `graph_invoke_test.go:238-291` (reducer errors)
 - Files: `graph_invoke_test.go:294-348` (router errors)
 
 ### Interrupts
+
 - Files: `graph_interrupt_test.go` (all)
-- Patterns: 
+- Patterns:
   - 2 interrupts in same super step
   - 2 interrupts in same node
   - 2 interrupts in different nodes
@@ -405,6 +435,7 @@ tools := ctx.Value("tools").(map[string]any)          // Optional tool registry
 ## Common Pitfalls
 
 ### 1. **Panics in Reducer**
+
 ```go
 // BAD: Can panic
 g := graph.New[int](func(a, b int) int {
@@ -419,6 +450,7 @@ g := graph.New[int](func(a, b int) int {
 ```
 
 ### 2. **Non-Deterministic Routing**
+
 ```go
 // BAD: Random routing
 g.AddConditionalEdge(START, func(state int) []graph.Target {
@@ -434,6 +466,7 @@ g.AddConditionalEdge(START, func(state int) []graph.Target {
 ```
 
 ### 3. **Forgetting to Handle Context Cancellation**
+
 ```go
 // BAD: Ignores cancellation
 g.AddNode("slow", func(ctx context.Context, state int) (int, error) {
@@ -453,6 +486,7 @@ g.AddNode("slow", func(ctx context.Context, state int) (int, error) {
 ```
 
 ### 4. **Infinite Loops Without Exit**
+
 ```go
 // BAD: Always routes back to itself
 g.AddConditionalEdge("loop", func(state int) []graph.Target {
@@ -471,6 +505,7 @@ g.AddConditionalEdge("loop", func(state int) []graph.Target {
 ## When to Use the Graph Package
 
 ✅ **Good fits:**
+
 - Multi-step workflows (e.g., approval chains, data pipelines)
 - Conditional branching based on state
 - Parallel processing with state merging
@@ -478,6 +513,7 @@ g.AddConditionalEdge("loop", func(state int) []graph.Target {
 - Human-in-the-loop via interrupts
 
 ❌ **Poor fits:**
+
 - Simple sequential execution (use FSM or direct functions)
 - Stateless request routing (use middleware)
 - Real-time streaming (consider reactive libraries)

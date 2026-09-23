@@ -5,13 +5,13 @@ import (
 	"log/slog"
 )
 
-func createMockGraphWith2InterruptInSingleNode() StateGraph[int] {
+func createMockGraphWith2InterruptInSingleNode() StateGraph[int, int] {
 	g := New[int](func(a, b int) int {
 		return a + b
 	})
 
 	g.AddNode("inc", func(ctx context.Context, state int) (int, error) {
-		itr1, err := Interrupt[int](ctx, "inc1-itr", map[string]any{"message": "Should I increment the state?"})
+		itr1, err := Interrupt[int, int](ctx, "inc1-itr", map[string]any{"message": "Should I increment the state?"})
 		if err != nil {
 			return 0, err
 		}
@@ -21,7 +21,7 @@ func createMockGraphWith2InterruptInSingleNode() StateGraph[int] {
 			return 0, itr1.Reject("User rejected increment node")
 		}
 
-		itr2, err := Interrupt[int](ctx, "inc2-itr", map[string]any{"message": "Should I increment the state again?"})
+		itr2, err := Interrupt[int, int](ctx, "inc2-itr", map[string]any{"message": "Should I increment the state again?"})
 		if err != nil {
 			return 0, err
 		}
@@ -39,13 +39,13 @@ func createMockGraphWith2InterruptInSingleNode() StateGraph[int] {
 
 	return g
 }
-func createMockGraphWith2InterruptIn2Node() StateGraph[int] {
+func createMockGraphWith2InterruptIn2Node() StateGraph[int, int] {
 	g := New[int](func(a, b int) int {
 		return a + b
 	})
 
 	g.AddNode("inc", func(ctx context.Context, state int) (int, error) {
-		itr1, err := Interrupt[int](ctx, "inc-itr", map[string]any{"message": "Should I increment the state?"})
+		itr1, err := Interrupt[int, int](ctx, "inc-itr", map[string]any{"message": "Should I increment the state?"})
 		if err != nil {
 			return 0, err
 		}
@@ -59,7 +59,7 @@ func createMockGraphWith2InterruptIn2Node() StateGraph[int] {
 	})
 
 	g.AddNode("double", func(ctx context.Context, state int) (int, error) {
-		itr2, err := Interrupt[int](ctx, "double-itr", map[string]any{"message": "Should I double the state?"})
+		itr2, err := Interrupt[int, int](ctx, "double-itr", map[string]any{"message": "Should I double the state?"})
 		if err != nil {
 			return 0, err
 		}
@@ -79,7 +79,7 @@ func createMockGraphWith2InterruptIn2Node() StateGraph[int] {
 	return g
 }
 
-func createMockGraphWith2InterruptInSameSuperStep() StateGraph[int] {
+func createMockGraphWith2InterruptInSameSuperStep() StateGraph[int, int] {
 	g := New[int](func(a, b int) int {
 		return a + b
 	})
@@ -91,7 +91,7 @@ func createMockGraphWith2InterruptInSameSuperStep() StateGraph[int] {
 		return state + 2, nil
 	})
 	g.AddNode("double", func(ctx context.Context, state int) (int, error) {
-		fromUser, err := Interrupt[int](ctx, "double-itr", map[string]any{"message": "triple the state"})
+		fromUser, err := Interrupt[int, int](ctx, "double-itr", map[string]any{"message": "triple the state"})
 		if err != nil {
 			return 0, err
 		}
@@ -105,7 +105,7 @@ func createMockGraphWith2InterruptInSameSuperStep() StateGraph[int] {
 	})
 
 	g.AddNode("triple", func(ctx context.Context, state int) (int, error) {
-		fromUser, err := Interrupt[int](ctx, "triple-itr", map[string]any{"message": "Should I triple the state?"})
+		fromUser, err := Interrupt[int, int](ctx, "triple-itr", map[string]any{"message": "Should I triple the state?"})
 		if err != nil {
 			return 0, err
 		}
@@ -127,7 +127,7 @@ func createMockGraphWith2InterruptInSameSuperStep() StateGraph[int] {
 	return g
 }
 
-func createComplexMapWithNoInterrupt() StateGraph[int] {
+func createComplexMapWithNoInterrupt() StateGraph[int, int] {
 	g := New(func(a, b int) int {
 		return a + b
 	})
@@ -173,7 +173,7 @@ func createComplexMapWithNoInterrupt() StateGraph[int] {
 
 // Visualization helper graphs
 
-func createSimpleGraphForVisualization() StateGraph[int] {
+func createSimpleGraphForVisualization() StateGraph[int, int] {
 	g := New(func(a, b int) int {
 		return a + b
 	})
@@ -187,7 +187,7 @@ func createSimpleGraphForVisualization() StateGraph[int] {
 	return g
 }
 
-func createMultipleNodesGraphForVisualization() StateGraph[int] {
+func createMultipleNodesGraphForVisualization() StateGraph[int, int] {
 	g := New(func(a, b int) int {
 		return a + b
 	})
@@ -206,7 +206,7 @@ func createMultipleNodesGraphForVisualization() StateGraph[int] {
 	return g
 }
 
-func createFanOutGraphForVisualization() StateGraph[int] {
+func createFanOutGraphForVisualization() StateGraph[int, int] {
 	g := New(func(a, b int) int {
 		return a + b
 	})
@@ -225,7 +225,7 @@ func createFanOutGraphForVisualization() StateGraph[int] {
 	return g
 }
 
-func createImbalanceNodesGraphForVisualization() StateGraph[int] {
+func createImbalanceNodesGraphForVisualization() StateGraph[int, int] {
 	g := New(func(a, b int) int {
 		return a + b
 	})
@@ -248,7 +248,7 @@ func createImbalanceNodesGraphForVisualization() StateGraph[int] {
 	return g
 }
 
-func createCycleGraphForVisualization() StateGraph[int] {
+func createCycleGraphForVisualization() StateGraph[int, int] {
 	g := New(func(a, b int) int {
 		return a + b
 	})
@@ -268,7 +268,7 @@ func createCycleGraphForVisualization() StateGraph[int] {
 	return g
 }
 
-func createWorkerNodeGraphForVisualization() StateGraph[int] {
+func createWorkerNodeGraphForVisualization() StateGraph[int, int] {
 	g := New(func(a, b int) int {
 		return a + b
 	})

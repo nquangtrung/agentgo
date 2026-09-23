@@ -36,7 +36,7 @@ func TestSimpleGraph(t *testing.T) {
 			g := createSimpleGraphForVisualization()
 
 			ctx := context.Background()
-			result, err := g.Invoke(ctx, tc.initialState, InvocationConfig[int]{})
+			result, err := g.Invoke(ctx, tc.initialState, InvocationConfig[int, int]{})
 
 			if tc.expectedError {
 				assert.Error(t, err, "Expected an error")
@@ -76,7 +76,7 @@ func TestGraphWithMultipleNodes(t *testing.T) {
 			g := createMultipleNodesGraphForVisualization()
 
 			ctx := context.Background()
-			result, err := g.Invoke(ctx, tc.initialState, InvocationConfig[int]{})
+			result, err := g.Invoke(ctx, tc.initialState, InvocationConfig[int, int]{})
 
 			if tc.expectedError {
 				assert.Error(t, err, "Expected an error")
@@ -116,7 +116,7 @@ func TestGraphWithFanOut(t *testing.T) {
 			g := createFanOutGraphForVisualization()
 
 			ctx := context.Background()
-			result, err := g.Invoke(ctx, tc.initialState, InvocationConfig[int]{})
+			result, err := g.Invoke(ctx, tc.initialState, InvocationConfig[int, int]{})
 
 			if tc.expectedError {
 				assert.Error(t, err, "Expected an error")
@@ -156,7 +156,7 @@ func TestGraphWithImbalanceNodes(t *testing.T) {
 			g := createImbalanceNodesGraphForVisualization()
 
 			ctx := context.Background()
-			result, err := g.Invoke(ctx, tc.initialState, InvocationConfig[int]{})
+			result, err := g.Invoke(ctx, tc.initialState, InvocationConfig[int, int]{})
 
 			if tc.expectedError {
 				assert.Error(t, err, "Expected an error")
@@ -170,12 +170,12 @@ func TestGraphWithImbalanceNodes(t *testing.T) {
 
 func TestGraphWithErrorInNode(t *testing.T) {
 	type test struct {
-		name                string
-		initialState        int
-		expectedState       int
-		expectedErrorCount  int
-		expectedErrorNodes  []string
-		expectedError       bool
+		name               string
+		initialState       int
+		expectedState      int
+		expectedErrorCount int
+		expectedErrorNodes []string
+		expectedError      bool
 	}
 
 	tt := []test{
@@ -211,7 +211,7 @@ func TestGraphWithErrorInNode(t *testing.T) {
 			g.AddEdge("errorNode2", END)
 
 			ctx := context.Background()
-			result, err := g.Invoke(ctx, tc.initialState, InvocationConfig[int]{})
+			result, err := g.Invoke(ctx, tc.initialState, InvocationConfig[int, int]{})
 
 			if tc.expectedError {
 				assert.Error(t, err, "Expected an error due to the intentional panic")
@@ -237,11 +237,11 @@ func TestGraphWithErrorInNode(t *testing.T) {
 
 func TestGraphWithErrorInReducer(t *testing.T) {
 	type test struct {
-		name            string
-		initialState    int
-		expectedState   int
-		expectedError   bool
-		expectedErrMsg  string
+		name           string
+		initialState   int
+		expectedState  int
+		expectedError  bool
+		expectedErrMsg string
 	}
 
 	tt := []test{
@@ -275,7 +275,7 @@ func TestGraphWithErrorInReducer(t *testing.T) {
 			g.AddEdge("zero", END)
 
 			ctx := context.Background()
-			result, err := g.Invoke(ctx, tc.initialState, InvocationConfig[int]{})
+			result, err := g.Invoke(ctx, tc.initialState, InvocationConfig[int, int]{})
 
 			if tc.expectedError {
 				assert.Error(t, err, "Expected an error due to the intentional panic in reducer")
@@ -293,11 +293,11 @@ func TestGraphWithErrorInReducer(t *testing.T) {
 
 func TestGraphWithErrorInRouter(t *testing.T) {
 	type test struct {
-		name            string
-		initialState    int
-		expectedState   int
-		expectedError   bool
-		expectedErrMsg  string
+		name           string
+		initialState   int
+		expectedState  int
+		expectedError  bool
+		expectedErrMsg string
 	}
 
 	tt := []test{
@@ -331,7 +331,7 @@ func TestGraphWithErrorInRouter(t *testing.T) {
 			g.AddEdge("inc", END)
 
 			ctx := context.Background()
-			result, err := g.Invoke(ctx, tc.initialState, InvocationConfig[int]{})
+			result, err := g.Invoke(ctx, tc.initialState, InvocationConfig[int, int]{})
 
 			if tc.expectedError {
 				assert.Error(t, err, "Expected an error due to the intentional panic in router")
@@ -372,7 +372,7 @@ func TestCycleGraphWithCondition(t *testing.T) {
 			g := createCycleGraphForVisualization()
 
 			ctx := context.Background()
-			result, err := g.Invoke(ctx, tc.initialState, InvocationConfig[int]{})
+			result, err := g.Invoke(ctx, tc.initialState, InvocationConfig[int, int]{})
 
 			if tc.expectedError {
 				assert.Error(t, err, "Expected an error")
@@ -416,7 +416,7 @@ func TestInfiniteLoopGraph(t *testing.T) {
 			}, []ID{"inc"})
 
 			ctx := context.Background()
-			_, err := g.Invoke(ctx, tc.initialState, InvocationConfig[int]{})
+			_, err := g.Invoke(ctx, tc.initialState, InvocationConfig[int, int]{})
 
 			if tc.expectedError {
 				assert.Error(t, err, "Expected an error due to infinite loop in the graph")
@@ -450,7 +450,7 @@ func TestGraphWithWorkerNode(t *testing.T) {
 			g := createWorkerNodeGraphForVisualization()
 
 			ctx := context.Background()
-			result, err := g.Invoke(ctx, tc.initialState, InvocationConfig[int]{})
+			result, err := g.Invoke(ctx, tc.initialState, InvocationConfig[int, int]{})
 
 			if tc.expectedError {
 				assert.Error(t, err, "Expected an error")
@@ -485,7 +485,7 @@ func TestGraphVisualize(t *testing.T) {
 			saveGraph(g, "graph_visualize_test_complex_map_with_no_interrupt")
 
 			ctx := context.Background()
-			result, err := g.Invoke(ctx, tc.initialState, InvocationConfig[int]{})
+			result, err := g.Invoke(ctx, tc.initialState, InvocationConfig[int, int]{})
 
 			if tc.expectedError {
 				assert.Error(t, err, "Expected an error")

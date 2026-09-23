@@ -7,20 +7,20 @@ type Serializable interface {
 	Deserialize(data []byte) error
 }
 
-type Persister[T Serializable] interface {
+type Persister interface {
 	Save(threadId string, key string, data []byte) error
 	Load(threadId string, key string) ([]byte, error)
 }
 
-type SerializableCheckpointer[T Serializable] struct {
-	persister Persister[T]
+type SerializableCheckpointer[T Serializable, D Serializable] struct {
+	persister Persister
 }
 
-func NewSerializableCheckpointer[T Serializable](persister Persister[T]) *SerializableCheckpointer[T] {
-	return &SerializableCheckpointer[T]{persister: persister}
+func NewSerializableCheckpointer[T Serializable, D Serializable](persister Persister) *SerializableCheckpointer[T, D] {
+	return &SerializableCheckpointer[T, D]{persister: persister}
 }
 
-func (c *SerializableCheckpointer[T]) Checkpoint(threadId string, cp Checkpoint[T]) error {
+func (c *SerializableCheckpointer[T, D]) Checkpoint(threadId string, cp Checkpoint[T, D]) error {
 	state, err := cp.State.Serialize()
 	if err != nil {
 		return err
@@ -58,7 +58,7 @@ func (c *SerializableCheckpointer[T]) Checkpoint(threadId string, cp Checkpoint[
 
 	return nil
 }
-func (c *SerializableCheckpointer[T]) restoreState(threadId string) (T, error) {
+func (c *SerializableCheckpointer[T, D]) restoreState(threadId string) (T, error) {
 	var state T = *new(T)
 	data, err := c.persister.Load(threadId, "state")
 	if err != nil {
@@ -73,7 +73,7 @@ func (c *SerializableCheckpointer[T]) restoreState(threadId string) (T, error) {
 	return state, nil
 }
 
-func (c *SerializableCheckpointer[T]) restoreSteps(threadId string) ([]ID, error) {
+func (c *SerializableCheckpointer[T, D]) restoreSteps(threadId string) ([]ID, error) {
 	var steps []ID
 	data, err := c.persister.Load(threadId, "steps")
 	if err != nil {
@@ -88,8 +88,8 @@ func (c *SerializableCheckpointer[T]) restoreSteps(threadId string) ([]ID, error
 	return steps, nil
 }
 
-func (c *SerializableCheckpointer[T]) restoreResults(threadId string) (map[ID]T, error) {
-	var results map[ID]T = make(map[ID]T)
+func (c *SerializableCheckpointer[T, D]) restoreResults(threadId string) (map[ID]D, error) {
+	var results map[ID]D = make(map[ID]D)
 	data, err := c.persister.Load(threadId, "results")
 
 	if err != nil {
@@ -103,7 +103,7 @@ func (c *SerializableCheckpointer[T]) restoreResults(threadId string) (map[ID]T,
 	}
 
 	for id, resultData := range jsonResults {
-		var result T = *new(T)
+		var result D = *new(D)
 		err := result.Deserialize(resultData)
 		if err != nil {
 			return results, err
@@ -114,8 +114,8 @@ func (c *SerializableCheckpointer[T]) restoreResults(threadId string) (map[ID]T,
 	return results, nil
 }
 
-func (c *SerializableCheckpointer[T]) Restore(threadId string) (Checkpoint[T], error) {
-	var cp Checkpoint[T]
+func (c *SerializableCheckpointer[T, D]) Restore(threadId string) (Checkpoint[T, D], error) {
+	var cp Checkpoint[T, D]
 	state, err := c.restoreState(threadId)
 	if err != nil {
 		return cp, err

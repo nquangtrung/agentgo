@@ -140,7 +140,7 @@ func NewSuperStepExecutionError(errs []error) *SuperStepExecutionError {
 	}
 }
 
-func NewNodeExecutionErrorFromResult[T any](r nodeResult[T]) *NodeExecutionError {
+func NewNodeExecutionErrorFromResult[T any, D any](r nodeResult[T, D]) *NodeExecutionError {
 	return &NodeExecutionError{
 		withIDBase: withIDBase{
 			ID: r.id,
@@ -149,7 +149,7 @@ func NewNodeExecutionErrorFromResult[T any](r nodeResult[T]) *NodeExecutionError
 	}
 }
 
-func NewSuperStepExecutionErrorFromResults[T any](results []nodeResult[T]) *SuperStepExecutionError {
+func NewSuperStepExecutionErrorFromResults[T any, D any](results []nodeResult[T, D]) *SuperStepExecutionError {
 	errors := []error{}
 	for _, r := range results {
 		if r.err != nil {

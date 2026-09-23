@@ -26,15 +26,15 @@ func GenerateText(ctx context.Context, params Params) (models.LanguageModelOutpu
 
 	config := graph.InvocationConfig[agentState]{}
 	result, err := g.Invoke(ctx, agentState{
-		ToolExecutionsArchive: execContext,
-		Messages:              &messages,
+		toolExecutionsArchive: execContext,
+		messages:              &messages,
 	}, config)
 
 	if err != nil {
 		return models.LanguageModelOutput{}, err
 	}
 
-	return resolveExecutionContextAsTextOutput(result.ToolExecutionsArchive)
+	return resolveExecutionContextAsTextOutput(result.toolExecutionsArchive)
 }
 
 func GenerateText_deprecated(ctx context.Context, params Params) (models.LanguageModelOutput, error) {

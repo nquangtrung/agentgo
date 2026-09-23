@@ -2,15 +2,15 @@ package graph
 
 import "fmt"
 
-type Checkpoint[T any] struct {
+type Checkpoint[T any, D any] struct {
 	State   T
 	Steps   []ID
-	Results map[ID]T
+	Results map[ID]D
 }
 
-type Checkpointer[T any] interface {
-	Checkpoint(threadId string, cp Checkpoint[T]) error
-	Restore(threadId string) (Checkpoint[T], error)
+type Checkpointer[T any, D any] interface {
+	Checkpoint(threadId string, cp Checkpoint[T, D]) error
+	Restore(threadId string) (Checkpoint[T, D], error)
 }
 
 type CheckPointNotFoundError struct {

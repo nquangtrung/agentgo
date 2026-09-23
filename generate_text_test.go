@@ -4,11 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 	"testing"
 
 	"github.com/nquangtrung/agentgo/endconditions"
-	"github.com/nquangtrung/agentgo/fsm"
 	"github.com/nquangtrung/agentgo/mocks"
 	"github.com/nquangtrung/agentgo/models"
 	"github.com/nquangtrung/agentgo/providers"
@@ -40,10 +38,10 @@ func TestGenerateText(t *testing.T) {
 			func(p providers.AgentProviderPromptMessageParams) bool {
 				switch {
 				case len(p.Messages) != 1:
-					log.Printf("Expected 1 message, got %d", len(p.Messages))
+					logger.Info("Expected 1 message", "len", len(p.Messages))
 					return false
 				case p.Messages[0].Content().Text() != params.Prompt:
-					log.Printf("Expected prompt '%s', got '%s'", params.Prompt, p.Messages[0].Content().Text())
+					logger.Info("Expected prompt", "expected", params.Prompt, "actual", p.Messages[0].Content().Text())
 					return false
 				default:
 					return true
@@ -69,10 +67,7 @@ func TestGenerateText(t *testing.T) {
 	)
 
 	output, err := GenerateText(ctx, params)
-	if err != nil {
-		panic(err)
-	}
-
+	assert.NoError(t, err, "should not return error")
 	assert.Equal(t, output.ModelName, modelName, "should have correct model name")
 	assert.Equal(t, output.Text, result, "should have correct output")
 	assert.Equal(t, int64(245), output.Usage.InputTokens, "should have correct input tokens")
@@ -104,7 +99,7 @@ func TestGenerateTextWithTool(t *testing.T) {
 		models.NewTool(models.NewToolParams{
 			Name: "mock_tool",
 			Fn: func(params models.ToolExecuteParams) models.ToolExecuteOutput {
-				log.Printf("Tool called with params: %v", params)
+				logger.Info("Tool called with", "params", params)
 				assert.Equal(t, toolParams, params.Input, "should be called with correct tool params")
 				return models.ToolExecuteOutput{
 					Output: toolResult,
@@ -132,13 +127,13 @@ func TestGenerateTextWithTool(t *testing.T) {
 	checkResolveToolCall := func(p providers.AgentProviderPromptMessageParams) bool {
 		switch {
 		case len(p.Messages) != 2:
-			log.Printf("Expected at least 2 message, got %d", len(p.Messages))
+			logger.Info("Expected at least 2 message", "actual", len(p.Messages))
 			return false
 		case p.Messages[0].Content().Text() != prompt:
-			log.Printf("Expected first message to be prompt '%s', got '%s'", prompt, p.Messages[0].Content().Text())
+			logger.Info("Expected first message to be prompt", "expected", prompt, "actual", p.Messages[0].Content().Text())
 			return false
 		case p.Messages[1].Content().Text() != fmt.Sprintf("Tool [%s] execution result: %s", tools[0].Name(), jsonedToolResult):
-			log.Printf("Expected second message to be tool result, got '%s'", p.Messages[1].Content().Text())
+			logger.Info("Expected second message to be tool result", "actual", p.Messages[1].Content().Text())
 			return false
 		default:
 			return true
@@ -157,10 +152,10 @@ func TestGenerateTextWithTool(t *testing.T) {
 			gomock.Cond(func(p providers.AgentProviderPromptMessageParams) bool {
 				switch {
 				case len(p.Messages) != 1:
-					log.Printf("Expected 1 message, got %d", len(p.Messages))
+					logger.Info("Expected 1 message", "len", len(p.Messages))
 					return false
 				case p.Messages[0].Content().Text() != params.Prompt:
-					log.Printf("Expected prompt '%s', got '%s'", params.Prompt, p.Messages[0].Content().Text())
+					logger.Info("Expected prompt", "expected", params.Prompt, "actual", p.Messages[0].Content().Text())
 					return false
 				default:
 					return true
@@ -553,14 +548,14 @@ func TestGenerateTextPrepareStepWithToolChoice(t *testing.T) {
 	}
 
 	stepCount := 0
-	prepareStep := func(step fsm.Step, ctx fsm.AgentContext) (fsm.PrepareStepResult, error) {
+	prepareStep := func(step step, ctx agentState) (PrepareStepResult, error) {
 		// Only first step has tool choice override
-		if step.StepIndex == 1 {
-			return fsm.PrepareStepResult{
-				ToolChoice: &fsm.ToolChoice{Name: "tool_a"},
+		if step.index == 1 {
+			return PrepareStepResult{
+				ToolChoice: &ToolChoice{Name: "tool_a"},
 			}, nil
 		}
-		return fsm.PrepareStepResult{}, nil
+		return PrepareStepResult{}, nil
 	}
 
 	mockProvider.EXPECT().Context().AnyTimes().Return(models.LanguageModelContext{ModelName: modelName})
@@ -612,18 +607,18 @@ func TestGenerateTextPrepareStepWithMessages(t *testing.T) {
 		}),
 	}
 
-	prepareStep := func(step fsm.Step, ctx fsm.AgentContext) (fsm.PrepareStepResult, error) {
-		if step.StepIndex == 1 {
+	prepareStep := func(step step, ctx agentState) (PrepareStepResult, error) {
+		if step.index == 1 {
 			// Override messages on first step
 			customMessages := []models.Message{
 				models.NewStringMessage("system", "You are a helpful assistant"),
 				models.NewStringMessage("user", "Modified prompt in prepare step"),
 			}
-			return fsm.PrepareStepResult{
+			return PrepareStepResult{
 				Messages: &customMessages,
 			}, nil
 		}
-		return fsm.PrepareStepResult{}, nil
+		return PrepareStepResult{}, nil
 	}
 
 	mockProvider.EXPECT().Context().AnyTimes().Return(models.LanguageModelContext{ModelName: modelName})
@@ -692,15 +687,15 @@ func TestGenerateTextPrepareStepWithActiveTools(t *testing.T) {
 		}),
 	}
 
-	prepareStep := func(step fsm.Step, ctx fsm.AgentContext) (fsm.PrepareStepResult, error) {
-		if step.StepIndex == 1 {
+	prepareStep := func(step step, ctx agentState) (PrepareStepResult, error) {
+		if step.index == 1 {
 			// Restrict to only tool_1
 			activeTools := []string{"tool_1"}
-			return fsm.PrepareStepResult{
+			return PrepareStepResult{
 				ActiveTools: &activeTools,
 			}, nil
 		}
-		return fsm.PrepareStepResult{}, nil
+		return PrepareStepResult{}, nil
 	}
 
 	mockProvider.EXPECT().Context().AnyTimes().Return(models.LanguageModelContext{ModelName: modelName})
@@ -770,20 +765,20 @@ func TestGenerateTextPrepareStepMultipleOverrides(t *testing.T) {
 		}),
 	}
 
-	prepareStep := func(step fsm.Step, ctx fsm.AgentContext) (fsm.PrepareStepResult, error) {
-		if step.StepIndex == 1 {
+	prepareStep := func(step step, ctx agentState) (PrepareStepResult, error) {
+		if step.index == 1 {
 			// Override all three options
 			activeTools := []string{"search"}
 			customMessages := []models.Message{
 				models.NewStringMessage("user", "Search for information"),
 			}
-			return fsm.PrepareStepResult{
-				ToolChoice:  &fsm.ToolChoice{Name: "search"},
+			return PrepareStepResult{
+				ToolChoice:  &ToolChoice{Name: "search"},
 				Messages:    &customMessages,
 				ActiveTools: &activeTools,
 			}, nil
 		}
-		return fsm.PrepareStepResult{}, nil
+		return PrepareStepResult{}, nil
 	}
 
 	mockProvider.EXPECT().Context().AnyTimes().Return(models.LanguageModelContext{ModelName: modelName})
@@ -853,23 +848,25 @@ func TestGenerateTextPrepareStepPerStepOptions(t *testing.T) {
 	}
 
 	callOrder := []string{}
-	prepareStep := func(step fsm.Step, ctx fsm.AgentContext) (fsm.PrepareStepResult, error) {
-		if step.StepIndex == 1 {
+	prepareStep := func(step step, ctx agentState) (PrepareStepResult, error) {
+		switch step.index {
+		case 1:
 			// First step: use only step1_tool
 			activeTools := []string{"step1_tool"}
 			callOrder = append(callOrder, "step1")
-			return fsm.PrepareStepResult{
+			return PrepareStepResult{
 				ActiveTools: &activeTools,
 			}, nil
-		} else if step.StepIndex == 2 {
+		case 2:
 			// Second step: use only step2_tool
 			activeTools := []string{"step2_tool"}
 			callOrder = append(callOrder, "step2")
-			return fsm.PrepareStepResult{
+			return PrepareStepResult{
 				ActiveTools: &activeTools,
 			}, nil
 		}
-		return fsm.PrepareStepResult{}, nil
+
+		return PrepareStepResult{}, nil
 	}
 
 	mockProvider.EXPECT().Context().AnyTimes().Return(models.LanguageModelContext{ModelName: modelName})
