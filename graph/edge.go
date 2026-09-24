@@ -11,7 +11,7 @@ type Target struct {
 func IDs(ids ...ID) []Target {
 	targets := make([]Target, len(ids))
 	for i, id := range ids {
-		targets[i] = Target{id: id, send: true}
+		targets[i] = Target{id: id, send: false}
 	}
 	return targets
 }

@@ -244,7 +244,11 @@ func (g StateGraph[T, D]) route(threadId ID, state T, result []nodeResult[T, D])
 	}
 
 	uniqueTargets := utils.Unique(newTargets, func(target1 Target, target2 Target) bool {
-		return target1.id == target2.id
+		if target1.id != target2.id {
+			return false
+		}
+		logger.Info("Duplicate target found", slog.String("target", target1.id), slog.Bool("send", target1.send))
+		return !target1.send
 	})
 
 	return uniqueTargets, nil
