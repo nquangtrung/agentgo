@@ -64,18 +64,23 @@ func NewAssistantStringMessage(content string) BaseMessage {
 }
 
 func NewMessageFromToolResult(output ToolExecuteOutput) BaseMessage {
+	// slog.Warn("output", "output", output)
+	toolName := "text"
+	if output.ToolCall != nil {
+		toolName = output.ToolCall.ToolName
+	}
 	if output.Error != nil {
 		stringError := utils.Must(json.Marshal(output.Error))
 		return NewAssistantStringMessage(
 			fmt.Sprintf("Tool [%s] execution error: %s",
-				output.ToolCall.ToolName,
+				toolName,
 				string(stringError),
 			),
 		)
 	} else {
 		stringResult := utils.Must(json.Marshal(output.Output))
 		return NewAssistantStringMessage(fmt.Sprintf("Tool [%s] execution result: %s",
-			output.ToolCall.ToolName,
+			toolName,
 			string(stringResult),
 		))
 	}

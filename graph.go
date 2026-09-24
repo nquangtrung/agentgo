@@ -21,7 +21,7 @@ type step struct {
 
 type agentState struct {
 	toolExecutionsArchive *models.ToolExecutionsArchive
-	messages              *[]models.Message
+	messages              []models.Message
 	totalUsage            models.LanguageModelUsage
 	steps                 []step
 	currentStep           step
@@ -40,6 +40,7 @@ type agentStateDelta struct {
 
 	textGenerated bool
 	stream        bool
+	shouldEnd     bool
 }
 
 const (
@@ -59,11 +60,12 @@ const (
 func checkLoop(ctx context.Context, state agentState) (agentStateDelta, error) {
 	endConditions := ctx.Value(models.EndConditionsContextKey).([]models.EndCondition)
 	tools := ctx.Value(models.ToolsContextKey).([]models.BaseTool)
-	var canProceedToNextStep func(context *models.ToolExecutionsArchive, endConds []models.EndCondition) bool
-	canProceedToNextStep = func(context *models.ToolExecutionsArchive, endConds []models.EndCondition) bool {
+	var canProceedToNextStep func(archive *models.ToolExecutionsArchive, endConds []models.EndCondition) bool
+	canProceedToNextStep = func(archive *models.ToolExecutionsArchive, endConds []models.EndCondition) bool {
+		logger.Info("Checking loop conditions", slog.Int("stepIndex", state.currentStep.index), slog.Int("endConditions", len(endConds)), slog.Int("tools", len(tools)), slog.Any("archive", archive))
 		conditions := endConds
 		for _, condition := range conditions {
-			if condition.Condition(context) {
+			if condition.Condition(archive) {
 				return false
 			}
 		}
@@ -84,39 +86,59 @@ func checkLoop(ctx context.Context, state agentState) (agentStateDelta, error) {
 	return agentStateDelta{
 		from:       LOOP_CHECK,
 		stepAction: stepAction,
+		shouldEnd:  true,
 	}, nil
 }
 
+func archiveToolResult(oldState agentState, toolResult *models.ToolExecuteOutput) agentState {
+	logger.Info("Archiving tool result", slog.Int("stepIndex", oldState.currentStep.index), slog.Any("tool", toolResult.ToolCall))
+	toolName := "text"
+	if toolResult.ToolCall != nil {
+		toolName = toolResult.ToolCall.ToolName
+	}
+
+	archive := oldState.toolExecutionsArchive
+	archive.AddToolCallWithResult(toolName, toolResult)
+
+	messages := oldState.messages
+	messages = append(messages, models.NewMessageFromToolResult(*toolResult))
+
+	currentStep := oldState.currentStep
+	currentStep.usage = models.AccumulateUsage(currentStep.usage, toolResult.Usage)
+
+	oldState.currentStep = currentStep
+	oldState.totalUsage = models.AccumulateUsage(oldState.totalUsage, toolResult.Usage)
+	oldState.toolExecutionsArchive = archive
+	oldState.messages = messages
+	oldState.toolExecutionsArchive = archive
+
+	return oldState
+}
+
 func accumulateAgentState(oldState agentState, delta agentStateDelta) agentState {
-	logger.Info("Accumulate state", slog.String("delta", delta.from))
+	logger.Debug("Accumulate state", slog.String("delta", delta.from), slog.Int("stepIndex", oldState.currentStep.index))
 
 	if delta.addStep != nil {
-		logger.Info("Adding new step", slog.Int("stepIndex", delta.addStep.index))
+		logger.Debug("Adding new step", slog.Int("stepIndex", delta.addStep.index))
 		oldState.currentStep = *delta.addStep
 		oldState.steps = append(oldState.steps, *delta.addStep)
 	}
 
 	oldState.textGenerated = oldState.textGenerated || delta.textGenerated
 	oldState.currentStep.stream = oldState.currentStep.stream || delta.stream
+	oldState.shouldEnd = oldState.shouldEnd || delta.shouldEnd
 
 	if delta.archiveToolResult != nil {
-		logger.Info("Archiving tool result", slog.Int("stepIndex", oldState.currentStep.index))
-		// XXX Should not be mutable
-		models.AccumulateToolCallResult(oldState.toolExecutionsArchive, delta.archiveToolResult, oldState.messages)
-
-		currentStep := oldState.currentStep
-		currentStep.usage = models.AccumulateUsage(currentStep.usage, delta.archiveToolResult.Usage)
-		oldState.currentStep = currentStep
-		oldState.totalUsage = models.AccumulateUsage(oldState.totalUsage, delta.archiveToolResult.Usage)
+		oldState = archiveToolResult(oldState, delta.archiveToolResult)
 	}
 
 	if delta.availableTools != nil {
-		logger.Info("Updating available tools", slog.Int("stepIndex", oldState.currentStep.index))
+		logger.Debug("Updating available tools", slog.Any("tools", delta.availableTools))
 		oldState.currentStep.tools = delta.availableTools
 	}
 
 	if delta.stepAction != "" {
-		logger.Info("Updating step action", slog.Int("stepIndex", oldState.currentStep.index), slog.String("action", delta.stepAction))
+		logger.Info("Updating step action", slog.String("action", delta.stepAction))
 		oldState.currentStep.action = delta.stepAction
 	}
 
@@ -134,7 +156,7 @@ func createGenerateTextGraph() graph.StateGraph[agentState, agentStateDelta] {
 	g.AddWorkerNode(EXECUTE_TOOL, executeTool)
 	g.AddNode(PREPARE_TEXT, prepareText)
 	g.AddNode(GENERATE_TEXT, generateText)
-	g.AddNode(STREAM_TEXT, generateText)
+	g.AddNode(STREAM_TEXT, streamText)
 	g.AddNode(END_TEXT, endText)
 	g.AddNode(END_STEP, endStep)
 
@@ -150,10 +172,14 @@ func createGenerateTextGraph() graph.StateGraph[agentState, agentStateDelta] {
 	})
 	g.AddConditionalEdge(RESOLVE_TOOL, func(state agentState) []graph.Target {
 		currentStep := state.currentStep
+		if len(currentStep.tools) == 0 {
+			return graph.IDs(PREPARE_TEXT)
+		}
+
 		return utils.Map(currentStep.tools, func(tool models.ToolCall) graph.Target {
 			return graph.Send(EXECUTE_TOOL, tool)
 		})
-	}, []graph.ID{EXECUTE_TOOL})
+	}, []graph.ID{EXECUTE_TOOL, PREPARE_TEXT})
 	g.AddEdge(EXECUTE_TOOL, END_STEP)
 	g.AddNamedConditionalEdge(PREPARE_TEXT, func(state agentState) string {
 		if state.currentStep.stream {

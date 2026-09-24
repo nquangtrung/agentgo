@@ -296,7 +296,7 @@ func (g StateGraph[T, D]) resolveStartNode(config InvocationConfig[T, D]) []Targ
 
 func (g StateGraph[T, D]) resolveRecursionLimit(config InvocationConfig[T, D]) int {
 	if config.RecursonLimit <= 0 {
-		return 25
+		return 100
 	}
 
 	return config.RecursonLimit

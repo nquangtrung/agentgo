@@ -48,7 +48,8 @@ func (t BaseTool) Description() string {
 }
 
 func (t BaseTool) Execute(params ToolExecuteParams) ToolExecuteOutput {
-	return t.fn(params)
+	output := t.fn(params)
+	return output
 }
 
 type NewToolParams struct {

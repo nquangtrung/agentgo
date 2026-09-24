@@ -29,7 +29,7 @@ func generateText(ctx context.Context, state agentState) (agentStateDelta, error
 	messages := state.messages
 
 	output, err := provider.GenerateText(ctx, providers.AgentProviderPromptMessageParams{
-		Messages: *messages,
+		Messages: messages,
 	})
 
 	if err != nil {
@@ -54,7 +54,7 @@ func streamText(ctx context.Context, state agentState) (agentStateDelta, error) 
 
 	output, err := provider.StreamText(
 		ctx,
-		providers.AgentProviderPromptMessageParams{Messages: *messages},
+		providers.AgentProviderPromptMessageParams{Messages: messages},
 		*emitter,
 	)
 

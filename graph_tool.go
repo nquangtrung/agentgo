@@ -19,6 +19,7 @@ func executeTool(ctx context.Context, params any) (agentStateDelta, error) {
 	toolResult := tool.Execute(models.ToolExecuteParams{
 		Input: toolCall.Params,
 	})
+	toolResult.ToolCall = &toolCall
 
 	logger.Debug("Tool executed", "tool", tool.Name(), "result", toolResult)
 
@@ -34,7 +35,7 @@ func resolveTool(ctx context.Context, state agentState) (agentStateDelta, error)
 	// TODO Handle when prepare step return only a subset
 	tools := ctx.Value(models.ToolsContextKey).([]models.BaseTool)
 	resolveOutput, err := provider.ResolveToolCall(
-		ctx, providers.AgentProviderPromptMessageParams{Messages: *state.messages},
+		ctx, providers.AgentProviderPromptMessageParams{Messages: state.messages},
 		tools,
 	)
 
