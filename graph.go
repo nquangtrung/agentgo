@@ -62,7 +62,7 @@ func checkLoop(ctx context.Context, state agentState) (agentStateDelta, error) {
 	tools := ctx.Value(models.ToolsContextKey).([]models.BaseTool)
 	var canProceedToNextStep func(archive *models.ToolExecutionsArchive, endConds []models.EndCondition) bool
 	canProceedToNextStep = func(archive *models.ToolExecutionsArchive, endConds []models.EndCondition) bool {
-		logger.Info("Checking loop conditions", slog.Int("stepIndex", state.currentStep.index), slog.Int("endConditions", len(endConds)), slog.Int("tools", len(tools)), slog.Any("archive", archive))
+		logger.Debug("Checking loop conditions", slog.Int("stepIndex", state.currentStep.index), slog.Int("endConditions", len(endConds)), slog.Int("tools", len(tools)), slog.Any("archive", archive))
 		conditions := endConds
 		for _, condition := range conditions {
 			if condition.Condition(archive) {
@@ -73,25 +73,28 @@ func checkLoop(ctx context.Context, state agentState) (agentStateDelta, error) {
 	}
 
 	var stepAction string = "end"
+	var shouldEnd bool = false
 	if state.textGenerated {
 		stepAction = "end"
+		shouldEnd = true
 	} else if len(endConditions) == 0 || len(tools) == 0 {
 		stepAction = "text"
 	} else if canProceedToNextStep(state.toolExecutionsArchive, endConditions) {
 		stepAction = "tool"
 	} else {
 		stepAction = "end"
+		shouldEnd = true
 	}
 
 	return agentStateDelta{
 		from:       LOOP_CHECK,
 		stepAction: stepAction,
-		shouldEnd:  true,
+		shouldEnd:  shouldEnd,
 	}, nil
 }
 
 func archiveToolResult(oldState agentState, toolResult *models.ToolExecuteOutput) agentState {
-	logger.Info("Archiving tool result", slog.Int("stepIndex", oldState.currentStep.index), slog.Any("tool", toolResult.ToolCall))
+	logger.Debug("Archiving tool result", slog.Int("stepIndex", oldState.currentStep.index), slog.Any("tool", toolResult.ToolCall))
 	toolName := "text"
 	if toolResult.ToolCall != nil {
 		toolName = toolResult.ToolCall.ToolName

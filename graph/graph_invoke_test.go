@@ -440,7 +440,7 @@ func TestGraphWithWorkerNode(t *testing.T) {
 		{
 			name:          "worker node processes multiple tasks",
 			initialState:  5,
-			expectedState: 17,
+			expectedState: 7,
 			expectedError: false,
 		},
 	}

@@ -243,7 +243,11 @@ func (g StateGraph[T, D]) route(threadId ID, state T, result []nodeResult[T, D])
 		newTargets = append(newTargets, targets...)
 	}
 
-	return newTargets, nil
+	uniqueTargets := utils.Unique(newTargets, func(target1 Target, target2 Target) bool {
+		return target1.id == target2.id
+	})
+
+	return uniqueTargets, nil
 }
 
 func (g StateGraph[T, D]) barrier(ctx context.Context, state T, result []nodeResult[T, D]) (stepInput[T, D], error) {

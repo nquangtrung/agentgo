@@ -4,8 +4,8 @@ stateDiagram-v2
     state "end" as end
     state "inc" as inc
     state "double" as double
+    start --> inc : 
     inc --> double : 
     double --> end : 
-    start --> inc : 
 
 ```
