@@ -10,10 +10,13 @@ import (
 
 func executeTool(ctx context.Context, params any) (agentStateDelta, error) {
 	toolCall := params.(models.ToolCall)
-	if toolCall.Tool == nil {
-		logger.Error("Tool is nil", "toolCall", toolCall)
-		return agentStateDelta{}, nil
+	if toolCall.NotFound {
+		logger.Error("Tool not found", "toolCall", toolCall)
+		return agentStateDelta{
+			addError: &models.ToolNotFoundError{ToolName: toolCall.ToolName},
+		}, nil
 	}
+
 	logger.Info("Executing tool", "tool", toolCall.Tool.Name(), "params", toolCall.Params)
 	tool := toolCall.Tool
 	toolResult := tool.Execute(models.ToolExecuteParams{
@@ -41,9 +44,10 @@ func resolveTool(ctx context.Context, state agentState) (agentStateDelta, error)
 
 	calls := []models.ToolCall{}
 	for _, call := range resolveOutput.ToolCalls {
-		tool, _ := utils.Find(tools, func(t models.BaseTool) bool {
+		tool, found := utils.Find(tools, func(t models.BaseTool) bool {
 			return t.Name() == call.ToolName
 		})
+		call.NotFound = !found
 		call.Tool = &tool
 		calls = append(calls, call)
 	}
@@ -51,7 +55,6 @@ func resolveTool(ctx context.Context, state agentState) (agentStateDelta, error)
 	logger.Info("Resolved tool calls", "calls", calls, "usage", resolveOutput.Usage)
 
 	if err != nil {
-		// TODO Handle error
 		return agentStateDelta{}, err
 	}
 

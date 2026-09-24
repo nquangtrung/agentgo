@@ -11,7 +11,7 @@ import (
 func GenerateText(ctx context.Context, params Params) (models.LanguageModelOutput, error) {
 	provider := mustResolveProviderFromParams(params)
 	messages := resolveMessages(params)
-	execContext := models.NewExecutionContextFromLanguageModelContext(provider.Context())
+	execArchive := models.NewExecutionContextFromLanguageModelContext(provider.Context())
 
 	emitter := models.NewEmptyPartEmitter()
 
@@ -26,7 +26,7 @@ func GenerateText(ctx context.Context, params Params) (models.LanguageModelOutpu
 
 	config := graph.InvocationConfig[agentState, agentStateDelta]{}
 	result, err := g.Invoke(ctx, agentState{
-		toolExecutionsArchive: execContext,
+		toolExecutionsArchive: execArchive,
 		messages:              messages,
 	}, config)
 

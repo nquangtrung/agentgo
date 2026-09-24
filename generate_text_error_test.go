@@ -67,7 +67,7 @@ func TestGenerateTextToolNotFoundError(t *testing.T) {
 		Tools:         tools,
 	})
 
-	assert.NoError(t, err)
+	assert.NoError(t, err, "should not cause an error")
 	assert.Equal(t, modelName, output.ModelName, "should have correct model name")
 	// Tool not found error should be recorded but execution continues
 	assert.True(t, len(output.Context.Records()) > 0, "should have execution records")

@@ -14,9 +14,10 @@ type step struct {
 	usage             models.LanguageModelUsage
 	prepareStepResult PrepareStepResult
 	action            string
-	tools             []models.ToolCall
+	calls             []models.ToolCall
 	toolResults       []models.ToolExecuteOutput
 	stream            bool
+	errors            []error
 }
 
 type agentState struct {
@@ -41,6 +42,8 @@ type agentStateDelta struct {
 	textGenerated bool
 	stream        bool
 	shouldEnd     bool
+
+	addError error
 }
 
 const (
@@ -137,12 +140,17 @@ func accumulateAgentState(oldState agentState, delta agentStateDelta) agentState
 
 	if delta.availableTools != nil {
 		logger.Debug("Updating available tools", slog.Any("tools", delta.availableTools))
-		oldState.currentStep.tools = delta.availableTools
+		oldState.currentStep.calls = delta.availableTools
 	}
 
 	if delta.stepAction != "" {
 		logger.Info("Updating step action", slog.String("action", delta.stepAction))
 		oldState.currentStep.action = delta.stepAction
+	}
+
+	if delta.addError != nil {
+		logger.Error("Adding error to current step", slog.Any("error", delta.addError))
+		oldState.currentStep.errors = append(oldState.currentStep.errors, delta.addError)
 	}
 
 	return oldState
@@ -175,11 +183,11 @@ func createGenerateTextGraph() graph.StateGraph[agentState, agentStateDelta] {
 	})
 	g.AddConditionalEdge(RESOLVE_TOOL, func(state agentState) []graph.Target {
 		currentStep := state.currentStep
-		if len(currentStep.tools) == 0 {
+		if len(currentStep.calls) == 0 {
 			return graph.IDs(PREPARE_TEXT)
 		}
 
-		return utils.Map(currentStep.tools, func(tool models.ToolCall) graph.Target {
+		return utils.Map(currentStep.calls, func(tool models.ToolCall) graph.Target {
 			return graph.Send(EXECUTE_TOOL, tool)
 		})
 	}, []graph.ID{EXECUTE_TOOL, PREPARE_TEXT})

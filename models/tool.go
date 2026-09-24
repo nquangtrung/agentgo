@@ -16,6 +16,7 @@ type ToolCall struct {
 	Params   map[string]any
 	Tool     Tool
 	Messages []Message
+	NotFound bool
 }
 
 //go:generate mockgen -destination=../mocks/mock_tool.go -package=mocks github.com/nquangtrung/agentgo/models Tool
