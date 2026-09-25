@@ -39,7 +39,10 @@ func (n stateNode[T, D]) execute(ctx context.Context, state T, target Target) (d
 
 	if e, ok := err.(withID); ok {
 		e.SetID(n.ID)
+	} else {
+		err = NewNodeExecutionError(threadId, n.ID, err)
 	}
+
 	if e, ok := err.(withThreadID); ok {
 		e.SetThreadID(threadId)
 	}
@@ -67,7 +70,22 @@ func (n workerNode[T, D]) execute(ctx context.Context, state T, target Target) (
 		}
 	}()
 
-	return n.fn(ctx, target.params)
+	result, err := n.fn(ctx, target.params)
+	if err == nil {
+		return result, nil
+	}
+
+	if e, ok := err.(withID); ok {
+		e.SetID(n.ID)
+	} else {
+		err = NewNodeExecutionError(threadId, n.ID, err)
+	}
+
+	if e, ok := err.(withThreadID); ok {
+		e.SetThreadID(threadId)
+	}
+
+	return result, err
 }
 
 func (n workerNode[T, D]) id() ID {

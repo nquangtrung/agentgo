@@ -35,10 +35,24 @@ func executeTool(ctx context.Context, params any) (agentStateDelta, error) {
 func resolveTool(ctx context.Context, state agentState) (agentStateDelta, error) {
 	provider := ctx.Value(models.ProviderContextKey).(providers.AgentProvider)
 
-	// TODO Handle when prepare step return only a subset
+	messages := state.messages
+	if state.currentStep.prepareStepResult.Messages != nil {
+		messages = *state.currentStep.prepareStepResult.Messages
+	}
+
 	tools := ctx.Value(models.ToolsContextKey).([]models.BaseTool)
+	if state.currentStep.prepareStepResult.ActiveTools != nil {
+		tools = utils.Filter(tools, func(t models.BaseTool) bool {
+			return utils.Contains(
+				*state.currentStep.prepareStepResult.ActiveTools,
+				t.Name(),
+				func(a, b string) bool { return a == b },
+			)
+		})
+	}
+
 	resolveOutput, err := provider.ResolveToolCall(
-		ctx, providers.AgentProviderPromptMessageParams{Messages: state.messages},
+		ctx, providers.AgentProviderPromptMessageParams{Messages: messages},
 		tools,
 	)
 
@@ -52,12 +66,12 @@ func resolveTool(ctx context.Context, state agentState) (agentStateDelta, error)
 		calls = append(calls, call)
 	}
 
-	logger.Info("Resolved tool calls", "calls", calls, "usage", resolveOutput.Usage)
-
 	if err != nil {
+		logger.Warn("Error resolving tool calls", "calls", calls, "usage", resolveOutput.Usage, "error", err)
 		return agentStateDelta{}, err
 	}
 
+	logger.Info("Resolved tool calls", "calls", calls, "usage", resolveOutput.Usage)
 	return agentStateDelta{
 		from:           RESOLVE_TOOL,
 		availableTools: calls,

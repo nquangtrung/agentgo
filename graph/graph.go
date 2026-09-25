@@ -68,6 +68,16 @@ func (g *StateGraph[T, D]) AddNode(name ID, fn NodeFn[T, D]) {
 	g.add(node)
 }
 
+func (g *StateGraph[T, D]) AddNodeWithRetry(name ID, fn NodeFn[T, D], retry RetryOptions) {
+	id := name
+	node := &stateNode[T, D]{
+		ID: id,
+		fn: fn,
+	}
+
+	g.add(withRetry(node, retry))
+}
+
 func (g *StateGraph[T, D]) AddWorkerNode(name ID, fn WorkerNodeFn[T, D]) {
 	id := name
 	node := &workerNode[T, D]{
@@ -76,6 +86,15 @@ func (g *StateGraph[T, D]) AddWorkerNode(name ID, fn WorkerNodeFn[T, D]) {
 	}
 
 	g.add(node)
+}
+func (g *StateGraph[T, D]) AddWorkerNodeWithRetry(name ID, fn WorkerNodeFn[T, D], retry RetryOptions) {
+	id := name
+	node := &workerNode[T, D]{
+		ID: id,
+		fn: fn,
+	}
+
+	g.add(withRetry(node, retry))
 }
 
 func (g *StateGraph[T, D]) add(node node[T, D]) {

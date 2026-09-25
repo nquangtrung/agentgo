@@ -12,6 +12,17 @@ import (
 	"go.uber.org/mock/gomock"
 )
 
+type mockTransientError struct {
+}
+
+func (t mockTransientError) Error() string {
+	return "this is a mock transient error"
+}
+
+func (t mockTransientError) Timeout() bool {
+	return true
+}
+
 // ============================================================================
 // RETRY AND ERROR HANDLING TESTS
 // ============================================================================
@@ -153,12 +164,19 @@ func TestGenerateTextResolveToolCallError(t *testing.T) {
 	}
 
 	mockProvider.EXPECT().Context().AnyTimes().Return(models.LanguageModelContext{ModelName: modelName})
+
 	// First call fails (triggers retry)
 	mockProvider.EXPECT().ResolveToolCall(
 		gomock.Any(),
 		gomock.Any(),
 		gomock.Eq(tools),
-	).Return(models.LanguageModelToolCallResolveOutput{}, fmt.Errorf("provider error")).Times(1)
+	).Return(models.LanguageModelToolCallResolveOutput{}, mockTransientError{}).Times(1)
+	// Second call fails (triggers retry)
+	mockProvider.EXPECT().ResolveToolCall(
+		gomock.Any(),
+		gomock.Any(),
+		gomock.Eq(tools),
+	).Return(models.LanguageModelToolCallResolveOutput{}, mockTransientError{}).Times(1)
 	// After retry, returns successfully
 	mockProvider.EXPECT().ResolveToolCall(
 		gomock.Any(),

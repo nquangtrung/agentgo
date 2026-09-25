@@ -159,15 +159,22 @@ func accumulateAgentState(oldState agentState, delta agentStateDelta) agentState
 func createGenerateTextGraph() graph.StateGraph[agentState, agentStateDelta] {
 	g := graph.New(accumulateAgentState)
 
+	retry := graph.RetryOptions{
+		ShouldRetry: func(err error) bool {
+			return utils.IsTransientError(err)
+		},
+		Jitter: true,
+	}
+
 	g.AddNode(PREPARE_PROCESS, prepareProcess)
 	g.AddNode(END_PROCESS, endProcess)
 	g.AddNode(PREPARE_STEP, prepareStep)
 	g.AddNode(LOOP_CHECK, checkLoop)
-	g.AddNode(RESOLVE_TOOL, resolveTool)
-	g.AddWorkerNode(EXECUTE_TOOL, executeTool)
+	g.AddNodeWithRetry(RESOLVE_TOOL, resolveTool, retry)
+	g.AddWorkerNodeWithRetry(EXECUTE_TOOL, executeTool, retry)
 	g.AddNode(PREPARE_TEXT, prepareText)
-	g.AddNode(GENERATE_TEXT, generateText)
-	g.AddNode(STREAM_TEXT, streamText)
+	g.AddNodeWithRetry(GENERATE_TEXT, generateText, retry)
+	g.AddNodeWithRetry(STREAM_TEXT, streamText, retry)
 	g.AddNode(END_TEXT, endText)
 	g.AddNode(END_STEP, endStep)
 

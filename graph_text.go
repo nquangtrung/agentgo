@@ -17,7 +17,6 @@ func prepareText(ctx context.Context, state agentState) (agentStateDelta, error)
 }
 
 func endText(_ context.Context, state agentState) (agentStateDelta, error) {
-	// TODO handle usage accumulate
 	return agentStateDelta{
 		from:          END_TEXT,
 		textGenerated: true,
@@ -28,12 +27,15 @@ func generateText(ctx context.Context, state agentState) (agentStateDelta, error
 	provider := ctx.Value(models.ProviderContextKey).(providers.AgentProvider)
 	messages := state.messages
 
+	if state.currentStep.prepareStepResult.Messages != nil {
+		messages = *state.currentStep.prepareStepResult.Messages
+	}
+
 	output, err := provider.GenerateText(ctx, providers.AgentProviderPromptMessageParams{
 		Messages: messages,
 	})
 
 	if err != nil {
-		// Handle error and retry
 		return agentStateDelta{}, err
 	}
 
@@ -52,6 +54,9 @@ func streamText(ctx context.Context, state agentState) (agentStateDelta, error) 
 	emitter := ctx.Value(models.PartEmitterContextKey).(*models.PartEmitter)
 	messages := state.messages
 
+	if state.currentStep.prepareStepResult.Messages != nil {
+		messages = *state.currentStep.prepareStepResult.Messages
+	}
 	output, err := provider.StreamText(
 		ctx,
 		providers.AgentProviderPromptMessageParams{Messages: messages},
