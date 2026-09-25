@@ -1,11 +1,11 @@
 # Graph Report - agentgo  (2026-09-25)
 
 ## Corpus Check
-- 402 files · ~507,863 words
+- 401 files · ~507,138 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 4096 nodes · 4971 edges · 360 communities (349 shown, 11 thin omitted)
+- 4085 nodes · 4961 edges · 350 communities (340 shown, 10 thin omitted)
 - Extraction: 98% EXTRACTED · 2% INFERRED · 0% AMBIGUOUS · INFERRED: 116 edges (avg confidence: 0.85)
 - Token cost: 0 input · 0 output
 
@@ -29,7 +29,7 @@
 - Params
 - slice.go
 - MockPart
-- MockEndPart
+- go.uber.org/mock/gomock.Controller
 - part_tool.go
 - MockTool
 - Using uber-go/fx for Application Wiring in Go
@@ -40,7 +40,7 @@
 - go.uber.org/mock/gomock.Call
 - StateGraph
 - `gopls` CLI reference
-- go.uber.org/mock/gomock.Controller
+- MockStartPart
 - graphify reference: query, path, explain
 - BaseTextPart
 - Using google/wire for Compile-Time Dependency Injection in Go
@@ -60,9 +60,9 @@
 - Go Continuous Integration
 - extraction-spec.md
 - Error Creation
-- NewMockAgentProvider
+- testing.T
 - Execution Trace Reference
-- Default Go Metrics (Always Exposed)
+- Prometheus Go Runtime Metrics Reference
 - Common Go Bugs
 - Cancellation, Timeouts & Deadlines
 - Go Structs & Interfaces
@@ -74,7 +74,7 @@
 - Checkpoint
 - samber/oops Structured Error Handling
 - Go CLI Best Practices
-- .StreamText
+- part_step.go
 - How to Make an AI SDK Clone in Golang - Part 5 - Replacing the Loop with a Pregel Graph
 - Cryptography Security Rules
 - stretchr/testify
@@ -253,7 +253,7 @@
 - golang-naming/SKILL.md
 - Profiling and Continuous Profiling
 - Allocation Patterns
-- Part
+- Default Go Metrics (Always Exposed)
 - Integration Testing
 - Workflows
 - Skill Architecture
@@ -277,7 +277,7 @@
 - Test-Driven Debugging
 - config.go
 - ExitError
-- testing.T
+- Optional Go Metrics (Opt-in, Go 1.17+)
 - Common Patterns
 - Diagnostic Tools Quick Reference
 - container/list — Doubly-Linked List
@@ -306,7 +306,7 @@
 - Missing Key Caching (Negative Caching)
 - Messaging Backends
 - Notification Backends
-- How to Make an AI SDK Clone in Golang - Part 6 - Interrupts and Resume in Pregel Graph
+- Common PromQL Queries
 - Adversarial evaluation design
 - Frontmatter
 - sync.WaitGroup
@@ -320,30 +320,20 @@
 - gobenchdata
 - clawhub-publish.sh
 - github.com/nquangtrung/agentgo
-- convertOutputToToolCalls
-- LanguageModelUsage
-- GenerateText
+- Part
 - graphify
 - Examples from Codebase
-- CreateAgentProvider
 - AgentGo Graph Package Skill
 - Best Practices
-- TestGenerateTextResolveToolCallError
-- MockopenAIResponsesService
-- Flight Recorder (Go 1.25+)
 - log/slog.Logger
-- OpenAIProvider
 - Common Pitfalls
 - 3. Connecting Nodes
-- Full Command Reference
-- What to Look For
-- PartEmitter
 - Architecture
 - Testing Patterns
 - Profile Types
 - Generating Profiles
 - 6. Error Handling
-- Performance Troubleshooting
+- JSON Pitfalls
 
 ## God Nodes (most connected - your core abstractions)
 1. `Evaluations` - 43 edges
@@ -358,33 +348,33 @@
 10. `GenerateText()` - 25 edges
 
 ## Surprising Connections (you probably didn't know these)
-- `resolveProviderFromParams()` --calls--> `CreateAgentProvider()`  [INFERRED]
-  resolver.go → factory.go
-- `TestGenerateTextResolveToolCallError()` --calls--> `GenerateText()`  [INFERRED]
-  generate_text_error_test.go → generate_text.go
-- `TestGenerateTextToolExecutionError()` --calls--> `GenerateText()`  [INFERRED]
-  generate_text_error_test.go → generate_text.go
-- `TestGenerateTextToolNotFoundError()` --calls--> `GenerateText()`  [INFERRED]
-  generate_text_error_test.go → generate_text.go
 - `GenerateText()` --calls--> `createGenerateTextGraph()`  [INFERRED]
   generate_text.go → graph.go
+- `GenerateText()` --calls--> `mustResolveProviderFromParams()`  [INFERRED]
+  generate_text.go → resolver.go
+- `GenerateText()` --calls--> `resolveExecutionContextAsTextOutput()`  [INFERRED]
+  generate_text.go → resolver.go
+- `GenerateText()` --calls--> `resolveMessages()`  [INFERRED]
+  generate_text.go → resolver.go
+- `StreamText()` --calls--> `createGenerateTextGraph()`  [INFERRED]
+  stream_text.go → graph.go
 
 ## Import Cycles
 - None detected.
 
-## Communities (360 total, 11 thin omitted)
+## Communities (350 total, 10 thin omitted)
 
 ### Community 0 - "LanguageModelContext"
 Cohesion: 0.21
-Nodes (8): BasePart, BaseProcessStartPart, LanguageModelContext, PartType, NewPart(), NewProcessStartPart(), BaseAgentProvider, NewBaseAgentProvider()
+Nodes (9): BasePart, BaseProcessStartPart, LanguageModelContext, NewLanguageModelContext(), PartType, NewPart(), NewProcessStartPart(), BaseAgentProvider (+1 more)
 
 ### Community 1 - "Message"
-Cohesion: 0.18
-Nodes (18): TestGenerateTextOpenAIWithInput(), TestStreamTextOpenAIWithInput(), AccumulateToolCallResult(), BaseMessage, BaseMessageContent, Message, NewAssistantStringMessage(), NewHumanStringMessage() (+10 more)
+Cohesion: 0.15
+Nodes (21): TestGenerateTextOpenAI(), TestGenerateTextOpenAIWithInput(), TestStreamTextOpenAI(), TestStreamTextOpenAIWithInput(), AccumulateToolCallResult(), BaseMessage, BaseMessageContent, Message (+13 more)
 
 ### Community 2 - "context.Context"
 Cohesion: 0.17
-Nodes (21): agentState, agentStateDelta, step, context.Context, accumulateAgentState(), archiveToolResult(), checkLoop(), createGenerateTextGraph() (+13 more)
+Nodes (22): agentState, agentStateDelta, step, context.Context, accumulateAgentState(), archiveToolResult(), checkLoop(), createGenerateTextGraph() (+14 more)
 
 ### Community 3 - "AgentGo - AI SDK Clone in Go 🚀"
 Cohesion: 0.05
@@ -395,8 +385,8 @@ Cohesion: 0.10
 Nodes (20): ConsecutiveFailureEndCondition, NewConsecutiveFailureEndCondition(), NewMaxTotalTokensEndCondition(), NewNoProgressEndCondition(), NewRepeatedStateMutationEndCondition(), recordFingerprint(), makeArchive(), TestConsecutiveFailureEndCondition() (+12 more)
 
 ### Community 5 - "LanguageModelOutput"
-Cohesion: 0.17
-Nodes (12): github.com/openai/openai-go/v3/responses.ResponseNewParamsInputUnion, github.com/openai/openai-go/v3/responses.ResponseUsage, github.com/openai/openai-go/v3/responses.ToolUnionParam, ContextKey, LanguageModelOutput, LanguageModelToolCallResolveOutput, NewLanguageModelOutput(), convertInputFromParams() (+4 more)
+Cohesion: 0.12
+Nodes (17): github.com/openai/openai-go/v3/responses.ResponseNewParamsInputUnion, github.com/openai/openai-go/v3/responses.ResponseUsage, github.com/openai/openai-go/v3/responses.ToolUnionParam, MockAgentProvider, ContextKey, LanguageModelOutput, LanguageModelToolCallResolveOutput, NewLanguageModelOutput() (+9 more)
 
 ### Community 6 - "How to Make an AI SDK Clone in Golang - Part 4 - Tool Calling Loops with FSM"
 Cohesion: 0.07
@@ -419,27 +409,27 @@ Cohesion: 0.10
 Nodes (19): 1. **Non-blocking**, 2. **Memory Efficient**, 3. **Error Handling Ready**, 4. **Extensible**, 5. **Testable**, Digging Into Part Types, Go Concurrency: The Channel Pattern, Go's Concurrency Philosophy (+11 more)
 
 ### Community 11 - "Params"
-Cohesion: 0.23
-Nodes (10): Params, PrepareStepFn, PrepareStepResult, ToolChoice, EndCondition, AgentProvider, mustResolveProviderFromParams(), resolveMessages() (+2 more)
+Cohesion: 0.15
+Nodes (16): AgentProviderFactoryParams, ModelType, Params, PrepareStepFn, PrepareStepResult, ToolChoice, CreateAgentProvider(), FindSupportedModel() (+8 more)
 
 ### Community 12 - "slice.go"
-Cohesion: 0.31
-Nodes (12): resolveTool(), U, Contains(), Each(), Filter(), Find(), T, Keys() (+4 more)
+Cohesion: 0.12
+Nodes (19): github.com/openai/openai-go/v3/packages/ssestream.Stream, github.com/openai/openai-go/v3/responses.Response, github.com/openai/openai-go/v3/responses.ResponseNewParams, github.com/openai/openai-go/v3/responses.ResponseStreamEventUnion, convertOutputToToolCalls(), resolveExecutionContextAsTextOutput(), U, Contains() (+11 more)
 
 ### Community 13 - "MockPart"
-Cohesion: 0.21
+Cohesion: 0.19
 Nodes (3): NewMockPart(), MockPart, MockPartMockRecorder
 
-### Community 14 - "MockEndPart"
-Cohesion: 0.31
-Nodes (3): NewMockEndPart(), MockEndPart, MockEndPartMockRecorder
+### Community 14 - "go.uber.org/mock/gomock.Controller"
+Cohesion: 0.18
+Nodes (7): go.uber.org/mock/gomock.Controller, NewMockEndPart(), MockEndPart, MockEndPartMockRecorder, MockopenAIResponsesService, MockopenAIResponsesServiceMockRecorder, NewMockopenAIResponsesService()
 
 ### Community 15 - "part_tool.go"
-Cohesion: 0.18
-Nodes (12): BaseToolErrorPart, BaseToolPart, BaseToolResultPart, BaseToolStartPart, TestStepEndPart(), TestToolErrorPart(), TestToolResultPart(), TestToolStartPart() (+4 more)
+Cohesion: 0.13
+Nodes (16): BaseToolErrorPart, BaseToolPart, BaseToolResultPart, BaseToolStartPart, TestStepEndPart(), TestToolErrorPart(), TestToolResultPart(), TestToolStartPart() (+8 more)
 
 ### Community 16 - "MockTool"
-Cohesion: 0.24
+Cohesion: 0.27
 Nodes (3): NewMockTool(), MockTool, MockToolMockRecorder
 
 ### Community 17 - "Using uber-go/fx for Application Wiring in Go"
@@ -463,8 +453,8 @@ Cohesion: 0.36
 Nodes (4): github.com/openai/openai-go/v3/responses.ResponseFunctionToolCall, MockasFunctionCaller, MockasFunctionCallerMockRecorder, NewMockasFunctionCaller()
 
 ### Community 22 - "go.uber.org/mock/gomock.Call"
-Cohesion: 0.19
-Nodes (4): go.uber.org/mock/gomock.Call, MockAgentProvider, MockAgentProviderMockRecorder, MockAsPartMockRecorder
+Cohesion: 0.18
+Nodes (5): go.uber.org/mock/gomock.Call, NewMockAsPart(), MockAgentProviderMockRecorder, MockAsPart, MockAsPartMockRecorder
 
 ### Community 23 - "StateGraph"
 Cohesion: 0.11
@@ -474,9 +464,9 @@ Nodes (31): StateGraph, Reducer, TestGraph2InterruptIn2Node(), TestGraph2Interru
 Cohesion: 0.05
 Nodes (41): Code actions and code lenses, CodeAction kind reference, Diagnostics, Global flags, `gopls` CLI reference, Introspection, Navigation commands, Position syntax (+33 more)
 
-### Community 25 - "go.uber.org/mock/gomock.Controller"
-Cohesion: 0.48
-Nodes (4): go.uber.org/mock/gomock.Controller, NewMockStartPart(), MockStartPart, MockStartPartMockRecorder
+### Community 25 - "MockStartPart"
+Cohesion: 0.29
+Nodes (5): time.Time, NewMockStartPart(), MockStartPart, MockStartPartMockRecorder, BaseStartPart
 
 ### Community 26 - "graphify reference: query, path, explain"
 Cohesion: 0.33
@@ -538,21 +528,21 @@ Nodes (37): Go Code Review Instructions, How to Report Issues, Review Priority, 
 Cohesion: 0.05
 Nodes (36): Creating Errors, Custom Error Types, Custom types that wrap other errors, Decision table: which error strategy to use, Error Creation, Error String Conventions, Errors as Values, `errors.New` — static error messages (+28 more)
 
-### Community 46 - "NewMockAgentProvider"
-Cohesion: 0.22
-Nodes (24): streamResolveToolCallErrorTestCase, NewMaxStepsEndCondition(), TestGenerateTextToolExecutionError(), TestGenerateTextToolNotFoundError(), TestGenerateTextMultipleToolCalls(), TestGenerateTextStopsAtMaxSteps(), TestGenerateTextWithTool(), NewMockAgentProvider() (+16 more)
+### Community 46 - "testing.T"
+Cohesion: 0.11
+Nodes (46): mockNonTransientError, mockTransientError, resolveToolCallErrorTestCase, streamResolveToolCallErrorTestCase, NewMaxStepsEndCondition(), TestGenerateTextWithToolOpenAI(), TestGenerateTextResolveToolCallError(), TestGenerateTextToolExecutionError() (+38 more)
 
 ### Community 47 - "Execution Trace Reference"
-Cohesion: 0.11
-Nodes (18): Custom Annotations, Execution Trace Reference, From benchmarks, From code (programmatic), From running service, From tests, Generating Traces, Log messages (+10 more)
+Cohesion: 0.05
+Nodes (37): Analyzing a snapshot, Constraints, Custom Annotations, Execution Trace Reference, Extracting pprof profiles from traces, Flight Recorder (Go 1.25+), From benchmarks, From code (programmatic) (+29 more)
 
-### Community 48 - "Default Go Metrics (Always Exposed)"
-Cohesion: 0.06
-Nodes (35): Additional Heap Metrics, All Other Metrics, Allocation and Free Counters, CGO Metrics, Common PromQL Queries, CPU and Memory, CPU Classes, CPU Usage (+27 more)
+### Community 48 - "Prometheus Go Runtime Metrics Reference"
+Cohesion: 0.17
+Nodes (12): All Other Metrics, CPU and Memory, File Descriptors, Important Clarification, Metrics with Labels, Page Faults, Process Information, Process Metrics (+4 more)
 
 ### Community 49 - "Common Go Bugs"
 Cohesion: 0.06
-Nodes (34): `break` in `select`/`switch` Inside `for` Loop, Closed Channel in `select` Causes Busy Loop, Common Go Bugs, Concurrent Map Read/Write (Fatal), Context Misuse, Copying sync Types, Defer Gotchas, Enum Zero Value with `iota` (+26 more)
+Nodes (31): `break` in `select`/`switch` Inside `for` Loop, Closed Channel in `select` Causes Busy Loop, Common Go Bugs, Concurrent Map Read/Write (Fatal), Context Misuse, Copying sync Types, Defer Gotchas, Enum Zero Value with `iota` (+23 more)
 
 ### Community 50 - "Cancellation, Timeouts & Deadlines"
 Cohesion: 0.06
@@ -594,9 +584,9 @@ Nodes (22): Assertions, Configuration, Logger integration, samber/oops — Advan
 Cohesion: 0.09
 Nodes (21): Always Bind Flags to Viper, Argument Validation, Common Mistakes, Configuration with Viper, Example Config File (.myapp.yaml), Exit Codes, Flag Validation with RegisterFlagCompletionFunc, Flags (+13 more)
 
-### Community 60 - ".StreamText"
-Cohesion: 0.20
-Nodes (8): time.Time, BaseStartPart, BaseStepEndPart, BaseStepStartPart, NewStepEndPart(), NewStepStartPart(), TestPartStart(), StepPartImpl
+### Community 60 - "part_step.go"
+Cohesion: 0.18
+Nodes (13): BaseStepEndPart, BaseStepErrorPart, BaseStepStartPart, EndPart, StepEndPart, NewStepEndPart(), NewStepErrorPart(), NewStepStartPart() (+5 more)
 
 ### Community 61 - "How to Make an AI SDK Clone in Golang - Part 5 - Replacing the Loop with a Pregel Graph"
 Cohesion: 0.14
@@ -635,7 +625,7 @@ Cohesion: 0.11
 Nodes (18): Advanced Types Reference, Cancellation, Chaining, Collecting Results, Constructor, From IO, Future[T] — Asynchronous Values, IO[T] — Synchronous Side Effects (+10 more)
 
 ### Community 70 - "ToolExecuteOutput"
-Cohesion: 0.36
+Cohesion: 0.33
 Nodes (7): NewToolParams, BaseTool, Tool, ToolCall, ToolExecuteOutput, ToolExecuteParams, resolveToolFromToolCall()
 
 ### Community 71 - "node"
@@ -783,7 +773,7 @@ Cohesion: 0.14
 Nodes (13): Conference Speakers & Community Leaders, Core Go Team, Famous Go Developers, Go Tooling & Infrastructure, Library & Framework Authors, Must-Follow Blogs, Newsletters, Official Go Resources (+5 more)
 
 ### Community 107 - "General Debugging Methodology"
-Cohesion: 0.14
+Cohesion: 0.15
 Nodes (13): General Debugging Methodology, Step 10: Defense-in-Depth, Step 1: Understand Expected vs Actual, Step 2: Get the Full Error, Step 3: Isolate the Problem, Step 4: Check External Dependencies, Step 5: Check Observability Tools, Step 6: Compare with Working Code (+5 more)
 
 ### Community 108 - "Pointer Types Deep Dive"
@@ -923,7 +913,7 @@ Cohesion: 0.17
 Nodes (12): Args validators, Best Practices, Cobra vs. viper, Command tree, Common Mistakes, Completions primer, Cross-References, Flags primer (+4 more)
 
 ### Community 142 - "Production Debugging"
-Cohesion: 0.17
+Cohesion: 0.15
 Nodes (12): HTTP Client Issues, Logging & Observability, Network & HTTP Debugging, Production Debugging, Production Debugging Checklist, Request ID Tracing, Step 1: Capture Immediately (don't restart!), Step 2: System Metrics (+4 more)
 
 ### Community 143 - "IDs"
@@ -1111,8 +1101,8 @@ Cohesion: 0.20
 Nodes (5): Test Helpers, Test Timeout, Basic Handler Test, HTTP Handler Testing, Query Parameters and Headers
 
 ### Community 189 - "NewExecutionContextFromLanguageModelContext"
-Cohesion: 0.22
-Nodes (6): NewExecutionContextFromLanguageModelContext(), TestNewExecutionContextFromLanguageModelContext(), resolveExecutionContextAsTextOutput(), TestResolveExecutionContextAsTextOutput(), T, Must()
+Cohesion: 0.25
+Nodes (5): NewExecutionContextFromLanguageModelContext(), TestNewExecutionContextFromLanguageModelContext(), TestResolveExecutionContextAsTextOutput(), T, Must()
 
 ### Community 190 - "Architecture & Design"
 Cohesion: 0.22
@@ -1181,6 +1171,10 @@ Nodes (9): AllowEmptyEnv, AutomaticEnv vs BindEnv, Debugging binding, Flag bindi
 ### Community 207 - "Viper Test Isolation"
 Cohesion: 0.22
 Nodes (9): Injecting viper into your app, Reading config files in tests, Snapshot and restore pattern, t.Setenv interactions, Table of Contents, The global state problem, viper.New() per test (correct approach), viper.Reset() — use with caution (+1 more)
+
+### Community 208 - "golang-troubleshooting/SKILL.md"
+Cohesion: 0.19
+Nodes (5): Code Review Red Flags, CPU Profiling, Lock Contention, Memory Profiling, Performance Troubleshooting
 
 ### Community 209 - "pprof Reference"
 Cohesion: 0.22
@@ -1306,9 +1300,9 @@ Nodes (6): Continuous Profiling with Pyroscope, Cost of Continuous Profiling, On
 Cohesion: 0.29
 Nodes (7): Allocation Patterns, Direct indexing vs append, Eliminate redundant map lookups, Interface boxing, Map size hints, Reuse slices via append(s[:0], ...), Sentinel errors vs fmt.Errorf
 
-### Community 240 - "Part"
-Cohesion: 0.17
-Nodes (15): NewMockAsPart(), MockAsPart, EndPart, Part, StepEndPart, StepStartPart, ToolErrorPart, ToolPart (+7 more)
+### Community 240 - "Default Go Metrics (Always Exposed)"
+Cohesion: 0.22
+Nodes (9): Allocation and Free Counters, Default Go Metrics (Always Exposed), GC Configuration and Timing, GC Pause Duration (with labels), Heap State, Memory Allocation, Runtime State, Stack and Metadata (+1 more)
 
 ### Community 241 - "Integration Testing"
 Cohesion: 0.29
@@ -1390,9 +1384,9 @@ Nodes (6): Mock Organization, Mocking and Test Fixtures, Mocks with testify/mock
 Cohesion: 0.33
 Nodes (5): Debugging Flaky Tests, Expand Edge Cases with Table Tests, Reproduce the Bug in a Test, Test-Driven Debugging, Useful Test Flags
 
-### Community 266 - "testing.T"
-Cohesion: 0.19
-Nodes (14): TestGenerateTextOpenAI(), TestStreamTextOpenAI(), TestGenerateTextWithToolOpenAI(), testing.T, TestAddConditionalEdge(), TestAddConditionalEdgePanic(), TestAddEdge(), TestAddEdgePanic() (+6 more)
+### Community 266 - "Optional Go Metrics (Opt-in, Go 1.17+)"
+Cohesion: 0.25
+Nodes (8): Additional Heap Metrics, CGO Metrics, CPU Classes, GC Cycles, GC Pauses Distribution, Memory Classes, Optional Go Metrics (Opt-in, Go 1.17+), Scheduler Metrics
 
 ### Community 267 - "Common Patterns"
 Cohesion: 0.20
@@ -1502,9 +1496,9 @@ Nodes (4): Fluentd — `slog-fluentd`, Kafka — `slog-kafka`, Logstash — `slo
 Cohesion: 0.50
 Nodes (4): Notification Backends, Slack — `slog-slack`, Telegram — `slog-telegram`, Webhook — `slog-webhook`
 
-### Community 303 - "How to Make an AI SDK Clone in Golang - Part 6 - Interrupts and Resume in Pregel Graph"
-Cohesion: 0.18
-Nodes (10): End-to-End Resume Loop, Error Shape and Caller Contract, How to Make an AI SDK Clone in Golang - Part 6 - Interrupts and Resume in Pregel Graph, Interrupt Flow (Single Node), Multiple Interrupts in the Same Superstep, Resume: Continue from the Last Checkpoint, Takeaways, Tradeoffs (+2 more)
+### Community 303 - "Common PromQL Queries"
+Cohesion: 0.33
+Nodes (6): Common PromQL Queries, CPU Usage, File Descriptor Leaks, GC Pressure, Goroutine Leaks, Memory Leak Detection
 
 ### Community 304 - "Adversarial evaluation design"
 Cohesion: 0.67
@@ -1550,17 +1544,9 @@ Nodes (3): File Conventions, Naming Conventions, Test Structure and Organization
 Cohesion: 0.40
 Nodes (5): CLI commands, Dashboard configuration, GitHub Action setup, gobenchdata, Regression gating on PRs
 
-### Community 325 - "convertOutputToToolCalls"
-Cohesion: 0.18
-Nodes (7): github.com/openai/openai-go/v3/packages/ssestream.Stream, github.com/openai/openai-go/v3/responses.Response, github.com/openai/openai-go/v3/responses.ResponseNewParams, github.com/openai/openai-go/v3/responses.ResponseStreamEventUnion, convertOutputToToolCalls(), T, Ternary()
-
-### Community 326 - "LanguageModelUsage"
-Cohesion: 0.20
-Nodes (14): BaseEndPart, BaseProcessEndPart, BaseStepErrorPart, LanguageModelUsageInputTokensDetails, LanguageModelUsageOutputTokensDetails, LanguageModelStreamOutput, LanguageModelUsage, NewLanguageModelContext() (+6 more)
-
-### Community 327 - "GenerateText"
-Cohesion: 0.33
-Nodes (7): GenerateText(), TestGenerateTextPrepareStepMultipleOverrides(), TestGenerateTextPrepareStepPerStepOptions(), TestGenerateTextPrepareStepWithActiveTools(), TestGenerateTextPrepareStepWithMessages(), TestGenerateTextPrepareStepWithToolChoice(), TestGenerateText()
+### Community 326 - "Part"
+Cohesion: 0.17
+Nodes (18): BaseEndPart, BaseProcessEndPart, PartEmitter, NewEmptyPartEmitter(), NewPartEmitter(), LanguageModelUsageInputTokensDetails, LanguageModelUsageOutputTokensDetails, LanguageModelStreamOutput (+10 more)
 
 ### Community 328 - "graphify"
 Cohesion: 0.29
@@ -1570,10 +1556,6 @@ Nodes (6): command, graphify, agent, description, template, $schema
 Cohesion: 0.29
 Nodes (7): Conditional Routing, Error Handling, Examples from Codebase, Fan-Out Graph (parallel execution), Interrupts, Simple Graph (2 nodes), Worker Node
 
-### Community 330 - "CreateAgentProvider"
-Cohesion: 0.43
-Nodes (6): AgentProviderFactoryParams, ModelType, CreateAgentProvider(), FindSupportedModel(), LoadAPIKeyFromEnv(), GetEnvVar()
-
 ### Community 331 - "AgentGo Graph Package Skill"
 Cohesion: 0.33
 Nodes (5): AgentGo Graph Package Skill, Context Values, Overview, Related Packages, When to Use the Graph Package
@@ -1582,25 +1564,9 @@ Nodes (5): AgentGo Graph Package Skill, Context Values, Overview, Related Packag
 Cohesion: 0.33
 Nodes (6): Best Practices, Node Design, Recursion & Loops, Reducer Design, Router Design, State Design
 
-### Community 333 - "TestGenerateTextResolveToolCallError"
-Cohesion: 0.29
-Nodes (4): mockNonTransientError, mockTransientError, resolveToolCallErrorTestCase, TestGenerateTextResolveToolCallError()
-
-### Community 334 - "MockopenAIResponsesService"
-Cohesion: 0.43
-Nodes (3): MockopenAIResponsesService, MockopenAIResponsesServiceMockRecorder, NewMockopenAIResponsesService()
-
-### Community 335 - "Flight Recorder (Go 1.25+)"
-Cohesion: 0.29
-Nodes (7): Analyzing a snapshot, Constraints, Flight Recorder (Go 1.25+), Setup, Snapshot on error, Trigger patterns, When to use flight recorder vs regular tracing
-
 ### Community 336 - "log/slog.Logger"
 Cohesion: 0.29
 Nodes (4): SetLogger(), log/slog.Logger, SetLogger(), SetLogger()
-
-### Community 337 - "OpenAIProvider"
-Cohesion: 0.60
-Nodes (4): OpenAIProvider, openAIResponsesService, NewOpenAIProvider(), newOpenAIProviderWithClient()
 
 ### Community 338 - "Common Pitfalls"
 Cohesion: 0.40
@@ -1609,18 +1575,6 @@ Nodes (5): 1. **Panics in Reducer**, 2. **Non-Deterministic Routing**, 3. **Forg
 ### Community 339 - "3. Connecting Nodes"
 Cohesion: 0.40
 Nodes (5): 3. Connecting Nodes, Conditional Routing, Cycles & Loops, Fan-Out (Parallel Execution), Simple Edge (Linear Flow)
-
-### Community 340 - "Full Command Reference"
-Cohesion: 0.33
-Nodes (6): Extracting pprof profiles from traces, Full capture-to-analysis workflows, Full Command Reference, `go tool trace` flags summary, HTTP endpoints served by the web UI, Opening traces
-
-### Community 341 - "What to Look For"
-Cohesion: 0.33
-Nodes (6): GC phases, Goroutine creation and destruction, Goroutine states, Network/sync blocking, Scheduling latency, What to Look For
-
-### Community 342 - "PartEmitter"
-Cohesion: 0.70
-Nodes (3): PartEmitter, NewEmptyPartEmitter(), NewPartEmitter()
 
 ### Community 343 - "Architecture"
 Cohesion: 0.50
@@ -1642,29 +1596,29 @@ Nodes (4): From benchmarks (no HTTP server needed), From code (programmatic), Fr
 Cohesion: 0.67
 Nodes (3): 6. Error Handling, Error Inspection, Execution Error Hierarchy
 
-### Community 348 - "Performance Troubleshooting"
-Cohesion: 0.50
-Nodes (4): CPU Profiling, Lock Contention, Memory Profiling, Performance Troubleshooting
+### Community 348 - "JSON Pitfalls"
+Cohesion: 0.67
+Nodes (3): JSON Pitfalls, Numbers into `interface{}` become `float64`, Unexported fields silently ignored
 
 ## Knowledge Gaps
-- **2588 isolated node(s):** `$schema`, `.opencode/plugins/graphify.js`, `clawhub-publish.sh script`, `$schema`, `config:recommended` (+2583 more)
+- **2579 isolated node(s):** `$schema`, `.opencode/plugins/graphify.js`, `clawhub-publish.sh script`, `$schema`, `config:recommended` (+2574 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **11 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **10 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `StreamText()` connect `NewMockAgentProvider` to `Message`, `context.Context`, `LanguageModelUsage`, `testing.T`, `Params`, `PartEmitter`, `NewExecutionContextFromLanguageModelContext`?**
+- **Why does `GenerateText()` connect `testing.T` to `Message`, `context.Context`, `LanguageModelOutput`, `Part`, `Params`, `slice.go`, `NewExecutionContextFromLanguageModelContext`?**
+  _High betweenness centrality (0.005) - this node is a cross-community bridge._
+- **Why does `ToolExecutionsArchive` connect `ToolExecutionsArchive` to `LanguageModelContext`, `Message`, `context.Context`, `LanguageModelOutput`, `slice.go`, `NewExecutionContextFromLanguageModelContext`?**
   _High betweenness centrality (0.003) - this node is a cross-community bridge._
-- **Why does `GenerateText()` connect `GenerateText` to `Message`, `context.Context`, `LanguageModelOutput`, `testing.T`, `Params`, `TestGenerateTextResolveToolCallError`, `NewMockAgentProvider`, `PartEmitter`, `NewExecutionContextFromLanguageModelContext`?**
+- **Why does `StreamText()` connect `testing.T` to `Message`, `context.Context`, `Part`, `Params`, `NewExecutionContextFromLanguageModelContext`?**
   _High betweenness centrality (0.003) - this node is a cross-community bridge._
-- **Why does `Checkpoint` connect `Checkpoint` to `stepInput`, `StateGraph[T, D]`?**
-  _High betweenness centrality (0.002) - this node is a cross-community bridge._
 - **What connects `$schema`, `.opencode/plugins/graphify.js`, `clawhub-publish.sh script` to the rest of the system?**
-  _2588 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _2579 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `AgentGo - AI SDK Clone in Go 🚀` be split into smaller, more focused modules?**
   _Cohesion score 0.05 - nodes in this community are weakly interconnected._
 - **Should `ToolExecutionsArchive` be split into smaller, more focused modules?**
   _Cohesion score 0.09523809523809523 - nodes in this community are weakly interconnected._
-- **Should `How to Make an AI SDK Clone in Golang - Part 4 - Tool Calling Loops with FSM` be split into smaller, more focused modules?**
-  _Cohesion score 0.06666666666666667 - nodes in this community are weakly interconnected._
+- **Should `LanguageModelOutput` be split into smaller, more focused modules?**
+  _Cohesion score 0.12169312169312169 - nodes in this community are weakly interconnected._

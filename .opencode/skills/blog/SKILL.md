@@ -3,8 +3,8 @@ name: blog writer
 description: "A skill for writing informative and educational blog posts about learning golang by implementing an agentic framework."
 ---
 
-- The blog post is to document my journey of learning  golang by implementing an agentic framework.
-- Be plain and explain the concept simply. 
+- The blog post is to document my journey of learning golang by implementing an agentic framework.
+- Be plain and explain the concept simply. Don't use too descriptive language, make it should real and genuine.
 - Do not use to many emoticon.
 - Do no be too verbose with code excerpt. Only use code excerpt from the repo only.
 - Keep the the timeline of the blog post in mind and make sure to explain the concept in a way that is easy to understand for readers who may not be familiar with the topic.
