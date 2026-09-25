@@ -12,6 +12,13 @@ import (
 	"go.uber.org/mock/gomock"
 )
 
+type mockNonTransientError struct {
+}
+
+func (t mockNonTransientError) Error() string {
+	return "this is a non-transient error"
+}
+
 type mockTransientError struct {
 }
 
@@ -143,14 +150,21 @@ func TestGenerateTextToolExecutionError(t *testing.T) {
 	assert.Equal(t, modelName, output.ModelName)
 }
 
-func TestGenerateTextResolveToolCallError(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
+// ============================================================================
+// TABLE-DRIVEN TESTS FOR RETRY AND ERROR HANDLING
+// ============================================================================
 
-	mockProvider := mocks.NewMockAgentProvider(ctrl)
-	prompt := "Provider fails to resolve tools"
+type resolveToolCallErrorTestCase struct {
+	name           string
+	prompt         string
+	errorRetries   int    // number of times to return error before success
+	errorType      error  // type of error to return (transient or non-transient)
+	shouldSucceed  bool   // whether GenerateText should succeed
+	expectedOutput string // expected output text if successful
+}
+
+func TestGenerateTextResolveToolCallError(t *testing.T) {
 	modelName := "mocked-llm-3.6-flash"
-	ctx := context.Background()
 	tools := []models.BaseTool{
 		models.NewTool(models.NewToolParams{
 			Name: "test_tool",
@@ -163,39 +177,111 @@ func TestGenerateTextResolveToolCallError(t *testing.T) {
 		}),
 	}
 
-	mockProvider.EXPECT().Context().AnyTimes().Return(models.LanguageModelContext{ModelName: modelName})
+	testCases := []resolveToolCallErrorTestCase{
+		{
+			name:           "transient error once then success",
+			prompt:         "Provider fails to resolve tools once",
+			errorRetries:   1,
+			errorType:      mockTransientError{},
+			shouldSucceed:  true,
+			expectedOutput: "recovered",
+		},
+		{
+			name:           "transient error twice then success",
+			prompt:         "Provider fails to resolve tools twice",
+			errorRetries:   2,
+			errorType:      mockTransientError{},
+			shouldSucceed:  true,
+			expectedOutput: "recovered",
+		},
+		{
+			name:           "transient error three times exceeds retry limit",
+			prompt:         "Provider fails to resolve tools three times",
+			errorRetries:   3,
+			errorType:      mockTransientError{},
+			shouldSucceed:  false,
+			expectedOutput: "",
+		},
+		{
+			name:           "non-transient error fails immediately",
+			prompt:         "Provider fails with non-transient error",
+			errorRetries:   1,
+			errorType:      mockNonTransientError{},
+			shouldSucceed:  false,
+			expectedOutput: "",
+		},
+	}
 
-	// First call fails (triggers retry)
-	mockProvider.EXPECT().ResolveToolCall(
-		gomock.Any(),
-		gomock.Any(),
-		gomock.Eq(tools),
-	).Return(models.LanguageModelToolCallResolveOutput{}, mockTransientError{}).Times(1)
-	// Second call fails (triggers retry)
-	mockProvider.EXPECT().ResolveToolCall(
-		gomock.Any(),
-		gomock.Any(),
-		gomock.Eq(tools),
-	).Return(models.LanguageModelToolCallResolveOutput{}, mockTransientError{}).Times(1)
-	// After retry, returns successfully
-	mockProvider.EXPECT().ResolveToolCall(
-		gomock.Any(),
-		gomock.Any(),
-		gomock.Eq(tools),
-	).Return(models.LanguageModelToolCallResolveOutput{}, nil).Times(1)
-	mockProvider.EXPECT().GenerateText(
-		gomock.Any(),
-		gomock.Any(),
-	).Return(models.LanguageModelOutput{Text: "recovered", ModelName: modelName}, nil)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
 
-	output, err := GenerateText(ctx, Params{
-		Prompt:        prompt,
-		Provider:      mockProvider,
-		EndConditions: []models.EndCondition{endconditions.NewMaxStepsEndCondition(10)},
-		Tools:         tools,
-	})
+			mockProvider := mocks.NewMockAgentProvider(ctrl)
+			ctx := context.Background()
 
-	assert.NoError(t, err)
-	assert.Equal(t, "recovered", output.Text, "should recover from provider error")
-	assert.Equal(t, modelName, output.ModelName)
+			mockProvider.EXPECT().Context().AnyTimes().Return(models.LanguageModelContext{ModelName: modelName})
+
+			// Check if this is a transient error (has Timeout() method that returns true)
+			isTransient := false
+			if transientErr, ok := tc.errorType.(interface{ Timeout() bool }); ok && transientErr.Timeout() {
+				isTransient = true
+			}
+
+			if isTransient {
+				// For transient errors, set up retry sequence
+				if tc.shouldSucceed {
+					// If we expect success, set up the exact number of errors followed by success
+					gomock.InOrder(
+						// Return error tc.errorRetries times
+						mockProvider.EXPECT().ResolveToolCall(
+							gomock.Any(),
+							gomock.Any(),
+							gomock.Eq(tools),
+						).Return(models.LanguageModelToolCallResolveOutput{}, tc.errorType).Times(tc.errorRetries),
+						// Then return success
+						mockProvider.EXPECT().ResolveToolCall(
+							gomock.Any(),
+							gomock.Any(),
+							gomock.Eq(tools),
+						).Return(models.LanguageModelToolCallResolveOutput{}, nil).Times(1),
+					)
+
+					mockProvider.EXPECT().GenerateText(
+						gomock.Any(),
+						gomock.Any(),
+					).Return(models.LanguageModelOutput{Text: tc.expectedOutput, ModelName: modelName}, nil)
+				} else {
+					// If we expect failure (exceeds retry limit), allow multiple calls to fail
+					mockProvider.EXPECT().ResolveToolCall(
+						gomock.Any(),
+						gomock.Any(),
+						gomock.Eq(tools),
+					).Return(models.LanguageModelToolCallResolveOutput{}, tc.errorType).MinTimes(tc.errorRetries)
+				}
+			} else {
+				// For non-transient errors, just expect one call that fails
+				mockProvider.EXPECT().ResolveToolCall(
+					gomock.Any(),
+					gomock.Any(),
+					gomock.Eq(tools),
+				).Return(models.LanguageModelToolCallResolveOutput{}, tc.errorType).Times(1)
+			}
+
+			output, err := GenerateText(ctx, Params{
+				Prompt:        tc.prompt,
+				Provider:      mockProvider,
+				EndConditions: []models.EndCondition{endconditions.NewMaxStepsEndCondition(10)},
+				Tools:         tools,
+			})
+
+			if tc.shouldSucceed {
+				assert.NoError(t, err, "should not error for transient errors that succeed")
+				assert.Equal(t, tc.expectedOutput, output.Text, "should return expected output")
+				assert.Equal(t, modelName, output.ModelName)
+			} else {
+				assert.Error(t, err, "should error when exceeding retry limit or on non-transient errors")
+			}
+		})
+	}
 }
