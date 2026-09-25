@@ -49,7 +49,10 @@ func (c *SerializableCheckpointer[T, D]) Checkpoint(threadId string, cp Checkpoi
 		}
 		serializedResults[id] = resultData
 	}
-	jsonResults, err := json.Marshal(cp.Results)
+	jsonResults, err := json.Marshal(serializedResults)
+	if err != nil {
+		return err
+	}
 
 	err = c.persister.Save(threadId, "results", jsonResults)
 	if err != nil {
