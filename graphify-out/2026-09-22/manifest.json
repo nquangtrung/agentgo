@@ -1,0 +1,2474 @@
+{
+  "examples/openai_test.go": {
+    "mtime": 1789134842.5533016,
+    "seen": 1789979783.0740657,
+    "ast_hash": "5d44df52622c0bdeb2ac1d778e49494c",
+    "semantic_hash": ""
+  },
+  "examples/openai_tool_test.go": {
+    "mtime": 1789134842.5513017,
+    "seen": 1789979783.0740674,
+    "ast_hash": "65e4630f182fde2850538f3213c35e63",
+    "semantic_hash": ""
+  },
+  "examples/playground.go": {
+    "mtime": 1785997186.8999522,
+    "seen": 1787896802.5297954,
+    "ast_hash": "98ab3c79c3a0e5fcced00e8433fecdca",
+    "semantic_hash": "98ab3c79c3a0e5fcced00e8433fecdca"
+  },
+  "factory.go": {
+    "mtime": 1789134842.5453017,
+    "seen": 1789979783.0740721,
+    "ast_hash": "03592ab20f4b0273283481f05c4baaa6",
+    "semantic_hash": ""
+  },
+  "generate_text.go": {
+    "mtime": 1789745185.744087,
+    "seen": 1789979783.074115,
+    "ast_hash": "0e86f4febd69f6df9ae88be0f895ee74",
+    "semantic_hash": ""
+  },
+  "generate_text_test.go": {
+    "mtime": 1789134842.5443015,
+    "seen": 1789979783.0741167,
+    "ast_hash": "2f12679517fa42ebba51154b0153f63f",
+    "semantic_hash": ""
+  },
+  "go.mod": {
+    "mtime": 1789892068.167905,
+    "seen": 1789979783.074118,
+    "ast_hash": "d2a6205ef256fda528a84327b41ab89c",
+    "semantic_hash": ""
+  },
+  "mocks/mock_agent_provider.go": {
+    "mtime": 1789134842.5463016,
+    "seen": 1789979783.074137,
+    "ast_hash": "08c1bd5a01935cf56fef0fc283f42849",
+    "semantic_hash": ""
+  },
+  "mocks/mock_as_part.go": {
+    "mtime": 1789134842.5543017,
+    "seen": 1789979783.0741386,
+    "ast_hash": "28179ed19f8e00bef76bf10257c1637d",
+    "semantic_hash": ""
+  },
+  "mocks/mock_end_part.go": {
+    "mtime": 1789134842.5543017,
+    "seen": 1789979783.07414,
+    "ast_hash": "63511fa120d655a09aac6a45e9929325",
+    "semantic_hash": ""
+  },
+  "mocks/mock_part.go": {
+    "mtime": 1789134842.5533016,
+    "seen": 1789979783.0741417,
+    "ast_hash": "a690bbab9a961ba94d2d9f314517731f",
+    "semantic_hash": ""
+  },
+  "mocks/mock_start_part.go": {
+    "mtime": 1789134842.5523016,
+    "seen": 1789979783.0741432,
+    "ast_hash": "80f2e8b17e610611b8df3af86d0682b6",
+    "semantic_hash": ""
+  },
+  "mocks/mock_tool.go": {
+    "mtime": 1789134842.5503016,
+    "seen": 1789979783.0741446,
+    "ast_hash": "63ab6315b0921851813d7641821cc894",
+    "semantic_hash": ""
+  },
+  "models/error.go": {
+    "mtime": 1787324468.1417623,
+    "seen": 1787896802.5298102,
+    "ast_hash": "498ec9a59534822380f7e461518e1367",
+    "semantic_hash": "498ec9a59534822380f7e461518e1367"
+  },
+  "models/message.go": {
+    "mtime": 1789134842.5483017,
+    "seen": 1789979783.074154,
+    "ast_hash": "301ed81308dbaa8d4a8ab736d6939c8c",
+    "semantic_hash": ""
+  },
+  "models/model.go": {
+    "mtime": 1788443015.6653824,
+    "seen": 1789979783.0741563,
+    "ast_hash": "cfb5fa47765843a251aafe14793d38b4",
+    "semantic_hash": ""
+  },
+  "models/model_test.go": {
+    "mtime": 1788076411.80774,
+    "seen": 1788350021.5235488,
+    "ast_hash": "6e602c9d56946e9eff6825a23881b1dd",
+    "semantic_hash": "6e602c9d56946e9eff6825a23881b1dd"
+  },
+  "models/part.go": {
+    "mtime": 1788199045.202501,
+    "seen": 1788350021.5235503,
+    "ast_hash": "3e794e1f20f5895c386cad6c5afbbbf4",
+    "semantic_hash": "3e794e1f20f5895c386cad6c5afbbbf4"
+  },
+  "models/part_step.go": {
+    "mtime": 1788199111.5018432,
+    "seen": 1788350021.5235512,
+    "ast_hash": "c268850cd25460b309e019c2cba8e389",
+    "semantic_hash": "c268850cd25460b309e019c2cba8e389"
+  },
+  "models/part_test.go": {
+    "mtime": 1788199124.9579122,
+    "seen": 1788350021.5235524,
+    "ast_hash": "d53bcc3d1e04e67da4d0fbdf959d0fa4",
+    "semantic_hash": "d53bcc3d1e04e67da4d0fbdf959d0fa4"
+  },
+  "models/part_text.go": {
+    "mtime": 1788199116.0758667,
+    "seen": 1788350021.5235543,
+    "ast_hash": "c3cd2e8875023429f56983d92a286244",
+    "semantic_hash": "c3cd2e8875023429f56983d92a286244"
+  },
+  "models/part_tool.go": {
+    "mtime": 1788199119.1588824,
+    "seen": 1788350021.5235555,
+    "ast_hash": "5128a79c55e24324d051ee4677dc5f26",
+    "semantic_hash": "5128a79c55e24324d051ee4677dc5f26"
+  },
+  "models/tool.go": {
+    "mtime": 1789134842.5463016,
+    "seen": 1789979783.0741677,
+    "ast_hash": "0cc9d1b28e21938c6142c1de3caafe10",
+    "semantic_hash": ""
+  },
+  "params.go": {
+    "mtime": 1789134842.5463016,
+    "seen": 1789979783.0741692,
+    "ast_hash": "a516fca122def010010e6b43fe5583ac",
+    "semantic_hash": ""
+  },
+  "providers/openai/converters.go": {
+    "mtime": 1789134842.5453017,
+    "seen": 1789979783.0741706,
+    "ast_hash": "b60c7e7847b7d1dd9c348201cf8c83f5",
+    "semantic_hash": ""
+  },
+  "providers/openai/converters_test.go": {
+    "mtime": 1789134842.5463016,
+    "seen": 1789979783.0741723,
+    "ast_hash": "d192732b4a3727062c515a723f5fb1c7",
+    "semantic_hash": ""
+  },
+  "providers/openai/interface.go": {
+    "mtime": 1789134842.5453017,
+    "seen": 1789979783.0741737,
+    "ast_hash": "5ab768d39f1a87ac915a22a27bf6c5e6",
+    "semantic_hash": ""
+  },
+  "providers/openai/mocks/mock_as_function_caller.go": {
+    "mtime": 1789134842.5543017,
+    "seen": 1789979783.0741756,
+    "ast_hash": "befaacfea0d4e1335368cee72779754e",
+    "semantic_hash": ""
+  },
+  "providers/openai/mocks/mock_open_ai_response.go": {
+    "mtime": 1789134842.5543017,
+    "seen": 1789979783.074177,
+    "ast_hash": "30085ae1de5fdd739b826ad74416a4b1",
+    "semantic_hash": ""
+  },
+  "providers/openai/openai.go": {
+    "mtime": 1789134842.5553017,
+    "seen": 1789979783.0741782,
+    "ast_hash": "30c35854d70e3b3e2ccb5dcb33c21fbf",
+    "semantic_hash": ""
+  },
+  "providers/openai/openai_test.go": {
+    "mtime": 1789134842.5523016,
+    "seen": 1789979783.0741796,
+    "ast_hash": "f0863a2ce8ff812f9b4029d1891dd081",
+    "semantic_hash": ""
+  },
+  "providers/provider.go": {
+    "mtime": 1789745185.744087,
+    "seen": 1789979783.074181,
+    "ast_hash": "9dac0e36f7d63eb6d346baa36336a3ae",
+    "semantic_hash": ""
+  },
+  "resolver.go": {
+    "mtime": 1789134842.5523016,
+    "seen": 1789979783.0741825,
+    "ast_hash": "ad6cec7365564b371d8c016d293c2a57",
+    "semantic_hash": ""
+  },
+  "resolvers_test.go": {
+    "mtime": 1789134842.5503016,
+    "seen": 1789979783.074184,
+    "ast_hash": "1dba4c9a65f2dded84bba8534281d71e",
+    "semantic_hash": ""
+  },
+  "stream_text.go": {
+    "mtime": 1789745185.744087,
+    "seen": 1789979783.0741851,
+    "ast_hash": "c0ec3ed06113b82a2334c64871a2cb7b",
+    "semantic_hash": ""
+  },
+  "stream_text_test.go": {
+    "mtime": 1789134842.5523016,
+    "seen": 1789979783.0741866,
+    "ast_hash": "93c97a0c383dcb5b4533a3505e62bf2c",
+    "semantic_hash": ""
+  },
+  "utils/env.go": {
+    "mtime": 1785997942.4900653,
+    "seen": 1787896802.5298407,
+    "ast_hash": "e260199498d09be3f6daf99245eb2cd2",
+    "semantic_hash": "e260199498d09be3f6daf99245eb2cd2"
+  },
+  "utils/must.go": {
+    "mtime": 1786880912.3762894,
+    "seen": 1787896802.529842,
+    "ast_hash": "5de7b0b4c73540feb6aea70ad76933d1",
+    "semantic_hash": "5de7b0b4c73540feb6aea70ad76933d1"
+  },
+  "utils/slice.go": {
+    "mtime": 1789630971.035149,
+    "seen": 1789979783.0741923,
+    "ast_hash": "de89faa3abc3f9ac8ba17ec6ecf759a2",
+    "semantic_hash": ""
+  },
+  "utils/ternary.go": {
+    "mtime": 1786880877.034402,
+    "seen": 1787896802.5298443,
+    "ast_hash": "a154cf85ede4bde9871532cdf95275af",
+    "semantic_hash": "a154cf85ede4bde9871532cdf95275af"
+  },
+  ".opencode/opencode.json": {
+    "mtime": 1788154783.95602,
+    "seen": 1788350021.523052,
+    "ast_hash": "e5f74d14a81702b55bdf53b33ec991d7",
+    "semantic_hash": "e5f74d14a81702b55bdf53b33ec991d7"
+  },
+  ".opencode/plugins/graphify.js": {
+    "mtime": 1787897017.9460347,
+    "seen": 1788350021.5230584,
+    "ast_hash": "3ea725724bc8ebe483c9f13d6aa1124f",
+    "semantic_hash": "3ea725724bc8ebe483c9f13d6aa1124f"
+  },
+  ".opencode/skills/graphify/SKILL.md": {
+    "mtime": 1787897017.9454224,
+    "seen": 1787897504.3947082,
+    "ast_hash": "2e9858a59406dd2af786cf4cb74bc610",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/graphify/references/add-watch.md": {
+    "mtime": 1787896788.239245,
+    "seen": 1787897504.3947103,
+    "ast_hash": "d59d027fe449f06aa03905a01184e779",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/graphify/references/exports.md": {
+    "mtime": 1787896788.2393708,
+    "seen": 1787897504.394712,
+    "ast_hash": "9da2a2152e60a22f07f05fed5158f287",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/graphify/references/extraction-spec.md": {
+    "mtime": 1787896788.239512,
+    "seen": 1787897504.394714,
+    "ast_hash": "42fef56a01698118f7fd722acdadea34",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/graphify/references/github-and-merge.md": {
+    "mtime": 1787896788.2396417,
+    "seen": 1787897504.3947155,
+    "ast_hash": "cde13df085e4c492aeb7ba298a996d0d",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/graphify/references/hooks.md": {
+    "mtime": 1787896788.2397594,
+    "seen": 1787897504.3947175,
+    "ast_hash": "3f545db6ce646650bb9de588f5512a27",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/graphify/references/query.md": {
+    "mtime": 1787896788.2399294,
+    "seen": 1787897504.3947191,
+    "ast_hash": "3c46f8ad006874260614ed8657d02307",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/graphify/references/transcribe.md": {
+    "mtime": 1787896788.2400777,
+    "seen": 1787897504.3947208,
+    "ast_hash": "67b6a5fa6c0974e18f60db9f8932fbd8",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/graphify/references/update.md": {
+    "mtime": 1787896788.2402482,
+    "seen": 1787897504.3947225,
+    "ast_hash": "9378bd03d56baaf78bd738ab3848f142",
+    "semantic_hash": ""
+  },
+  "AGENTS.md": {
+    "mtime": 1788337974.451078,
+    "seen": 1789979783.0745506,
+    "ast_hash": "54195d86ce68f4797934f53595518402",
+    "semantic_hash": ""
+  },
+  "README.md": {
+    "mtime": 1789134842.5493016,
+    "seen": 1789979783.074552,
+    "ast_hash": "041f442df0961bbaae5aa3ae2a2d3ccd",
+    "semantic_hash": ""
+  },
+  "blogs/part1-generatetext.md": {
+    "mtime": 1786018014.886215,
+    "seen": 1787897504.3947277,
+    "ast_hash": "cbec9dba7701f644984f6d275c966fe5",
+    "semantic_hash": ""
+  },
+  "blogs/part2-streamtext.md": {
+    "mtime": 1786019215.1243043,
+    "seen": 1787897504.3947291,
+    "ast_hash": "549bfa53b07bb58675c35fd5c6ec5491",
+    "semantic_hash": ""
+  },
+  "blogs/part3-messages-and-testing.md": {
+    "mtime": 1789134842.5523016,
+    "seen": 1789979783.074557,
+    "ast_hash": "fffedba73992b474c8d4b89a8dc9a8fa",
+    "semantic_hash": ""
+  },
+  "fsm/after_text_generation_state.go": {
+    "mtime": 1789134842.5453017,
+    "seen": 1789979783.0740745,
+    "ast_hash": "9afe26115ca2249cf26e5296af8025ab",
+    "semantic_hash": ""
+  },
+  "fsm/context.go": {
+    "mtime": 1789134842.5523016,
+    "seen": 1789979783.0740764,
+    "ast_hash": "73a8aa7575d3c398dc3581e72dc41678",
+    "semantic_hash": ""
+  },
+  "fsm/end_state.go": {
+    "mtime": 1789134842.5453017,
+    "seen": 1789979783.0740778,
+    "ast_hash": "59dfe74e8d6fa4ad7dd3d30911789564",
+    "semantic_hash": ""
+  },
+  "fsm/machine.go": {
+    "mtime": 1789979472.5055876,
+    "seen": 1789979783.0740833,
+    "ast_hash": "1871d96b366e504654206300f90099cf",
+    "semantic_hash": ""
+  },
+  "fsm/predicate_state.go": {
+    "mtime": 1789134842.5443015,
+    "seen": 1789979783.0740845,
+    "ast_hash": "ba4033b9b1d3fa4e9adb5b5e04ad1840",
+    "semantic_hash": ""
+  },
+  "fsm/prepare_text_generation_state.go": {
+    "mtime": 1789134842.5543017,
+    "seen": 1789979783.0740876,
+    "ast_hash": "989da6bb4f0f2a3e9403cb3f5985066c",
+    "semantic_hash": ""
+  },
+  "fsm/start_state.go": {
+    "mtime": 1789134842.5533016,
+    "seen": 1789979783.0740905,
+    "ast_hash": "3cee8ec058205883572a0ce449e9514c",
+    "semantic_hash": ""
+  },
+  "fsm/step_end_state.go": {
+    "mtime": 1789134842.5533016,
+    "seen": 1789979783.0741065,
+    "ast_hash": "2cd13a9ca8f3d248959a1e136ecddc13",
+    "semantic_hash": ""
+  },
+  "fsm/step_start_state.go": {
+    "mtime": 1789134842.5513017,
+    "seen": 1789979783.0741086,
+    "ast_hash": "f15baf0c55fe4d580d0c7dae94c759dc",
+    "semantic_hash": ""
+  },
+  "fsm/text_generation_state.go": {
+    "mtime": 1789134842.5523016,
+    "seen": 1789979783.0741103,
+    "ast_hash": "a2a24bbb8899f6c4170c8cfa1c2726df",
+    "semantic_hash": ""
+  },
+  "fsm/text_stream_state.go": {
+    "mtime": 1789134842.5543017,
+    "seen": 1789979783.074112,
+    "ast_hash": "6b1d2e4900301157524e629b73a2e04f",
+    "semantic_hash": ""
+  },
+  "fsm/tool_resolve_state.go": {
+    "mtime": 1789134842.5513017,
+    "seen": 1789979783.0741136,
+    "ast_hash": "70d266c231d4bb248307658b0546dab6",
+    "semantic_hash": ""
+  },
+  "models/accumulator.go": {
+    "mtime": 1788194295.5029767,
+    "seen": 1788350021.523461,
+    "ast_hash": "4bedd0711eff661bb37de7ffa55e1043",
+    "semantic_hash": "4bedd0711eff661bb37de7ffa55e1043"
+  },
+  "models/emitter.go": {
+    "mtime": 1788198976.7991438,
+    "seen": 1788350021.5234628,
+    "ast_hash": "53d2158c51939cb121dbe4aec3bb6a32",
+    "semantic_hash": "53d2158c51939cb121dbe4aec3bb6a32"
+  },
+  "models/end_condition.go": {
+    "mtime": 1788195925.8611965,
+    "seen": 1788350021.5234637,
+    "ast_hash": "fa31e4a23a40158b82595d9538391bed",
+    "semantic_hash": "fa31e4a23a40158b82595d9538391bed"
+  },
+  "blogs/part4-tool-calling-fsm.md": {
+    "mtime": 1788079622.3214426,
+    "seen": 1788194305.7277157,
+    "ast_hash": "6eb9d119d546d6ec847f7047a37c3709",
+    "semantic_hash": ""
+  },
+  ".zed/tasks.json": {
+    "mtime": 1788199521.8578966,
+    "seen": 1788350021.523061,
+    "ast_hash": "1c46e1f59a379de7bca0895418ac3fb8",
+    "semantic_hash": "1c46e1f59a379de7bca0895418ac3fb8"
+  },
+  "endconditions/end_condition.go": {
+    "mtime": 1789134842.5473015,
+    "seen": 1789979783.0740623,
+    "ast_hash": "0b4043e2051dfe57784f98e5e8e09f8e",
+    "semantic_hash": ""
+  },
+  "endconditions/end_condition_test.go": {
+    "mtime": 1789134842.5513017,
+    "seen": 1789979783.0740638,
+    "ast_hash": "61d5851183fa8edbf51189855057d385",
+    "semantic_hash": ""
+  },
+  "fsm/error_state.go": {
+    "mtime": 1788348716.2127423,
+    "seen": 1788350021.523205,
+    "ast_hash": "a53c74a6e51ae3c0b8cac46f70a64079",
+    "semantic_hash": "a53c74a6e51ae3c0b8cac46f70a64079"
+  },
+  "fsm/finalized_state.go": {
+    "mtime": 1788195060.34876,
+    "seen": 1788350021.5232098,
+    "ast_hash": "cc8053728d2ae786209b3e17f315deab",
+    "semantic_hash": "cc8053728d2ae786209b3e17f315deab"
+  },
+  "fsm/prepare.go": {
+    "mtime": 1789134842.5553017,
+    "seen": 1789979783.0740862,
+    "ast_hash": "33c088ba4051e181ce0da5f31fc58c42",
+    "semantic_hash": ""
+  },
+  "fsm/retry_state.go": {
+    "mtime": 1788348670.3356695,
+    "seen": 1788350021.523217,
+    "ast_hash": "b4aa59ccbb86bc31eb4c593bc0fab65c",
+    "semantic_hash": "b4aa59ccbb86bc31eb4c593bc0fab65c"
+  },
+  "models/llm.go": {
+    "mtime": 1788199172.8481565,
+    "seen": 1788350021.5235066,
+    "ast_hash": "6f1de9e86b06e32395184aff711ec2e3",
+    "semantic_hash": "6f1de9e86b06e32395184aff711ec2e3"
+  },
+  "utils/error.go": {
+    "mtime": 1789654863.9968803,
+    "seen": 1789979783.0741897,
+    "ast_hash": "104cefadf50744ed4ddd119ca86ab21a",
+    "semantic_hash": "104cefadf50744ed4ddd119ca86ab21a"
+  },
+  ".opencode/skills/cc-skills-golang/.claude-plugin/plugin.json": {
+    "mtime": 1789135012.5520623,
+    "seen": 1789979783.0739467,
+    "ast_hash": "428af6ab58c15bedbc194c959dd61976",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/.codex-plugin/plugin.json": {
+    "mtime": 1789135012.5527697,
+    "seen": 1789979783.0739515,
+    "ast_hash": "c61ad2f7e7899556339379bc8b4cc862",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/.cursor-plugin/plugin.json": {
+    "mtime": 1789135012.5527697,
+    "seen": 1789979783.073954,
+    "ast_hash": "6054e90b939a6bddf4289c8ef3db0fb9",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/clawhub-publish.sh": {
+    "mtime": 1789135012.5590625,
+    "seen": 1789979783.0739577,
+    "ast_hash": "ca0cbcff295d97c965aefc6e3cd83390",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/gemini-extension.json": {
+    "mtime": 1789135012.5590625,
+    "seen": 1789979783.0739598,
+    "ast_hash": "93480a366540d48df8cc5e9a9c53f8ef",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-benchmark/evals/evals.json": {
+    "mtime": 1789135012.5600624,
+    "seen": 1789979783.0739696,
+    "ast_hash": "988a3e78666a24397ab150a6078d1327",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-cli/assets/examples/args.go": {
+    "mtime": 1789135012.5613475,
+    "seen": 1789979783.0739722,
+    "ast_hash": "18cb639e6f389b2dc74b865310888780",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-cli/assets/examples/cli_test.go": {
+    "mtime": 1789135012.5614617,
+    "seen": 1789979783.0739737,
+    "ast_hash": "9558c8488e1f41166dfe42a7b42b7f1b",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-cli/assets/examples/completion.go": {
+    "mtime": 1789135012.5614617,
+    "seen": 1789979783.0739758,
+    "ast_hash": "eb574251377f4731d1601aaf1b235065",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-cli/assets/examples/config.go": {
+    "mtime": 1789135012.5614617,
+    "seen": 1789979783.0739782,
+    "ast_hash": "eca751f28af1a2142285c41e26602435",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-cli/assets/examples/exit_codes.go": {
+    "mtime": 1789135012.5614617,
+    "seen": 1789979783.0739803,
+    "ast_hash": "695bc58b1f5c8c4433e69a9d29246080",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-cli/assets/examples/flags.go": {
+    "mtime": 1789135012.5614617,
+    "seen": 1789979783.0739825,
+    "ast_hash": "7eb3ef81465d22349c054e84bb1295d2",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-cli/assets/examples/main.go": {
+    "mtime": 1789135012.5614617,
+    "seen": 1789979783.0739849,
+    "ast_hash": "1219c85ed3f87c0c567c5923e2271650",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-cli/assets/examples/output.go": {
+    "mtime": 1789135012.5614617,
+    "seen": 1789979783.0739875,
+    "ast_hash": "1fcb21bb1da208217eeb5a26e23f9116",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-cli/assets/examples/root.go": {
+    "mtime": 1789135012.5614617,
+    "seen": 1789979783.0739903,
+    "ast_hash": "99ea98205c251f27b18922122ab4539d",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-cli/assets/examples/serve.go": {
+    "mtime": 1789135012.5614617,
+    "seen": 1789979783.0739923,
+    "ast_hash": "adcd2f4ebbca45395a68edeadb5c30a7",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-cli/assets/examples/signal.go": {
+    "mtime": 1789135012.5614617,
+    "seen": 1789979783.073994,
+    "ast_hash": "882bd2293a52f9c0a3f41776542ea59c",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-cli/assets/examples/version.go": {
+    "mtime": 1789135012.5614617,
+    "seen": 1789979783.0739958,
+    "ast_hash": "10c5a77ae03b60fe55afde9f360939bd",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-cli/evals/evals.json": {
+    "mtime": 1789135012.5620625,
+    "seen": 1789979783.073998,
+    "ast_hash": "dc68283865a82f903e30641d80f147cb",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-code-style/evals/evals.json": {
+    "mtime": 1789135012.5623627,
+    "seen": 1789979783.074,
+    "ast_hash": "bec0e12446e7af3cd05de9b6d42badd8",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-concurrency/evals/evals.json": {
+    "mtime": 1789135012.562792,
+    "seen": 1789979783.074002,
+    "ast_hash": "bf93fb6788aa348b5a4e99f2c50d67c0",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-context/evals/evals.json": {
+    "mtime": 1789135012.5633085,
+    "seen": 1789979783.0740037,
+    "ast_hash": "5a25ccf9525df57791ef78ced95e9294",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-continuous-integration/assets/renovate.json": {
+    "mtime": 1789135012.5640624,
+    "seen": 1789979783.0740054,
+    "ast_hash": "d2632a1a244983dee1e7316297150b41",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-continuous-integration/evals/evals.json": {
+    "mtime": 1789135012.5640624,
+    "seen": 1789979783.0740066,
+    "ast_hash": "5f9d2c232dbdb5a16acf45e7375b939a",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-data-structures/evals/evals.json": {
+    "mtime": 1789135012.5650625,
+    "seen": 1789979783.0740082,
+    "ast_hash": "6b13469e2c5740c11df70fcf96237c57",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-database/evals/evals.json": {
+    "mtime": 1789135012.5659087,
+    "seen": 1789979783.0740104,
+    "ast_hash": "d66a498f29b94def67d0d22a7da9f398",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-dependency-injection/evals/evals.json": {
+    "mtime": 1789135012.5665689,
+    "seen": 1789979783.0740118,
+    "ast_hash": "fc1e41dea40c87409be5aef714969f40",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-dependency-management/evals/evals.json": {
+    "mtime": 1789135012.5670624,
+    "seen": 1789979783.0740135,
+    "ast_hash": "1cfa4b4946f8ed6a1ba5230caf580002",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-design-patterns/evals/evals.json": {
+    "mtime": 1789135012.5678408,
+    "seen": 1789979783.0740151,
+    "ast_hash": "5ec4a7bd791c4d8dc81fcbca349cfdd7",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-documentation/evals/evals.json": {
+    "mtime": 1789135012.5687234,
+    "seen": 1789979783.0740168,
+    "ast_hash": "4d218f8af7587a32945cb1e15abb6b8b",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-error-handling/evals/evals.json": {
+    "mtime": 1789135012.5696099,
+    "seen": 1789979783.0740185,
+    "ast_hash": "79202740123a6b1c57f7342eca180cdb",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-google-wire/evals/evals.json": {
+    "mtime": 1789135012.5700624,
+    "seen": 1789979783.07402,
+    "ast_hash": "e06a93c6b6ac5ed126d1fd65e125768b",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-graphql/evals/evals.json": {
+    "mtime": 1789135012.5713942,
+    "seen": 1789979783.0740213,
+    "ast_hash": "6b53a4f7c9aa74ff99fe7c4fec508c06",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-grpc/evals/evals.json": {
+    "mtime": 1789135012.5719616,
+    "seen": 1789979783.074023,
+    "ast_hash": "a0521e54f7b81646ec66249bc582ea85",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-lint/evals/evals.json": {
+    "mtime": 1789135012.5730624,
+    "seen": 1789979783.0740244,
+    "ast_hash": "22992a37cb80efdf4b0403776773928c",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-modernize/evals/evals.json": {
+    "mtime": 1789135012.5737484,
+    "seen": 1789979783.0740256,
+    "ast_hash": "d98c01bc42fdc87692fc83109df509ca",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-naming/evals/evals.json": {
+    "mtime": 1789135012.5745609,
+    "seen": 1789979783.074027,
+    "ast_hash": "993cb0408394190f71790f23be9f055c",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-observability/evals/evals.json": {
+    "mtime": 1789135012.5754492,
+    "seen": 1789979783.0740283,
+    "ast_hash": "e6735d14ef31452515e188107174168b",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-performance/evals/evals.json": {
+    "mtime": 1789135012.576551,
+    "seen": 1789979783.0740297,
+    "ast_hash": "4f06df87f90aa0e4f6deaa318b47689f",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-popular-libraries/evals/evals.json": {
+    "mtime": 1789135012.5780945,
+    "seen": 1789979783.0740309,
+    "ast_hash": "f61e1624d93d4bf81ae2627ede8b0455",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-project-layout/evals/evals.json": {
+    "mtime": 1789135012.5787416,
+    "seen": 1789979783.074032,
+    "ast_hash": "ddc63f786148be83a6fd6b3f0418c008",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-safety/evals/evals.json": {
+    "mtime": 1789135012.580084,
+    "seen": 1789979783.0740333,
+    "ast_hash": "8f0fa38ec3280a80ea3f6c531e3b8d8a",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-samber-do/evals/evals.json": {
+    "mtime": 1789135012.5808086,
+    "seen": 1789979783.0740347,
+    "ast_hash": "67b70653429f3c1469e8351a0c6743e7",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-samber-hot/evals/evals.json": {
+    "mtime": 1789135012.5813007,
+    "seen": 1789979783.074036,
+    "ast_hash": "2b606c11e3c681dda04139e3d69eeef7",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-samber-lo/evals/evals.json": {
+    "mtime": 1789135012.5818892,
+    "seen": 1789979783.0740376,
+    "ast_hash": "195c8372a14a9750453d53e44748e84b",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-samber-mo/evals/evals.json": {
+    "mtime": 1789135012.5824752,
+    "seen": 1789979783.0740385,
+    "ast_hash": "48b618cc4971884864a602434a9f4246",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-samber-oops/evals/evals.json": {
+    "mtime": 1789135012.583253,
+    "seen": 1789979783.0740404,
+    "ast_hash": "1a86a25bf9bbf1341f5a1abe92f571ca",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-samber-ro/evals/evals.json": {
+    "mtime": 1789135012.5836508,
+    "seen": 1789979783.0740416,
+    "ast_hash": "a4c858763f215a6a364f3eff65923804",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-samber-slog/evals/evals.json": {
+    "mtime": 1789135012.5843148,
+    "seen": 1789979783.0740428,
+    "ast_hash": "56e3bc739116731c24fc90b3bc66cdda",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-security/evals/evals.json": {
+    "mtime": 1789135012.5850625,
+    "seen": 1789979783.074044,
+    "ast_hash": "5e46a528dc9c42d295921a03f43b1390",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-spf13-cobra/evals/evals.json": {
+    "mtime": 1789135012.5863683,
+    "seen": 1789979783.0740454,
+    "ast_hash": "3afd973f7d9c53df26a9762fc3ba1143",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-spf13-viper/evals/evals.json": {
+    "mtime": 1789135012.5869687,
+    "seen": 1789979783.0740464,
+    "ast_hash": "b7437a77ea9bdeb87da70daacdbeff62",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-stay-updated/evals/evals.json": {
+    "mtime": 1789135012.5876129,
+    "seen": 1789979783.0740478,
+    "ast_hash": "a87a57ded329e975255813380e34a86e",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-stretchr-testify/evals/evals.json": {
+    "mtime": 1789135012.5878627,
+    "seen": 1789979783.074049,
+    "ast_hash": "12738dbeb13b86d3ffc616a51e0e6026",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-structs-interfaces/evals/evals.json": {
+    "mtime": 1789135012.5882459,
+    "seen": 1789979783.0740502,
+    "ast_hash": "ee508272b159825f4afa4c1641269a01",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-swagger/evals/evals.json": {
+    "mtime": 1789135012.5886626,
+    "seen": 1789979783.0740516,
+    "ast_hash": "2dc1527ca08010d3ede942cae4706403",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-testing/evals/evals.json": {
+    "mtime": 1789135012.5890841,
+    "seen": 1789979783.074053,
+    "ast_hash": "60a821bbfd20c6fe8bba996b8b540dd4",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-troubleshooting/evals/evals.json": {
+    "mtime": 1789135012.5898106,
+    "seen": 1789979783.0740547,
+    "ast_hash": "3c9417a1bb938c12375db6db3f5fa35c",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-uber-dig/evals/evals.json": {
+    "mtime": 1789135012.5910723,
+    "seen": 1789979783.074056,
+    "ast_hash": "d56c48d66e618e9096d7ccbf4e3f9bb4",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-uber-fx/evals/evals.json": {
+    "mtime": 1789135012.591668,
+    "seen": 1789979783.074057,
+    "ast_hash": "d2a3213798f9adf670b31b0f44fea94b",
+    "semantic_hash": ""
+  },
+  "graph/checkpoint.go": {
+    "mtime": 1789901587.2659652,
+    "seen": 1789979783.0741193,
+    "ast_hash": "cb9ee585da9063ce2542215c67c42443",
+    "semantic_hash": ""
+  },
+  "graph/edge.go": {
+    "mtime": 1789904712.0351074,
+    "seen": 1789979783.074121,
+    "ast_hash": "4a90122026080c1e504aea4a0effe3e2",
+    "semantic_hash": ""
+  },
+  "graph/error.go": {
+    "mtime": 1789979754.8333476,
+    "seen": 1789979783.0741222,
+    "ast_hash": "0acdaeb29279495b3a79ffca67618b29",
+    "semantic_hash": ""
+  },
+  "graph/graph.go": {
+    "mtime": 1789979727.4708436,
+    "seen": 1789979783.0741234,
+    "ast_hash": "af7bafbb604bf1b0d74eb36aaff280fb",
+    "semantic_hash": ""
+  },
+  "graph/graph_interrupt_test.go": {
+    "mtime": 1789979761.0222402,
+    "seen": 1789979783.0741246,
+    "ast_hash": "6128512ab18fa983aaed210ec066e37e",
+    "semantic_hash": ""
+  },
+  "graph/graph_test.go": {
+    "mtime": 1789906564.916992,
+    "seen": 1789979783.0741255,
+    "ast_hash": "9633a74f2f2e84e47b47558764f1a450",
+    "semantic_hash": ""
+  },
+  "graph/inmemory.go": {
+    "mtime": 1789901644.9538767,
+    "seen": 1789979783.074127,
+    "ast_hash": "001a81f2d46c2b3c94a00376d34d6689",
+    "semantic_hash": ""
+  },
+  "graph/interrupt.go": {
+    "mtime": 1789905600.8058176,
+    "seen": 1789979783.0741284,
+    "ast_hash": "d1acae5d7b4c9f5d6abb26379dfe2625",
+    "semantic_hash": ""
+  },
+  "graph/invoke_fsm.go": {
+    "mtime": 1789979746.9354868,
+    "seen": 1789979783.0741296,
+    "ast_hash": "7ea01323c815abc4cecc124f7f11224e",
+    "semantic_hash": ""
+  },
+  "graph/node.go": {
+    "mtime": 1789905833.119768,
+    "seen": 1789979783.0741308,
+    "ast_hash": "fe78780b418f271594e624ab10919b14",
+    "semantic_hash": ""
+  },
+  "graph/nodes.go": {
+    "mtime": 1789905773.7877803,
+    "seen": 1789979783.074132,
+    "ast_hash": "05541665a82bf01337ce49a12ab95d0c",
+    "semantic_hash": ""
+  },
+  "graph/reducer.go": {
+    "mtime": 1789656956.0852835,
+    "seen": 1789979783.074133,
+    "ast_hash": "f90ec7a1489ad726cf5a6ac6cabe5138",
+    "semantic_hash": ""
+  },
+  "graph/serializable.go": {
+    "mtime": 1789902737.9807591,
+    "seen": 1789979783.074134,
+    "ast_hash": "9952b1c3df8bd198e52edc6265252028",
+    "semantic_hash": ""
+  },
+  "graph/step.go": {
+    "mtime": 1789901109.7446988,
+    "seen": 1789979783.0741355,
+    "ast_hash": "6714c4673859d80955dd02c60566b49e",
+    "semantic_hash": ""
+  },
+  "visualizer/mermaid.go": {
+    "mtime": 1789745412.6623669,
+    "seen": 1789979783.0741954,
+    "ast_hash": "7dc0823cb38cf84514c9511f2e59b644",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/blog/SKILL.md": {
+    "mtime": 1788337864.632532,
+    "seen": 1789979783.074197,
+    "ast_hash": "cc75658e1a0dd2ea3d382f20aa6cc5f5",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/.github/FUNDING.yml": {
+    "mtime": 1789135012.5527697,
+    "seen": 1789979783.0741982,
+    "ast_hash": "e2f647c00711e887781db44b879e9d4a",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/.github/dependabot.yml": {
+    "mtime": 1789135012.5530624,
+    "seen": 1789979783.0741994,
+    "ast_hash": "4bbce65f6c407f9f2f642c355ad182dd",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/.github/workflows/dependabot-automerge.yaml": {
+    "mtime": 1789135012.5530624,
+    "seen": 1789979783.0742009,
+    "ast_hash": "0a21c059a423f882e3a4f45bc516b79e",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/.github/workflows/lint.yml": {
+    "mtime": 1789135012.5533113,
+    "seen": 1789979783.074202,
+    "ast_hash": "4f77fb3583db114e29356b088d4be265",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/.github/workflows/publish-clawhub.yml": {
+    "mtime": 1789135012.5533113,
+    "seen": 1789979783.0742035,
+    "ast_hash": "f6b671b022f3604b7587a615dab71d58",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/.github/workflows/security-scan.yml": {
+    "mtime": 1789135012.5533113,
+    "seen": 1789979783.074205,
+    "ast_hash": "a82b388b05fb7279424556fd06b0d61f",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/.github/workflows/update-library-skill.yml": {
+    "mtime": 1789135012.5533113,
+    "seen": 1789979783.0742064,
+    "ast_hash": "5324c46f2cfd36f644fc4f91573cdb65",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/.github/workflows/update-modernize-skill.yml": {
+    "mtime": 1789135012.5533113,
+    "seen": 1789979783.0742078,
+    "ast_hash": "def3a1bcd4cadeadf627047361978014",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/.github/workflows/validate.yml": {
+    "mtime": 1789135012.5533113,
+    "seen": 1789979783.074209,
+    "ast_hash": "6761e43f580bfb15f720ce9ab5e83f41",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/CLAUDE.md": {
+    "mtime": 1789135012.5540624,
+    "seen": 1789979783.0742104,
+    "ast_hash": "1ee68de055e03fd76a664de05943f26d",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/EVALUATIONS.md": {
+    "mtime": 1789135012.5580623,
+    "seen": 1789979783.0742116,
+    "ast_hash": "a15656d1e1dbf130fb85763a8d5fe5e8",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/GOLANG-AI-DRIVEN-REVIEW.md": {
+    "mtime": 1789135012.5580623,
+    "seen": 1789979783.0742126,
+    "ast_hash": "41a3ff7f777b3586385b7ae8121806a1",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/README.md": {
+    "mtime": 1789135012.5580623,
+    "seen": 1789979783.074214,
+    "ast_hash": "56c60c54acc694d9e127305d5d71cc89",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-benchmark/SKILL.md": {
+    "mtime": 1789135012.559429,
+    "seen": 1789979783.074215,
+    "ast_hash": "f83b6f6a7a4b2e7223f2fac90f38eb49",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-benchmark/references/benchstat.md": {
+    "mtime": 1789135012.5600624,
+    "seen": 1789979783.0742183,
+    "ast_hash": "0f895479688c0d05ac7e734b65eac2e5",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-benchmark/references/ci-regression.md": {
+    "mtime": 1789135012.5604613,
+    "seen": 1789979783.0742195,
+    "ast_hash": "cd59d8bd4192e534071abf97de69c144",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-benchmark/references/compiler-analysis.md": {
+    "mtime": 1789135012.5604613,
+    "seen": 1789979783.074221,
+    "ast_hash": "2e390fd7f4b873701708a9cc8da66402",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-benchmark/references/investigation-session.md": {
+    "mtime": 1789135012.5604613,
+    "seen": 1789979783.0742218,
+    "ast_hash": "4db4bf7d7507b456f270c70d53f8a293",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-benchmark/references/pprof.md": {
+    "mtime": 1789135012.5604613,
+    "seen": 1789979783.0742228,
+    "ast_hash": "f5166e1c2a0d3a6aed86586b87c61d29",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-benchmark/references/prometheus-go-metrics.md": {
+    "mtime": 1789135012.5604613,
+    "seen": 1789979783.0742238,
+    "ast_hash": "7d2a54116a0d292da3580cb605d60a44",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-benchmark/references/tools.md": {
+    "mtime": 1789135012.5604613,
+    "seen": 1789979783.0742252,
+    "ast_hash": "cfcd78339cff6edb97682fa7aee76ca8",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-benchmark/references/trace.md": {
+    "mtime": 1789135012.5610623,
+    "seen": 1789979783.0742261,
+    "ast_hash": "1296f7d02c51d4a3158a5e24a15dae34",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-cli/SKILL.md": {
+    "mtime": 1789135012.5610623,
+    "seen": 1789979783.0742278,
+    "ast_hash": "19aab39be71551aba769a1422e174659",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-code-style/SKILL.md": {
+    "mtime": 1789135012.5620625,
+    "seen": 1789979783.0742288,
+    "ast_hash": "e80cf43625c373af25ae88293b143f83",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-code-style/references/details.md": {
+    "mtime": 1789135012.5623627,
+    "seen": 1789979783.0742297,
+    "ast_hash": "19891e396a986f1b24bf34b7a2854fcb",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-concurrency/SKILL.md": {
+    "mtime": 1789135012.5623627,
+    "seen": 1789979783.0742316,
+    "ast_hash": "a199f74d5d5a4768125233584c3395fe",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-concurrency/references/channels-and-select.md": {
+    "mtime": 1789135012.562792,
+    "seen": 1789979783.0742326,
+    "ast_hash": "916529b074d9ec5f5c3d14826849fb84",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-concurrency/references/pipelines.md": {
+    "mtime": 1789135012.5630116,
+    "seen": 1789979783.074234,
+    "ast_hash": "03d7eb2352ed546a94d3723e6437f3cc",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-concurrency/references/sync-primitives.md": {
+    "mtime": 1789135012.5630624,
+    "seen": 1789979783.0742354,
+    "ast_hash": "7b61b59125ab4cc55cc4cbf45f4e6ba5",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-context/SKILL.md": {
+    "mtime": 1789135012.5630624,
+    "seen": 1789979783.0742364,
+    "ast_hash": "593846967b1c6da6e288986c174e58d2",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-context/references/cancellation.md": {
+    "mtime": 1789135012.5633085,
+    "seen": 1789979783.0742383,
+    "ast_hash": "8cedfb0630418824e6458900cce26c9f",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-context/references/http-services.md": {
+    "mtime": 1789135012.563526,
+    "seen": 1789979783.0742393,
+    "ast_hash": "ea11f852f9b8c41f427e7baae246302f",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-context/references/values-tracing.md": {
+    "mtime": 1789135012.563526,
+    "seen": 1789979783.0742404,
+    "ast_hash": "27c37bd207fb0d5619417bf713aebeb6",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-continuous-integration/SKILL.md": {
+    "mtime": 1789135012.563526,
+    "seen": 1789979783.0742419,
+    "ast_hash": "3f8ab99be6a7edd4ab1cc539ebc4a6b0",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-continuous-integration/assets/claude-code-review.yml": {
+    "mtime": 1789135012.5638506,
+    "seen": 1789979783.0742433,
+    "ast_hash": "f6fac44b0f01b3b6102d0469decfe529",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-continuous-integration/assets/codecov.yml": {
+    "mtime": 1789135012.5639791,
+    "seen": 1789979783.0742443,
+    "ast_hash": "f7ad422aacff20727d1d80f82ee3033d",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-continuous-integration/assets/codeql-config.yml": {
+    "mtime": 1789135012.5639791,
+    "seen": 1789979783.0742457,
+    "ast_hash": "efe06101512801f950b097345080eef0",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-continuous-integration/assets/copilot-review-instructions.md": {
+    "mtime": 1789135012.5639791,
+    "seen": 1789979783.0742474,
+    "ast_hash": "75250a865f814ed27f27af969ca9ee0d",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-continuous-integration/assets/dependabot-auto-merge.yml": {
+    "mtime": 1789135012.5640624,
+    "seen": 1789979783.0742488,
+    "ast_hash": "cf299da6400a45d5fbbce932f02b0221",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-continuous-integration/assets/dependabot.yml": {
+    "mtime": 1789135012.5640624,
+    "seen": 1789979783.0742497,
+    "ast_hash": "cad2a064d9f68a6eb9e3acbf164458ff",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-continuous-integration/assets/docker.yml": {
+    "mtime": 1789135012.5640624,
+    "seen": 1789979783.074251,
+    "ast_hash": "0d882848a6b0a879a17e091d52edeea6",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-continuous-integration/assets/goreleaser-cli.yml": {
+    "mtime": 1789135012.5640624,
+    "seen": 1789979783.0742524,
+    "ast_hash": "027ef3d091ef06ee788ee47b5a0f95d5",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-continuous-integration/assets/goreleaser-lib.yml": {
+    "mtime": 1789135012.5640624,
+    "seen": 1789979783.0742536,
+    "ast_hash": "76489fcea2edace8f0562a4ecd31132a",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-continuous-integration/assets/goreleaser-monorepo.yml": {
+    "mtime": 1789135012.5640624,
+    "seen": 1789979783.0742548,
+    "ast_hash": "de2d7cf63818e2a2b92f0071c4a1429d",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-continuous-integration/assets/integration.yml": {
+    "mtime": 1789135012.5640624,
+    "seen": 1789979783.0742562,
+    "ast_hash": "7ba26ea9d5a2f7e499786167cb67ec2a",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-continuous-integration/assets/lint.yml": {
+    "mtime": 1789135012.5640624,
+    "seen": 1789979783.0742574,
+    "ast_hash": "b9a47571b64e96d5f8aed185ad05395e",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-continuous-integration/assets/release.yml": {
+    "mtime": 1789135012.5640624,
+    "seen": 1789979783.074259,
+    "ast_hash": "fcf32090c43cc437b3ae5e1dfe00803a",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-continuous-integration/assets/security.yml": {
+    "mtime": 1789135012.5640624,
+    "seen": 1789979783.07426,
+    "ast_hash": "8bd395216a03c56fb9fcb8731f6459ce",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-continuous-integration/assets/test.yml": {
+    "mtime": 1789135012.5640624,
+    "seen": 1789979783.0742617,
+    "ast_hash": "65bde059d473e25dc421c1dfb555f0e7",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-continuous-integration/references/repo-security.md": {
+    "mtime": 1789135012.5640624,
+    "seen": 1789979783.074263,
+    "ast_hash": "31925971bb87b7696f260a951b09c20e",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-data-structures/SKILL.md": {
+    "mtime": 1789135012.5640624,
+    "seen": 1789979783.0742643,
+    "ast_hash": "abb2c537c1ba5f8a523de61dd708c044",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-data-structures/references/containers.md": {
+    "mtime": 1789135012.5650625,
+    "seen": 1789979783.0742657,
+    "ast_hash": "935a629efbb927651f13944816ad55d0",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-data-structures/references/generics.md": {
+    "mtime": 1789135012.5653825,
+    "seen": 1789979783.0742674,
+    "ast_hash": "d034f438791a3d223256d3b591160a7c",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-data-structures/references/map-internals.md": {
+    "mtime": 1789135012.5653825,
+    "seen": 1789979783.0742688,
+    "ast_hash": "e2340b8d36cbbf2ba06a07ebbccbe1af",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-data-structures/references/pointers.md": {
+    "mtime": 1789135012.5653825,
+    "seen": 1789979783.0742705,
+    "ast_hash": "1ff3f1adf40d6e0a306dd529d1f54b5c",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-data-structures/references/slice-internals.md": {
+    "mtime": 1789135012.5653825,
+    "seen": 1789979783.0742717,
+    "ast_hash": "447e92a25b7dde46af2fb729259e4b56",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-database/SKILL.md": {
+    "mtime": 1789135012.5653825,
+    "seen": 1789979783.074273,
+    "ast_hash": "778567fd2e25edd230b7144dcb94643d",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-database/references/performance.md": {
+    "mtime": 1789135012.5660625,
+    "seen": 1789979783.0742743,
+    "ast_hash": "b4a6e6df9baa2815adccd52317c6f42b",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-database/references/scanning.md": {
+    "mtime": 1789135012.5662158,
+    "seen": 1789979783.0742757,
+    "ast_hash": "d9c2720b1106b2830ac6e65ad585f078",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-database/references/testing.md": {
+    "mtime": 1789135012.5662158,
+    "seen": 1789979783.074277,
+    "ast_hash": "ea50ce491b31b23bd05839b33527e823",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-database/references/transactions.md": {
+    "mtime": 1789135012.5662158,
+    "seen": 1789979783.074278,
+    "ast_hash": "9f24711d2aee9ecaa889010f8df3ebb3",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-dependency-injection/SKILL.md": {
+    "mtime": 1789135012.5662158,
+    "seen": 1789979783.074279,
+    "ast_hash": "b92d10d8714ca4684695d689321dc07d",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-dependency-injection/references/google-wire.md": {
+    "mtime": 1789135012.5665689,
+    "seen": 1789979783.0742807,
+    "ast_hash": "f7028b1ab3066a3180838ea08b790434",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-dependency-injection/references/manual-di.md": {
+    "mtime": 1789135012.5667696,
+    "seen": 1789979783.074282,
+    "ast_hash": "40da655f68bdd6c8dbac3a9fe6a853ec",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-dependency-injection/references/samber-do.md": {
+    "mtime": 1789135012.5667696,
+    "seen": 1789979783.0742836,
+    "ast_hash": "c3c63e139ef2ba27fdb201581f90bc0f",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-dependency-injection/references/uber-dig-fx.md": {
+    "mtime": 1789135012.5667696,
+    "seen": 1789979783.0742848,
+    "ast_hash": "e438b8a43db56523ac316efc5643e745",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-dependency-management/SKILL.md": {
+    "mtime": 1789135012.5667696,
+    "seen": 1789979783.074286,
+    "ast_hash": "3c26a9ebd28a59629f650c97d26ce512",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-dependency-management/references/auditing.md": {
+    "mtime": 1789135012.5670624,
+    "seen": 1789979783.0742877,
+    "ast_hash": "7c92c9944d569fd24241dee7d338c83b",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-dependency-management/references/automated-updates.md": {
+    "mtime": 1789135012.5673492,
+    "seen": 1789979783.0742888,
+    "ast_hash": "635fbeaec2de11840e784f3d1ccdc377",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-dependency-management/references/conflicts.md": {
+    "mtime": 1789135012.5673492,
+    "seen": 1789979783.0742903,
+    "ast_hash": "e446cd05345614f206739fee89b2585e",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-dependency-management/references/versioning.md": {
+    "mtime": 1789135012.5673492,
+    "seen": 1789979783.074292,
+    "ast_hash": "6d00f3a628bea038df66b0b39f9822ac",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-dependency-management/references/visualization.md": {
+    "mtime": 1789135012.5673492,
+    "seen": 1789979783.074293,
+    "ast_hash": "3b70825fee2b2f79c56abb6f2cad5f01",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-dependency-management/references/workspaces.md": {
+    "mtime": 1789135012.5673492,
+    "seen": 1789979783.0742943,
+    "ast_hash": "a520529c6602caed9032f3f065fa2807",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-design-patterns/SKILL.md": {
+    "mtime": 1789135012.5673492,
+    "seen": 1789979783.0742958,
+    "ast_hash": "4fb75a611e902b5ba09f6db7965656b9",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-design-patterns/references/architecture.md": {
+    "mtime": 1789135012.5678408,
+    "seen": 1789979783.0742972,
+    "ast_hash": "7d89b7a02d25880d999d7df705520683",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-design-patterns/references/clean-architecture.md": {
+    "mtime": 1789135012.5680883,
+    "seen": 1789979783.0742984,
+    "ast_hash": "e58689706320a2051efcbd82a89879e4",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-design-patterns/references/data-handling.md": {
+    "mtime": 1789135012.5680883,
+    "seen": 1789979783.0742996,
+    "ast_hash": "5f5eca75bdb32a847fe5ed6e6d70e448",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-design-patterns/references/ddd.md": {
+    "mtime": 1789135012.5680883,
+    "seen": 1789979783.074301,
+    "ast_hash": "8455d1a33cc27a27da336f2aba1ad96a",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-design-patterns/references/hexagonal-architecture.md": {
+    "mtime": 1789135012.5680883,
+    "seen": 1789979783.0743024,
+    "ast_hash": "533e65263a3213d5555483c323bac13d",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-design-patterns/references/resource-management.md": {
+    "mtime": 1789135012.5680883,
+    "seen": 1789979783.074304,
+    "ast_hash": "a8b81edab6ab865a491ee3f09f2a13fb",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-documentation/SKILL.md": {
+    "mtime": 1789135012.5680883,
+    "seen": 1789979783.0743053,
+    "ast_hash": "c891f01663afe6bda1e09539f34be83c",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-documentation/assets/templates/CHANGELOG.md": {
+    "mtime": 1789135012.5685947,
+    "seen": 1789979783.0743062,
+    "ast_hash": "792a68d643114068985d0a35429bb999",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-documentation/assets/templates/CONTRIBUTING.md": {
+    "mtime": 1789135012.5687234,
+    "seen": 1789979783.074308,
+    "ast_hash": "f58e3605576ca6f8aa81378cf1f76ce9",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-documentation/assets/templates/README.md": {
+    "mtime": 1789135012.5687234,
+    "seen": 1789979783.074309,
+    "ast_hash": "634056536054fbcd67a58a52c4400dd4",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-documentation/assets/templates/llms.txt": {
+    "mtime": 1789135012.5687234,
+    "seen": 1789979783.07431,
+    "ast_hash": "4f083b4baf9174fd44acd33437a32115",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-documentation/references/application.md": {
+    "mtime": 1789135012.5690625,
+    "seen": 1789979783.0743115,
+    "ast_hash": "a22b90ea593a89fd80d892a65a303e83",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-documentation/references/code-comments.md": {
+    "mtime": 1789135012.5692286,
+    "seen": 1789979783.0743127,
+    "ast_hash": "93e445c9eaae820dde0fbca7f987cb7f",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-documentation/references/library.md": {
+    "mtime": 1789135012.5692286,
+    "seen": 1789979783.0743136,
+    "ast_hash": "27dba2b75168f14042c672f0c355e0b7",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-documentation/references/project-docs.md": {
+    "mtime": 1789135012.5692286,
+    "seen": 1789979783.0743148,
+    "ast_hash": "b0b16cd183381d630b6e61cb68575f2f",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-error-handling/SKILL.md": {
+    "mtime": 1789135012.5692286,
+    "seen": 1789979783.0743158,
+    "ast_hash": "97e59e6b28dd9f928caec283bbf3aa8e",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-error-handling/references/error-creation.md": {
+    "mtime": 1789135012.5696099,
+    "seen": 1789979783.0743167,
+    "ast_hash": "ec043e6c7e696c9c363c939d39c171f1",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-error-handling/references/error-handling.md": {
+    "mtime": 1789135012.5698924,
+    "seen": 1789979783.0743182,
+    "ast_hash": "59f523c8671a7bdac2836687bf461594",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-error-handling/references/error-wrapping.md": {
+    "mtime": 1789135012.5698924,
+    "seen": 1789979783.0743198,
+    "ast_hash": "d91a56d31efca8e6b51535c7dd0bc740",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-google-wire/SKILL.md": {
+    "mtime": 1789135012.5700624,
+    "seen": 1789979783.0743215,
+    "ast_hash": "d979af3f47729ba371bde9034bd7d9c1",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-google-wire/references/advanced.md": {
+    "mtime": 1789135012.5700624,
+    "seen": 1789979783.0743232,
+    "ast_hash": "c8af09669db065b5acdedaba2b51f9ca",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-google-wire/references/recipes.md": {
+    "mtime": 1789135012.5704548,
+    "seen": 1789979783.0743241,
+    "ast_hash": "0f257432427f80bd3c626f0d478bdc14",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-google-wire/references/testing.md": {
+    "mtime": 1789135012.5704548,
+    "seen": 1789979783.0743256,
+    "ast_hash": "c3f48c2277250696defeef8fd831363d",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-gopls/SKILL.md": {
+    "mtime": 1789135012.5704548,
+    "seen": 1789979783.0743268,
+    "ast_hash": "04f4705ed301326065f42b6a2b2bd157",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-gopls/references/cli.md": {
+    "mtime": 1789135012.5707595,
+    "seen": 1789979783.074328,
+    "ast_hash": "26ff21dbbc8b058c46b731b57eaf5c56",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-gopls/references/features.md": {
+    "mtime": 1789135012.5708742,
+    "seen": 1789979783.0743291,
+    "ast_hash": "daf2551a06dae60f56e60dd8603a9fea",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-gopls/references/matrix.md": {
+    "mtime": 1789135012.5708742,
+    "seen": 1789979783.0743303,
+    "ast_hash": "7ec6afcd04cb3c2996c460aefda00b86",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-gopls/references/mcp.md": {
+    "mtime": 1789135012.5708742,
+    "seen": 1789979783.0743313,
+    "ast_hash": "bf9a6bafebcb5463eb7654d9dffbc411",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-gopls/references/settings.md": {
+    "mtime": 1789135012.5710626,
+    "seen": 1789979783.0743327,
+    "ast_hash": "9829034b4c2c22819deefc29c3fdfd17",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-graphql/SKILL.md": {
+    "mtime": 1789135012.5710626,
+    "seen": 1789979783.074334,
+    "ast_hash": "5c6a190a3074ab6a6816641d7c71e84f",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-graphql/references/gqlgen.md": {
+    "mtime": 1789135012.5713942,
+    "seen": 1789979783.0743349,
+    "ast_hash": "edc8f6cae03c2da83af27410f1a285a1",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-graphql/references/graphql-go.md": {
+    "mtime": 1789135012.5716777,
+    "seen": 1789979783.0743363,
+    "ast_hash": "cb1c4ba91b8fd0d89b64e5678cdd7d9d",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-graphql/references/testing.md": {
+    "mtime": 1789135012.5716777,
+    "seen": 1789979783.0743372,
+    "ast_hash": "6c48ef45c998dccd930fc4a3c1f009d4",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-grpc/SKILL.md": {
+    "mtime": 1789135012.5716777,
+    "seen": 1789979783.0743387,
+    "ast_hash": "132e20e93e6e6d3dc3840ffae6336cc2",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-grpc/references/protoc-reference.md": {
+    "mtime": 1789135012.5720625,
+    "seen": 1789979783.0743396,
+    "ast_hash": "bc54fa9d7f4a2c00bba458214e58e2d6",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-grpc/references/testing.md": {
+    "mtime": 1789135012.5721924,
+    "seen": 1789979783.0743408,
+    "ast_hash": "0390c96bc51bef5bd96eff8cd31a076b",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-how-to/SKILL.md": {
+    "mtime": 1789135012.5721924,
+    "seen": 1789979783.0743423,
+    "ast_hash": "6639cd8cd775b979e30bfcfe472ca20d",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-how-to/references/by-category.md": {
+    "mtime": 1789135012.5724318,
+    "seen": 1789979783.0743437,
+    "ast_hash": "37b9affc95f9a47bf6afce643fcc3fcb",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-how-to/references/disambiguation.md": {
+    "mtime": 1789135012.5727,
+    "seen": 1789979783.0743446,
+    "ast_hash": "6b1ce8a495e26490a1c06085805311ab",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-how-to/references/project-config.md": {
+    "mtime": 1789135012.5727,
+    "seen": 1789979783.0743458,
+    "ast_hash": "b8b21514f3a16eb3d793d3c8a7ea1119",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-lint/SKILL.md": {
+    "mtime": 1789135012.5727,
+    "seen": 1789979783.074347,
+    "ast_hash": "5026849bba521505c3d7b53df7905fc9",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-lint/assets/.golangci.yml": {
+    "mtime": 1789135012.5730624,
+    "seen": 1789979783.074348,
+    "ast_hash": "2dfbe25b434baede6e18ca59afd3a6ca",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-lint/references/linter-reference.md": {
+    "mtime": 1789135012.5730624,
+    "seen": 1789979783.0743494,
+    "ast_hash": "74b54de21353131beab35f3ef4758c18",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-lint/references/nolint-directives.md": {
+    "mtime": 1789135012.573511,
+    "seen": 1789979783.0743504,
+    "ast_hash": "98126068a9ca13f0e1ea17a4dc1d9992",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-modernize/SKILL.md": {
+    "mtime": 1789135012.573511,
+    "seen": 1789979783.0743513,
+    "ast_hash": "3a23bd77a51c416495a7e88951598edd",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-modernize/references/tooling.md": {
+    "mtime": 1789135012.5740626,
+    "seen": 1789979783.0743527,
+    "ast_hash": "5db7394f9eaf941d869f92250b1f333b",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-modernize/references/versions.md": {
+    "mtime": 1789135012.5740626,
+    "seen": 1789979783.0743537,
+    "ast_hash": "605a7f4877dce6c805776c110bc96d93",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-naming/SKILL.md": {
+    "mtime": 1789135012.5740626,
+    "seen": 1789979783.074355,
+    "ast_hash": "e51c3b1e0933bea2077ec772a485803a",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-naming/references/functions-methods.md": {
+    "mtime": 1789135012.5745609,
+    "seen": 1789979783.074356,
+    "ast_hash": "7b1afcf5e36d3760296166d56e469e4a",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-naming/references/identifiers.md": {
+    "mtime": 1789135012.574849,
+    "seen": 1789979783.0743573,
+    "ast_hash": "e2b9848148fe23e480aa410fc91b020b",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-naming/references/packages-files.md": {
+    "mtime": 1789135012.574849,
+    "seen": 1789979783.0743582,
+    "ast_hash": "7d25d9ceafecbae268574d294e25e444",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-naming/references/testing.md": {
+    "mtime": 1789135012.574849,
+    "seen": 1789979783.0743592,
+    "ast_hash": "d93c1ae9f0559f7e10c2e63d225f3f40",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-naming/references/types-errors.md": {
+    "mtime": 1789135012.5750625,
+    "seen": 1789979783.0743606,
+    "ast_hash": "ca7ba0cc78360e1f875b48301fe568b9",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-observability/SKILL.md": {
+    "mtime": 1789135012.5750625,
+    "seen": 1789979783.0743618,
+    "ast_hash": "aabde6ea86df3878ef5364055577d86c",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-observability/references/alerting.md": {
+    "mtime": 1789135012.5754492,
+    "seen": 1789979783.0743632,
+    "ast_hash": "a1ac50b561b4ab445c762597fe1e8360",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-observability/references/dashboards.md": {
+    "mtime": 1789135012.5759096,
+    "seen": 1789979783.0743642,
+    "ast_hash": "8bffd8c73db99a6c1a017f492065474d",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-observability/references/logging.md": {
+    "mtime": 1789135012.5759096,
+    "seen": 1789979783.0743654,
+    "ast_hash": "f3b10c57fcb4bb5c5baca94e8aa5b345",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-observability/references/metrics.md": {
+    "mtime": 1789135012.5760624,
+    "seen": 1789979783.0743666,
+    "ast_hash": "a77e10066838557aa5332cfbf2423b34",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-observability/references/profiling.md": {
+    "mtime": 1789135012.5760624,
+    "seen": 1789979783.0743678,
+    "ast_hash": "5c637994ad6a90559e69df98dc71d68e",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-observability/references/rum.md": {
+    "mtime": 1789135012.5760624,
+    "seen": 1789979783.074369,
+    "ast_hash": "faf6e87e5838fdbfd7e5145981e43751",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-observability/references/tracing.md": {
+    "mtime": 1789135012.5760624,
+    "seen": 1789979783.0743706,
+    "ast_hash": "abbc2bf4a7e819bedfa3b108d4a7b91f",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-performance/SKILL.md": {
+    "mtime": 1789135012.5760624,
+    "seen": 1789979783.0743718,
+    "ast_hash": "23b512c191156d1b34f840944afd9f79",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-performance/assets/prometheus-alerts.yml": {
+    "mtime": 1789135012.576551,
+    "seen": 1789979783.0743735,
+    "ast_hash": "fa9357ffa87c4f894fc21afa9707c4db",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-performance/references/caching.md": {
+    "mtime": 1789135012.576551,
+    "seen": 1789979783.0743744,
+    "ast_hash": "d5169acce66699b1812fbee803b5f006",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-performance/references/cpu.md": {
+    "mtime": 1789135012.5770626,
+    "seen": 1789979783.0743756,
+    "ast_hash": "d3c807075a6f25a3da28b56797593985",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-performance/references/io-networking.md": {
+    "mtime": 1789135012.5770626,
+    "seen": 1789979783.0743768,
+    "ast_hash": "f307732a4f9841863a4f492dccf17a9d",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-performance/references/memory.md": {
+    "mtime": 1789135012.5770626,
+    "seen": 1789979783.0743778,
+    "ast_hash": "fcb5ab672336f551360787fc5dc4a3d5",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-performance/references/observability.md": {
+    "mtime": 1789135012.5770626,
+    "seen": 1789979783.074379,
+    "ast_hash": "733bcaf0b27cac787c16cbe72c65a412",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-performance/references/runtime.md": {
+    "mtime": 1789135012.5770626,
+    "seen": 1789979783.0743806,
+    "ast_hash": "822fbe2abb54bdb0e2c81bb3e1b513bc",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-pkg-go-dev/SKILL.md": {
+    "mtime": 1789135012.5770626,
+    "seen": 1789979783.0743818,
+    "ast_hash": "cf77a3d099daf1d3feaa74316d3d4900",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-pkg-go-dev/references/sample-output.md": {
+    "mtime": 1789135012.5778332,
+    "seen": 1789979783.074383,
+    "ast_hash": "2e2b1641686c46a8363c331a8eb8e27e",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-popular-libraries/SKILL.md": {
+    "mtime": 1789135012.5778332,
+    "seen": 1789979783.0743847,
+    "ast_hash": "8a670f2474eab39e7993767cf87a52f4",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-popular-libraries/references/libraries.md": {
+    "mtime": 1789135012.5780945,
+    "seen": 1789979783.074386,
+    "ast_hash": "ab01ee2d257b463a78100dcf049679a6",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-popular-libraries/references/stdlib.md": {
+    "mtime": 1789135012.578416,
+    "seen": 1789979783.0743876,
+    "ast_hash": "906025a37cb074fd79a0f50a822e7439",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-popular-libraries/references/tools.md": {
+    "mtime": 1789135012.578416,
+    "seen": 1789979783.0743887,
+    "ast_hash": "3539a5c038daca0bdcffe6a3bd47435a",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-project-layout/SKILL.md": {
+    "mtime": 1789135012.578416,
+    "seen": 1789979783.07439,
+    "ast_hash": "9bf3d8f96fdfb491f74d7c7ef0b53d13",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-project-layout/references/config.md": {
+    "mtime": 1789135012.5787416,
+    "seen": 1789979783.0743911,
+    "ast_hash": "a16adf6e6684d02441af11d60a155353",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-project-layout/references/directory-layouts.md": {
+    "mtime": 1789135012.579004,
+    "seen": 1789979783.0743923,
+    "ast_hash": "090e99ea7676a0d9d293501fdd1c9b94",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-project-layout/references/testing-layout.md": {
+    "mtime": 1789135012.579004,
+    "seen": 1789979783.0743935,
+    "ast_hash": "a16033b0c9d8063b6c9491d429872e02",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-project-layout/references/workspaces.md": {
+    "mtime": 1789135012.5790625,
+    "seen": 1789979783.0743947,
+    "ast_hash": "bf8e495700fae905fdde1b6de76f11e4",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-refactoring/SKILL.md": {
+    "mtime": 1789135012.5790625,
+    "seen": 1789979783.074396,
+    "ast_hash": "8209bc9e9cd2d0d76ab1abd996cefdf9",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-refactoring/references/catalog.md": {
+    "mtime": 1789135012.5793555,
+    "seen": 1789979783.074397,
+    "ast_hash": "2b437fb7ccb0eca2edc2c9b6acc7ec0b",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-refactoring/references/go-tooling.md": {
+    "mtime": 1789135012.5794995,
+    "seen": 1789979783.0743988,
+    "ast_hash": "e34dd44549a51e00191f58d80f12fd2a",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-refactoring/references/safety-net.md": {
+    "mtime": 1789135012.5794995,
+    "seen": 1789979783.0743997,
+    "ast_hash": "2ada1591aa7e76b4e439b8449b93d384",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-refactoring/references/structural.md": {
+    "mtime": 1789135012.5794995,
+    "seen": 1789979783.0744014,
+    "ast_hash": "5872e1aec3bb94644ccab56f80f72b91",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-refactoring/references/workflow.md": {
+    "mtime": 1789135012.5794995,
+    "seen": 1789979783.074403,
+    "ast_hash": "f36f93e160106cf855af9234ef15795a",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-safety/SKILL.md": {
+    "mtime": 1789135012.5794995,
+    "seen": 1789979783.0744042,
+    "ast_hash": "ffb0881de535da33c44eccf0861e0f20",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-safety/references/nil-safety.md": {
+    "mtime": 1789135012.580084,
+    "seen": 1789979783.0744057,
+    "ast_hash": "017730dc423ea80608333ff4733bbd3f",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-safety/references/slice-map-safety.md": {
+    "mtime": 1789135012.580516,
+    "seen": 1789979783.074407,
+    "ast_hash": "50d56a6d5f340fa7ff68f51abf3da44c",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-samber-do/SKILL.md": {
+    "mtime": 1789135012.580516,
+    "seen": 1789979783.0744085,
+    "ast_hash": "da2f7fade62e3405d6da29e653afc886",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-samber-do/references/advanced.md": {
+    "mtime": 1789135012.5808086,
+    "seen": 1789979783.0744095,
+    "ast_hash": "8b76a6e142cfc83c18da18832cbb27c0",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-samber-do/references/testing.md": {
+    "mtime": 1789135012.5810683,
+    "seen": 1789979783.0744107,
+    "ast_hash": "b5484b7e7a47330d66908aab62095924",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-samber-hot/SKILL.md": {
+    "mtime": 1789135012.5810683,
+    "seen": 1789979783.0744123,
+    "ast_hash": "6972c99a0449e61c8fcdf5384f6070a0",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-samber-hot/references/algorithm-guide.md": {
+    "mtime": 1789135012.5813007,
+    "seen": 1789979783.0744133,
+    "ast_hash": "1ff5a92266fdee057030412f45d01c95",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-samber-hot/references/api-reference.md": {
+    "mtime": 1789135012.5816011,
+    "seen": 1789979783.0744145,
+    "ast_hash": "378dbd811c8b7e72a54ef53a92b13547",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-samber-hot/references/production-patterns.md": {
+    "mtime": 1789135012.5816011,
+    "seen": 1789979783.074416,
+    "ast_hash": "eefeff6cc753f18b89e1aabca922caa5",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-samber-lo/SKILL.md": {
+    "mtime": 1789135012.5816011,
+    "seen": 1789979783.074417,
+    "ast_hash": "f6cae96318c2903c0a0700bb43eec7bc",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-samber-lo/references/advanced-patterns.md": {
+    "mtime": 1789135012.5820625,
+    "seen": 1789979783.0744185,
+    "ast_hash": "2ca4979452f64623e233edbc5f4ffd38",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-samber-lo/references/api-reference.md": {
+    "mtime": 1789135012.5820625,
+    "seen": 1789979783.07442,
+    "ast_hash": "685c865bd97e4e5c7a2cd8c527f90f6e",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-samber-lo/references/package-guide.md": {
+    "mtime": 1789135012.5820625,
+    "seen": 1789979783.074421,
+    "ast_hash": "0ee1c0cc1277c249c4e45b9324bca2e1",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-samber-mo/SKILL.md": {
+    "mtime": 1789135012.5820625,
+    "seen": 1789979783.0744226,
+    "ast_hash": "0caf2b4d55ec049cf69758c969f6d8ba",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-samber-mo/references/advanced-types.md": {
+    "mtime": 1789135012.5824752,
+    "seen": 1789979783.074424,
+    "ast_hash": "9a9b5d2ea24fb6e2d8594fa5c7baae8c",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-samber-mo/references/either.md": {
+    "mtime": 1789135012.5827446,
+    "seen": 1789979783.0744257,
+    "ast_hash": "f604fa160c3d70a86ba9a20144376d88",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-samber-mo/references/monads-guide.md": {
+    "mtime": 1789135012.5827446,
+    "seen": 1789979783.0744278,
+    "ast_hash": "b4835007f700d0b304fc5b48b8b40254",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-samber-mo/references/option.md": {
+    "mtime": 1789135012.5827446,
+    "seen": 1789979783.0744295,
+    "ast_hash": "c083fe9b8006b63c353a5afc383a53bc",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-samber-mo/references/pipelines.md": {
+    "mtime": 1789135012.5827446,
+    "seen": 1789979783.0744305,
+    "ast_hash": "5a336381a7d822304e70fedcb93123ab",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-samber-mo/references/result.md": {
+    "mtime": 1789135012.5827446,
+    "seen": 1789979783.0744324,
+    "ast_hash": "162bbd6c79d051a8caac271e53359a84",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-samber-oops/SKILL.md": {
+    "mtime": 1789135012.5830624,
+    "seen": 1789979783.0744333,
+    "ast_hash": "236785236f1e579a58bf100c8758e1de",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-samber-oops/references/advanced.md": {
+    "mtime": 1789135012.583253,
+    "seen": 1789979783.0744345,
+    "ast_hash": "edd0a79c7f29a6622f995a63b9867d52",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-samber-ro/SKILL.md": {
+    "mtime": 1789135012.583253,
+    "seen": 1789979783.074436,
+    "ast_hash": "a418bfb888c7e826e6f12d56283e7ea1",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-samber-ro/references/operators-guide.md": {
+    "mtime": 1789135012.5836508,
+    "seen": 1789979783.0744371,
+    "ast_hash": "4c3a737f1e4407f340de6ab7f002d521",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-samber-ro/references/patterns.md": {
+    "mtime": 1789135012.583926,
+    "seen": 1789979783.0744429,
+    "ast_hash": "1667b3e0c1c37f1beb5188005c3cbe7c",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-samber-ro/references/plugin-ecosystem.md": {
+    "mtime": 1789135012.583926,
+    "seen": 1789979783.0744443,
+    "ast_hash": "aa4fb2bc7ade20c340df63f21375a709",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-samber-ro/references/subjects-guide.md": {
+    "mtime": 1789135012.583926,
+    "seen": 1789979783.0744455,
+    "ast_hash": "efc712187d93a3b8e0f68600d875fec7",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-samber-slog/SKILL.md": {
+    "mtime": 1789135012.5840626,
+    "seen": 1789979783.0744472,
+    "ast_hash": "68a26b43ca8db0b19f4883362c4f401d",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-samber-slog/references/backend-handlers.md": {
+    "mtime": 1789135012.5843148,
+    "seen": 1789979783.0744486,
+    "ast_hash": "607d3275bede8b8b5aa3eec49a2cd052",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-samber-slog/references/http-middlewares.md": {
+    "mtime": 1789135012.5845878,
+    "seen": 1789979783.0744503,
+    "ast_hash": "8ad1eda140a9c24ee5ab30845b7ae531",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-samber-slog/references/pipeline-patterns.md": {
+    "mtime": 1789135012.5845878,
+    "seen": 1789979783.0744514,
+    "ast_hash": "a0de744a7635f18a2c4b069b3caa9166",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-samber-slog/references/sampling-strategies.md": {
+    "mtime": 1789135012.5845878,
+    "seen": 1789979783.0744526,
+    "ast_hash": "7b3c52dd8d597319c0481e933098614f",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-security/SKILL.md": {
+    "mtime": 1789135012.5845878,
+    "seen": 1789979783.0744543,
+    "ast_hash": "f948af017538be015846aa3df17837a3",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-security/references/architecture.md": {
+    "mtime": 1789135012.5850625,
+    "seen": 1789979783.0744555,
+    "ast_hash": "b30ba99ade1a53363e916f882df3647c",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-security/references/checklist.md": {
+    "mtime": 1789135012.5854092,
+    "seen": 1789979783.0744572,
+    "ast_hash": "eb5912718259924cf3d4ab418dd10fcb",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-security/references/cookies.md": {
+    "mtime": 1789135012.5854092,
+    "seen": 1789979783.0744584,
+    "ast_hash": "09bb8ebd28ef7be3d0bc61d0cc6c4672",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-security/references/cryptography.md": {
+    "mtime": 1789135012.5854092,
+    "seen": 1789979783.0744596,
+    "ast_hash": "c695f91641f2e08ca51764c6254d48ee",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-security/references/filesystem.md": {
+    "mtime": 1789135012.5854092,
+    "seen": 1789979783.0744612,
+    "ast_hash": "0a696d9aa3b50770289dab650ca88ec3",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-security/references/injection.md": {
+    "mtime": 1789135012.5854092,
+    "seen": 1789979783.0744624,
+    "ast_hash": "c743697485235723b1635050d132c69f",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-security/references/logging.md": {
+    "mtime": 1789135012.5854092,
+    "seen": 1789979783.0744638,
+    "ast_hash": "098f0b02aefd6b4a7cade3a3e6214672",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-security/references/memory-safety.md": {
+    "mtime": 1789135012.5854092,
+    "seen": 1789979783.074465,
+    "ast_hash": "f3e7a32cc4d9ff14a2d690a808b0fe43",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-security/references/network.md": {
+    "mtime": 1789135012.5854092,
+    "seen": 1789979783.0744665,
+    "ast_hash": "ec7fb575e20920c7f2551cacf6690685",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-security/references/third-party.md": {
+    "mtime": 1789135012.5854092,
+    "seen": 1789979783.074468,
+    "ast_hash": "e49bee9580cb5fe271e3bc457b2a135b",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-security/references/threat-modeling.md": {
+    "mtime": 1789135012.5860624,
+    "seen": 1789979783.074469,
+    "ast_hash": "add2efca0a46d9e8393bf82ed3299a4a",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-spf13-cobra/SKILL.md": {
+    "mtime": 1789135012.5860624,
+    "seen": 1789979783.0744703,
+    "ast_hash": "5148c63840433b2d3afb7e4c702cdcca",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-spf13-cobra/references/commands-and-args.md": {
+    "mtime": 1789135012.5863683,
+    "seen": 1789979783.0744717,
+    "ast_hash": "65c15c4498ba56330a29a88d58f38307",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-spf13-cobra/references/completions.md": {
+    "mtime": 1789135012.5866003,
+    "seen": 1789979783.0744731,
+    "ast_hash": "c1d6c28a6371d56938322e1724108ab5",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-spf13-cobra/references/flags.md": {
+    "mtime": 1789135012.5866003,
+    "seen": 1789979783.0744743,
+    "ast_hash": "b4a3e5a3698b2bda2f0387ee62e2159c",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-spf13-cobra/references/generators.md": {
+    "mtime": 1789135012.5866003,
+    "seen": 1789979783.0744758,
+    "ast_hash": "6c5a7a0388429a800e90753a7308ec4e",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-spf13-cobra/references/testing.md": {
+    "mtime": 1789135012.5866003,
+    "seen": 1789979783.074477,
+    "ast_hash": "abca0fda40f6ca5d1427e6b19dec076c",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-spf13-viper/SKILL.md": {
+    "mtime": 1789135012.5866003,
+    "seen": 1789979783.0744784,
+    "ast_hash": "71f6933c41a114af873a4ebfd5e81176",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-spf13-viper/references/binding-and-env.md": {
+    "mtime": 1789135012.5870626,
+    "seen": 1789979783.0744793,
+    "ast_hash": "bb1b89314e890b4bbade716c1bb676df",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-spf13-viper/references/sources-and-formats.md": {
+    "mtime": 1789135012.5872173,
+    "seen": 1789979783.074481,
+    "ast_hash": "bf83efb957324837b871207bc880d6b3",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-spf13-viper/references/testing-and-isolation.md": {
+    "mtime": 1789135012.5872173,
+    "seen": 1789979783.074482,
+    "ast_hash": "0c70689d45a02edd44bc358d04a6bb9b",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-spf13-viper/references/unmarshal.md": {
+    "mtime": 1789135012.5872173,
+    "seen": 1789979783.0744832,
+    "ast_hash": "43660e4394f04c64075b266e78224fd6",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-spf13-viper/references/watch-and-reload.md": {
+    "mtime": 1789135012.5872173,
+    "seen": 1789979783.0744846,
+    "ast_hash": "2e887382701bc541663e5908d1dc0237",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-stay-updated/SKILL.md": {
+    "mtime": 1789135012.5872173,
+    "seen": 1789979783.074486,
+    "ast_hash": "2d46b41c6b9c5ccba38f569e80da7d07",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-stretchr-testify/SKILL.md": {
+    "mtime": 1789135012.5876129,
+    "seen": 1789979783.0744874,
+    "ast_hash": "66a54a00ee7b94e52b091a2b8bd7c333",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-stretchr-testify/references/mock.md": {
+    "mtime": 1789135012.5878627,
+    "seen": 1789979783.0744889,
+    "ast_hash": "4c4a4910d849cd689a3c602fa7f7d7cb",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-structs-interfaces/SKILL.md": {
+    "mtime": 1789135012.5880625,
+    "seen": 1789979783.07449,
+    "ast_hash": "78c59a97ce7a23e803668d4fd3e44021",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-structs-interfaces/references/struct-fields.md": {
+    "mtime": 1789135012.5882459,
+    "seen": 1789979783.074492,
+    "ast_hash": "1ab8aab2a10e9526b0e4c43675afcaa7",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-structs-interfaces/references/type-assertions.md": {
+    "mtime": 1789135012.5884545,
+    "seen": 1789979783.0744932,
+    "ast_hash": "99567fcddd73c53533c21aba21f4c5e5",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-swagger/SKILL.md": {
+    "mtime": 1789135012.5884545,
+    "seen": 1789979783.074495,
+    "ast_hash": "30dd3d34b053764c237c12a032db1b02",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-swagger/references/swag-cli.md": {
+    "mtime": 1789135012.5886626,
+    "seen": 1789979783.074496,
+    "ast_hash": "899adb5140b05194005ec1dcf48f1462",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-testing/SKILL.md": {
+    "mtime": 1789135012.5886626,
+    "seen": 1789979783.0744977,
+    "ast_hash": "d5baa979b291516426693b63756261cb",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-testing/references/benchmarks.md": {
+    "mtime": 1789135012.5890841,
+    "seen": 1789979783.0744991,
+    "ast_hash": "f1e47dbe92f22975c44b5427f6db9d73",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-testing/references/coverage.md": {
+    "mtime": 1789135012.5893462,
+    "seen": 1789979783.0745003,
+    "ast_hash": "32de29b8909ab4ffb1badc232cacdab2",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-testing/references/examples.md": {
+    "mtime": 1789135012.5893462,
+    "seen": 1789979783.0745015,
+    "ast_hash": "1b7212207ee5bb571b9c779c334a9166",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-testing/references/helpers.md": {
+    "mtime": 1789135012.5893462,
+    "seen": 1789979783.0745032,
+    "ast_hash": "0aecb7cfbeb9b374bf61c52e324d9d3f",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-testing/references/http-testing.md": {
+    "mtime": 1789135012.5893462,
+    "seen": 1789979783.0745041,
+    "ast_hash": "9111110c28a7fbbffc3537aad786b390",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-testing/references/integration-testing.md": {
+    "mtime": 1789135012.5893462,
+    "seen": 1789979783.0745056,
+    "ast_hash": "b4a22d97967f018828d7c5b46c4fb9de",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-testing/references/mocking.md": {
+    "mtime": 1789135012.5893462,
+    "seen": 1789979783.0745068,
+    "ast_hash": "16c0be3b2b296670353dc622fcc6b4cf",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-troubleshooting/SKILL.md": {
+    "mtime": 1789135012.5893462,
+    "seen": 1789979783.074508,
+    "ast_hash": "d2fc3fc5fd9fe26b1194a32a05963157",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-troubleshooting/references/code-review-flags.md": {
+    "mtime": 1789135012.5900626,
+    "seen": 1789979783.0745094,
+    "ast_hash": "f0c0bb34cf7a4cd03bcf1d83839ef0e8",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-troubleshooting/references/common-go-bugs.md": {
+    "mtime": 1789135012.5901735,
+    "seen": 1789979783.074511,
+    "ast_hash": "811bef6040eafe4bd21776584eb7f61f",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-troubleshooting/references/compilation.md": {
+    "mtime": 1789135012.5901735,
+    "seen": 1789979783.0745125,
+    "ast_hash": "05e0e891ac0efaabbdfc8df9e1110de6",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-troubleshooting/references/concurrency-debug.md": {
+    "mtime": 1789135012.5901735,
+    "seen": 1789979783.0745137,
+    "ast_hash": "b6181fdfb9a2f21422137602ef46048f",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-troubleshooting/references/diagnostic-tools.md": {
+    "mtime": 1789135012.5901735,
+    "seen": 1789979783.074515,
+    "ast_hash": "b7ab9181ca3e500f8af5d512ebacecc9",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-troubleshooting/references/methodology.md": {
+    "mtime": 1789135012.5901735,
+    "seen": 1789979783.0745165,
+    "ast_hash": "479643f26924844ac8e7b4593a1a0f4d",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-troubleshooting/references/performance-debug.md": {
+    "mtime": 1789135012.5901735,
+    "seen": 1789979783.0745175,
+    "ast_hash": "4eb5b45eed6fd48e2f49ee3e6aeccbbc",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-troubleshooting/references/pprof.md": {
+    "mtime": 1789135012.5901735,
+    "seen": 1789979783.0745192,
+    "ast_hash": "211bd389f81eda9b2a1b515727e2904c",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-troubleshooting/references/production-debug.md": {
+    "mtime": 1789135012.5901735,
+    "seen": 1789979783.0745206,
+    "ast_hash": "8e9f861d1398a1398f3adc041f280305",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-troubleshooting/references/testing-debug.md": {
+    "mtime": 1789135012.5901735,
+    "seen": 1789979783.074522,
+    "ast_hash": "7534baba18371f6872a9ec76a1ba9be2",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-uber-dig/SKILL.md": {
+    "mtime": 1789135012.5901735,
+    "seen": 1789979783.0745234,
+    "ast_hash": "71efc6a727279920bba6f2494d2777b4",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-uber-dig/references/advanced.md": {
+    "mtime": 1789135012.5910723,
+    "seen": 1789979783.0745246,
+    "ast_hash": "0ead62cd2b4cbf8f5c0adbe17bb95d94",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-uber-dig/references/recipes.md": {
+    "mtime": 1789135012.591348,
+    "seen": 1789979783.0745258,
+    "ast_hash": "12e541ff2ff7d03a4b3f4afef38dcbe7",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-uber-dig/references/testing.md": {
+    "mtime": 1789135012.591348,
+    "seen": 1789979783.0745273,
+    "ast_hash": "2f482df1c6a3d3735c6c2dbb4ba69f27",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-uber-fx/SKILL.md": {
+    "mtime": 1789135012.591348,
+    "seen": 1789979783.0745282,
+    "ast_hash": "90909de916901b8f6a2a648316443ca0",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-uber-fx/references/advanced.md": {
+    "mtime": 1789135012.591668,
+    "seen": 1789979783.0745296,
+    "ast_hash": "ea0785eb67d5eebf745ed987be228565",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-uber-fx/references/recipes.md": {
+    "mtime": 1789135012.592002,
+    "seen": 1789979783.0745308,
+    "ast_hash": "30351f7940eb1a54dfe6ef28930ed7cf",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/skills/golang-uber-fx/references/testing.md": {
+    "mtime": 1789135012.5920625,
+    "seen": 1789979783.074532,
+    "ast_hash": "b2eab653f83cb16b32568299fb3edbd9",
+    "semantic_hash": ""
+  },
+  "graph/invoke_fsm.md": {
+    "mtime": 1789903757.41501,
+    "seen": 1789979783.0745604,
+    "ast_hash": "b840aeb1b0727e708791aee930fd5bf5",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/.codex-plugin/assets/logo-dark.png": {
+    "mtime": 1789135012.552567,
+    "seen": 1789979783.0745618,
+    "ast_hash": "82d565133e057c4a31ae71923616442f",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/cc-skills-golang/.codex-plugin/assets/logo.png": {
+    "mtime": 1789135012.5527697,
+    "seen": 1789979783.074563,
+    "ast_hash": "dfa1ad5eab36ab9a3989c1a7428fbfc9",
+    "semantic_hash": ""
+  }
+}

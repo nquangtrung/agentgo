@@ -3,6 +3,7 @@ module github.com/nquangtrung/agentgo
 go 1.26.5
 
 require (
+	github.com/google/uuid v1.6.0
 	github.com/joho/godotenv v1.5.1
 	github.com/openai/openai-go/v3 v3.50.0
 	github.com/stretchr/testify v1.11.1

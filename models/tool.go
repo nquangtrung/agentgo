@@ -14,6 +14,9 @@ type ToolExecuteOutput struct {
 type ToolCall struct {
 	ToolName string
 	Params   map[string]any
+	Tool     Tool
+	Messages []Message
+	NotFound bool
 }
 
 //go:generate mockgen -destination=../mocks/mock_tool.go -package=mocks github.com/nquangtrung/agentgo/models Tool
@@ -46,7 +49,8 @@ func (t BaseTool) Description() string {
 }
 
 func (t BaseTool) Execute(params ToolExecuteParams) ToolExecuteOutput {
-	return t.fn(params)
+	output := t.fn(params)
+	return output
 }
 
 type NewToolParams struct {

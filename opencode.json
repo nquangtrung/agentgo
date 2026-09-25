@@ -1,0 +1,10 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "command": {
+    "graphify": {
+      "description": "Query, analyze, or update the knowledge graph for codebase exploration.",
+      "agent": "explore",
+      "template": "Use the graphify skill to handle this task.\n\nUser request: $ARGUMENTS"
+    }
+  }
+}

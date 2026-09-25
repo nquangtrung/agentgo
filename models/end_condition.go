@@ -1,5 +1,5 @@
 package models
 
 type EndCondition interface {
-	Condition(context *ToolExecutionsArchive) bool
+	Condition(archive *ToolExecutionsArchive) bool
 }

@@ -4,22 +4,19 @@ import (
 	"context"
 	"sync"
 
-	"github.com/nquangtrung/agentgo/fsm"
+	"github.com/nquangtrung/agentgo/graph"
 	"github.com/nquangtrung/agentgo/models"
 )
 
 func StreamText(ctx context.Context, params Params) models.LanguageModelStreamOutput {
 	provider := mustResolveProviderFromParams(params)
 	messages := resolveMessages(params)
-	execContext := models.NewExecutionContextFromLanguageModelContext(provider.Context())
+	execArchive := models.NewExecutionContextFromLanguageModelContext(provider.Context())
 
 	partChannel := make(chan models.Part)
-
-	machine := fsm.New[fsm.AgentContext]()
 	emitter := models.NewPartEmitter(partChannel)
 
 	ctx = context.WithValue(ctx, models.ProviderContextKey, provider)
-	ctx = context.WithValue(ctx, models.MachineContextKey, machine)
 	ctx = context.WithValue(ctx, models.EndConditionsContextKey, params.EndConditions)
 	ctx = context.WithValue(ctx, models.ToolsContextKey, params.Tools)
 	ctx = context.WithValue(ctx, models.StreamContextKey, true)
@@ -28,12 +25,14 @@ func StreamText(ctx context.Context, params Params) models.LanguageModelStreamOu
 
 	var wg sync.WaitGroup
 	wg.Go(func() {
-		agentCtx := &fsm.AgentContext{
-			Messages:              &messages,
-			ToolExecutionsArchive: execContext,
-		}
-		machine.Run(ctx, &fsm.StartState{}, agentCtx)
+		g := createGenerateTextGraph()
+		config := graph.InvocationConfig[agentState, agentStateDelta]{}
+		g.Invoke(ctx, agentState{
+			toolExecutionsArchive: execArchive,
+			messages:              messages,
+		}, config)
 	})
+
 	go func() {
 		wg.Wait()
 		close(partChannel)

@@ -1,7 +1,6 @@
 package agentgo
 
 import (
-	"github.com/nquangtrung/agentgo/fsm"
 	"github.com/nquangtrung/agentgo/models"
 	"github.com/nquangtrung/agentgo/providers"
 )
@@ -13,5 +12,5 @@ type Params struct {
 	Messages      []models.Message
 	Tools         []models.BaseTool
 	EndConditions []models.EndCondition
-	PrepareStep   fsm.PrepareStepFn
+	PrepareStep   PrepareStepFn
 }
