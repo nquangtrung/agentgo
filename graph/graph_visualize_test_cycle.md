@@ -1,8 +1,8 @@
 ```mermaid
 stateDiagram-v2
-    state "inc" as inc
     state "start" as start
     state "end" as end
+    state "inc" as inc
     state router_inc <<choice>>
     start --> inc : 
     inc --> router_inc : 
