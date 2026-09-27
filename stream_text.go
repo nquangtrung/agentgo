@@ -25,14 +25,35 @@ func StreamText(ctx context.Context, params Params) models.LanguageModelStreamOu
 	ctx = context.WithValue(ctx, models.ToolMiddlewaresContextKey, params.ToolMiddlewares)
 	ctx = context.WithValue(ctx, models.StepMiddlewaresContextKey, params.StepMiddlewares)
 
+	config := graph.InvocationConfig[agentState, agentStateDelta]{
+		Checkpointer: resolveGraphCheckpointer(params.Checkpointer),
+	}
+
 	var wg sync.WaitGroup
 	wg.Go(func() {
+		if params.Resume {
+			g, ok := retrieveGraphForResume(params.Checkpointer, params.ThreadID)
+			if !ok {
+				g = createGenerateTextGraph()
+			}
+			g.Resume(ctx, params.ThreadID, params.InterruptResults, config)
+			return
+		}
+
 		g := createGenerateTextGraph()
-		config := graph.InvocationConfig[agentState, agentStateDelta]{}
-		g.Invoke(ctx, agentState{
+		_, err := g.Invoke(ctx, agentState{
 			toolExecutionsArchive: execArchive,
 			messages:              messages,
 		}, config)
+
+		if err != nil {
+			if superStepErr, ok := err.(*graph.SuperStepExecutionError); ok {
+				interrupts := superStepErr.Interrupts()
+				if len(interrupts) > 0 {
+					storeGraphForResume(params.Checkpointer, interrupts[0].ThreadID, g)
+				}
+			}
+		}
 	})
 
 	go func() {

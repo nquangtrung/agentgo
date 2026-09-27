@@ -15,4 +15,9 @@ type Params struct {
 	PrepareStep      PrepareStepFn
 	ToolMiddlewares  []ToolMiddleware
 	StepMiddlewares  []StepMiddleware
+	Checkpointer     Checkpointer
+	// Resume fields — set these to resume an execution paused by a HITL interrupt.
+	Resume           bool
+	ThreadID         string
+	InterruptResults map[string]any
 }
