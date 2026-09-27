@@ -35,6 +35,20 @@ func prepareStep(ctx context.Context, state agentState) (agentStateDelta, error)
 		step.prepareStepResult = prepareStepResult
 	}
 
+	// Run StepMiddleware Before hooks
+	stepMiddlewares := ctx.Value(models.StepMiddlewaresContextKey).([]StepMiddleware)
+	for _, mw := range stepMiddlewares {
+		if mw.Before != nil {
+			mwCtx := buildStepMiddlewareContext(state, step)
+			err := mw.Before(ctx, mwCtx)
+			if err != nil {
+				logger.Warn("Step middleware Before hook error", "stepIndex", step.index, "error", err)
+				// Any error from step middleware aborts the pipeline
+				return agentStateDelta{}, err
+			}
+		}
+	}
+
 	return agentStateDelta{
 		from:    PREPARE_STEP,
 		addStep: &step,
@@ -52,6 +66,21 @@ func endProcess(ctx context.Context, state agentState) (agentStateDelta, error) 
 func endStep(ctx context.Context, state agentState) (agentStateDelta, error) {
 	provider := ctx.Value(models.ProviderContextKey).(providers.AgentProvider)
 	emitter := ctx.Value(models.PartEmitterContextKey).(*models.PartEmitter)
+
+	// Run StepMiddleware After hooks before emitting StepEndPart
+	stepMiddlewares := ctx.Value(models.StepMiddlewaresContextKey).([]StepMiddleware)
+	for _, mw := range stepMiddlewares {
+		if mw.After != nil {
+			mwCtx := buildStepMiddlewareContext(state, state.currentStep)
+			err := mw.After(ctx, mwCtx)
+			if err != nil {
+				logger.Warn("Step middleware After hook error", "stepIndex", state.currentStep.index, "error", err)
+				// Any error from step middleware aborts the pipeline
+				return agentStateDelta{}, err
+			}
+		}
+	}
+
 	// TODO handle usage accumulate
 	emitter.Emit(models.NewStepEndPart(
 		provider.Context(),

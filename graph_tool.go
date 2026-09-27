@@ -17,6 +17,34 @@ func executeTool(ctx context.Context, params any) (agentStateDelta, error) {
 		}, nil
 	}
 
+	toolMiddlewares := ctx.Value(models.ToolMiddlewaresContextKey).([]ToolMiddleware)
+
+	// Run Before hooks
+	for _, mw := range toolMiddlewares {
+		if mw.Before != nil {
+			err := mw.Before(ctx, ToolMiddlewareContext{
+				ToolName: toolCall.ToolName,
+				Params:   toolCall.Params,
+			})
+			if err != nil {
+				logger.Warn("Tool middleware Before hook error", "tool", toolCall.Tool.Name(), "error", err)
+				// If it's an interrupt error, propagate it to pause execution
+				if isInterruptError(err) {
+					return agentStateDelta{}, err
+				}
+				// Otherwise, include the error in the tool result and continue
+				toolResult := models.ToolExecuteOutput{
+					Error:    err,
+					ToolCall: &toolCall,
+				}
+				return agentStateDelta{
+					from:              EXECUTE_TOOL,
+					archiveToolResult: &toolResult,
+				}, nil
+			}
+		}
+	}
+
 	logger.Info("Executing tool", "tool", toolCall.Tool.Name(), "params", toolCall.Params)
 	tool := toolCall.Tool
 	toolResult := tool.Execute(models.ToolExecuteParams{
@@ -25,6 +53,29 @@ func executeTool(ctx context.Context, params any) (agentStateDelta, error) {
 	toolResult.ToolCall = &toolCall
 
 	logger.Debug("Tool executed", "tool", tool.Name(), "result", toolResult)
+
+	// Run After hooks only on success (no error from Execute)
+	if toolResult.Error == nil {
+		for _, mw := range toolMiddlewares {
+			if mw.After != nil {
+				err := mw.After(ctx, ToolMiddlewareContext{
+					ToolName: toolCall.ToolName,
+					Params:   toolCall.Params,
+					Result:   &toolResult,
+				})
+				if err != nil {
+					logger.Warn("Tool middleware After hook error", "tool", toolCall.Tool.Name(), "error", err)
+					// If it's an interrupt error, propagate it
+					if isInterruptError(err) {
+						return agentStateDelta{}, err
+					}
+					// Otherwise, include the validation error in the result
+					toolResult.Error = err
+					break
+				}
+			}
+		}
+	}
 
 	return agentStateDelta{
 		from:              EXECUTE_TOOL,

@@ -20,6 +20,8 @@ func GenerateText(ctx context.Context, params Params) (models.LanguageModelOutpu
 	ctx = context.WithValue(ctx, models.StreamContextKey, false)
 	ctx = context.WithValue(ctx, models.PartEmitterContextKey, emitter)
 	ctx = context.WithValue(ctx, models.PrepareStepFnContextKey, params.PrepareStep)
+	ctx = context.WithValue(ctx, models.ToolMiddlewaresContextKey, params.ToolMiddlewares)
+	ctx = context.WithValue(ctx, models.StepMiddlewaresContextKey, params.StepMiddlewares)
 
 	g := createGenerateTextGraph()
 	config := graph.InvocationConfig[agentState, agentStateDelta]{}

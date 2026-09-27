@@ -4,9 +4,9 @@ stateDiagram-v2
     state "end" as end
     state "inc" as inc
     state router_inc <<choice>>
-    start --> inc : 
     inc --> router_inc : 
     router_inc --> inc : 
     router_inc --> end : 
+    start --> inc : 
 
 ```
