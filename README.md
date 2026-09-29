@@ -65,6 +65,52 @@ func main() {
 
 That's it! Just pass a model name and a prompt. The SDK figures out which provider to use and handles the rest.
 
+### Generating Structured Objects
+
+Use `GenerateObject` when you need a typed, validated object instead of free text:
+
+```go
+type Recipe struct {
+    Name     string `json:"name"`
+    Servings int    `json:"servings"`
+}
+
+schema := agentgo.NewSchema[Recipe](agentgo.NewSchemaParams[Recipe]{
+    Name: "recipe",
+    JSONSchema: map[string]any{
+        "type": "object",
+        "properties": map[string]any{
+            "name":     map[string]any{"type": "string"},
+            "servings": map[string]any{"type": "integer"},
+        },
+        "required": []string{"name", "servings"},
+    },
+    Validate: func(r Recipe) error {
+        if r.Name == "" {
+            return fmt.Errorf("name must not be empty")
+        }
+        return nil
+    },
+})
+
+result, err := agentgo.GenerateObject(ctx, agentgo.ObjectParams[Recipe]{
+    ModelName: "gpt-5-mini",
+    Prompt:    "Generate a pancake recipe",
+    Schema:    schema,
+})
+if err != nil {
+    panic(err)
+}
+
+fmt.Println(result.Object.Name)     // "pancakes"
+fmt.Println(result.Object.Servings) // 4
+fmt.Println(result.Raw)             // the raw JSON
+```
+
+`StreamObject` is the streaming counterpart — it returns the same part channel as `StreamText`, with the validated object arriving as a final `models.ObjectPart`.
+
+If the model's output fails validation, the SDK automatically retries with a repair prompt (up to `MaxObjectRetries`, default 2). When every attempt fails, `GenerateObject` returns a `*models.NoObjectGeneratedError`.
+
 ## How It Works
 
 The magic is in the **Provider Pattern** + **Factory Pattern**:

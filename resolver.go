@@ -75,16 +75,28 @@ func resolveTextOutputAsToolExecuteOutput(textOutput models.LanguageModelOutput,
 	}
 }
 
-func resolveExecutionContextAsTextOutput(context *models.ToolExecutionsArchive) (models.LanguageModelOutput, error) {
-	if context.LastRecord() == nil {
-		return models.LanguageModelOutput{}, &models.ExecutionContextError{
-			Message: "no steps in execution context",
-		}
+func resolveObjectOutputAsToolExecuteOutput(output models.LanguageModelOutput, value any) models.ToolExecuteOutput {
+	return models.ToolExecuteOutput{
+		Output: map[string]any{
+			"object": value,
+			"raw":    output.Text,
+		},
+		Error: nil,
+		Usage: output.Usage,
 	}
-	lastOutput, ok := context.LastRecord().ToolResult.Output["text"].(string)
-	text := utils.Ternary(ok, lastOutput, "")
+}
 
-	usage := utils.Reduce(
+func responseFormatFromSchema(schema models.ObjectSchema) *models.ResponseFormat {
+	return &models.ResponseFormat{
+		Name:        schema.Name(),
+		Description: schema.Description(),
+		JSONSchema:  schema.JSONSchema(),
+	}
+}
+
+// accumulateArchiveUsage sums the token usage across every archived record.
+func accumulateArchiveUsage(context *models.ToolExecutionsArchive) models.LanguageModelUsage {
+	return utils.Reduce(
 		context.Records(),
 		func(acc models.LanguageModelUsage, step models.ToolExecutionRecord) models.LanguageModelUsage {
 			return models.LanguageModelUsage{
@@ -102,11 +114,38 @@ func resolveExecutionContextAsTextOutput(context *models.ToolExecutionsArchive) 
 		},
 		models.LanguageModelUsage{},
 	)
+}
+
+func resolveExecutionContextAsTextOutput(context *models.ToolExecutionsArchive) (models.LanguageModelOutput, error) {
+	if context.LastRecord() == nil {
+		return models.LanguageModelOutput{}, &models.ExecutionContextError{
+			Message: "no steps in execution context",
+		}
+	}
+	lastOutput, ok := context.LastRecord().ToolResult.Output["text"].(string)
+	text := utils.Ternary(ok, lastOutput, "")
 
 	return models.LanguageModelOutput{
 		Text:      text,
-		Usage:     usage,
+		Usage:     accumulateArchiveUsage(context),
 		ModelName: context.ModelName(),
 		Context:   context,
 	}, nil
+}
+
+// resolveExecutionContextAsObjectResult pulls the last archived object out of
+// the execution context. The value is typed as any; the caller asserts it to
+// the schema's concrete type.
+func resolveExecutionContextAsObjectResult(context *models.ToolExecutionsArchive) (any, string, error) {
+	if context.LastRecord() == nil {
+		return nil, "", &models.ExecutionContextError{
+			Message: "no steps in execution context",
+		}
+	}
+
+	result := context.LastRecord().ToolResult
+	object, _ := result.Output["object"].(any)
+	raw, _ := result.Output["raw"].(string)
+
+	return object, raw, nil
 }

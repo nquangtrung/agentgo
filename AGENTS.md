@@ -19,6 +19,7 @@ Rules:
 - **Factory Pattern** (factory.go): `CreateAgentProvider()` maps model names (gpt-*, gemini-*, claude-*) to implementations
 - **FSM Orchestration** (fsm/): Finite state machine drives AI interactions through defined state transitions (StartState → TextGeneration → ToolResolve → EndState)
 - **Streaming** (stream_text.go): Async alternative using `LanguageModelStreamOutput` with channels for real-time parts
+- **Object Generation** (generate_object.go, stream_object.go): `GenerateObject[T]` / `StreamObject[T]` produce schema-validated objects with a graph-level repair loop
 
 ## Testing
 
@@ -51,6 +52,7 @@ Tests use testify assertions, uber/mock for mocks (generated, pre-committed in m
 3. Add case in `CreateAgentProvider()` to instantiate it
 4. Add API key case in `LoadAPIKeyFromEnv()`
 5. Update factory.go `ModelType` const and test coverage
+6. Honor `params.ResponseFormat` in `GenerateText`/`StreamText` when the provider supports structured output (see `providers/openai/converters.go: convertResponseFormat`)
 
 ## Context patterns
 

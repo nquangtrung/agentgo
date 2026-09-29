@@ -18,6 +18,9 @@ const (
 	PartTypeStepStart PartType = "step_start"
 	PartTypeStepEnd   PartType = "step_end"
 	PartTypeStepError PartType = "step_error"
+
+	PartTypeObject      PartType = "object"
+	PartTypeObjectError PartType = "object_error"
 )
 
 type FinishReason string

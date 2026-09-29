@@ -8,6 +8,10 @@ import (
 
 type AgentProviderPromptMessageParams struct {
 	Messages []models.Message
+	// ResponseFormat, when non-nil, asks the provider to constrain the model's
+	// output to the given JSON Schema (structured output). A nil value means
+	// plain text.
+	ResponseFormat *models.ResponseFormat
 }
 
 //go:generate mockgen -destination=../mocks/mock_agent_provider.go -package=mocks github.com/nquangtrung/agentgo/providers AgentProvider

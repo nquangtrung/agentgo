@@ -6,7 +6,7 @@ import (
 )
 
 func TestGenerateTextGraph(t *testing.T) {
-	g := createGenerateTextGraph()
+	g := createAgentGraph()
 
 	log.Println(string(g.Visualize()))
 }

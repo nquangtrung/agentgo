@@ -34,13 +34,13 @@ func StreamText(ctx context.Context, params Params) models.LanguageModelStreamOu
 		if params.Resume {
 			g, ok := retrieveGraphForResume(params.Checkpointer, params.ThreadID)
 			if !ok {
-				g = createGenerateTextGraph()
+				g = createAgentGraph()
 			}
 			g.Resume(ctx, params.ThreadID, params.InterruptResults, config)
 			return
 		}
 
-		g := createGenerateTextGraph()
+		g := createAgentGraph()
 		_, err := g.Invoke(ctx, agentState{
 			toolExecutionsArchive: execArchive,
 			messages:              messages,
