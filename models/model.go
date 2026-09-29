@@ -42,14 +42,16 @@ type ToolExecutionsArchive struct {
 type ContextKey string
 
 const (
-	ProviderContextKey      ContextKey = "provider_context"
-	MachineContextKey       ContextKey = "machine_context"
-	EndConditionsContextKey ContextKey = "end_conditions_context"
-	ToolsContextKey         ContextKey = "tools_context"
-	StreamContextKey        ContextKey = "stream_context"
-	PartEmitterContextKey   ContextKey = "part_emitter_context"
-	AccumulatorContextKey   ContextKey = "accumulator_context"
-	PrepareStepFnContextKey ContextKey = "prepare_step_fn_context"
+	ProviderContextKey        ContextKey = "provider_context"
+	MachineContextKey         ContextKey = "machine_context"
+	EndConditionsContextKey   ContextKey = "end_conditions_context"
+	ToolsContextKey           ContextKey = "tools_context"
+	StreamContextKey          ContextKey = "stream_context"
+	PartEmitterContextKey     ContextKey = "part_emitter_context"
+	AccumulatorContextKey     ContextKey = "accumulator_context"
+	PrepareStepFnContextKey   ContextKey = "prepare_step_fn_context"
+	ToolMiddlewaresContextKey ContextKey = "tool_middlewares_context"
+	StepMiddlewaresContextKey ContextKey = "step_middlewares_context"
 )
 
 func (e *ToolExecutionsArchive) ModelName() string {
