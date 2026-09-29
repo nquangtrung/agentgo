@@ -27,7 +27,7 @@ func GenerateText(ctx context.Context, params Params) (models.LanguageModelOutpu
 	if params.Resume {
 		g, ok := retrieveGraphForResume(params.Checkpointer, params.ThreadID)
 		if !ok {
-			g = createGenerateTextGraph()
+			g = createAgentGraph()
 		}
 		result, err := g.Resume(ctx, params.ThreadID, params.InterruptResults, config)
 		if err != nil {
@@ -39,7 +39,7 @@ func GenerateText(ctx context.Context, params Params) (models.LanguageModelOutpu
 	messages := resolveMessages(params)
 	execArchive := models.NewExecutionContextFromLanguageModelContext(provider.Context())
 
-	g := createGenerateTextGraph()
+	g := createAgentGraph()
 	result, err := g.Invoke(ctx, agentState{
 		toolExecutionsArchive: execArchive,
 		messages:              messages,

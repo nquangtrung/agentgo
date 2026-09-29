@@ -37,6 +37,33 @@ func TestConvertInputFromParams(t *testing.T) {
 	assert.Equal(t, "I'm doing well, thank you! How can I assist you today?", assistantInput.Content[0].OfOutputText.Text)
 }
 
+func TestConvertResponseFormatNil(t *testing.T) {
+	format := convertResponseFormat(nil)
+	assert.Equal(t, responses.ResponseTextConfigParam{}, format)
+}
+
+func TestConvertResponseFormat(t *testing.T) {
+	format := convertResponseFormat(&models.ResponseFormat{
+		Name:        "recipe",
+		Description: "A recipe",
+		Strict:      true,
+		JSONSchema: map[string]any{
+			"type": "object",
+			"properties": map[string]any{
+				"name": map[string]any{"type": "string"},
+			},
+			"required": []string{"name"},
+		},
+	})
+
+	jsonSchema := format.Format.OfJSONSchema
+	assert.NotNil(t, jsonSchema, "should use the json_schema variant")
+	assert.Equal(t, "recipe", jsonSchema.Name)
+	assert.Equal(t, "A recipe", jsonSchema.Description.Value)
+	assert.True(t, jsonSchema.Strict.Value, "strict should be set")
+	assert.Equal(t, "object", jsonSchema.Schema["type"])
+}
+
 func TestConvertMessageObjectToInput(t *testing.T) {
 	messages := []models.Message{
 		models.NewSystemStringMessage("You are a helpful assistant."),

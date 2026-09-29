@@ -52,6 +52,8 @@ const (
 	PrepareStepFnContextKey   ContextKey = "prepare_step_fn_context"
 	ToolMiddlewaresContextKey ContextKey = "tool_middlewares_context"
 	StepMiddlewaresContextKey ContextKey = "step_middlewares_context"
+	SchemaContextKey          ContextKey = "schema_context"
+	MaxObjectRetriesContextKey ContextKey = "max_object_retries_context"
 )
 
 func (e *ToolExecutionsArchive) ModelName() string {

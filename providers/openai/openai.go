@@ -40,6 +40,7 @@ func (p OpenAIProvider) GenerateText(
 	resp, err := p.response.New(ctx, responses.ResponseNewParams{
 		Model: p.BaseAgentProvider.Context().ModelName,
 		Input: convertInputFromParams(params),
+		Text:  convertResponseFormat(params.ResponseFormat),
 	})
 	if err != nil {
 		return models.LanguageModelOutput{}, err
@@ -64,6 +65,7 @@ func (p OpenAIProvider) StreamText(
 	stream := p.response.NewStreaming(ctx, responses.ResponseNewParams{
 		Model: p.BaseAgentProvider.Context().ModelName,
 		Input: convertInputFromParams(params),
+		Text:  convertResponseFormat(params.ResponseFormat),
 	})
 
 	emitter.Emit(models.NewStepStartPart(p.Context(), "streaming started"))

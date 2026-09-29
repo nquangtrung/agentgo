@@ -62,6 +62,28 @@ func convertMessageObjectToInput(messages []models.Message) responses.ResponseNe
 	return responses.ResponseNewParamsInputUnion{OfInputItemList: inputItems}
 }
 
+// convertResponseFormat maps a models.ResponseFormat to the OpenAI Responses
+// API text configuration. A nil format yields the zero value, which the API
+// treats as plain text.
+func convertResponseFormat(format *models.ResponseFormat) responses.ResponseTextConfigParam {
+	if format == nil {
+		return responses.ResponseTextConfigParam{}
+	}
+
+	jsonSchema := &responses.ResponseFormatTextJSONSchemaConfigParam{
+		Name:   format.Name,
+		Schema: format.JSONSchema,
+		Strict: openai.Bool(format.Strict),
+	}
+	if format.Description != "" {
+		jsonSchema.Description = openai.String(format.Description)
+	}
+
+	return responses.ResponseTextConfigParam{
+		Format: responses.ResponseFormatTextConfigUnionParam{OfJSONSchema: jsonSchema},
+	}
+}
+
 func convertToolParamsToInput(tools []models.BaseTool) []responses.ToolUnionParam {
 	return utils.Map(tools, func(tool models.BaseTool) responses.ToolUnionParam {
 		openAiTool := responses.ToolParamOfFunction(tool.Name(), tool.InputSchema(), true)

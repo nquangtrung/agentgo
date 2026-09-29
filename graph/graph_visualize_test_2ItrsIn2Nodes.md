@@ -1,11 +1,11 @@
 ```mermaid
 stateDiagram-v2
-    state "start" as start
     state "end" as end
     state "inc" as inc
     state "double" as double
-    start --> inc : 
+    state "start" as start
     inc --> double : 
     double --> end : 
+    start --> inc : 
 
 ```
