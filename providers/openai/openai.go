@@ -126,6 +126,7 @@ func (p OpenAIProvider) ResolveToolCall(
 		ToolCalls: toolCalls,
 		Usage:     convertOpenAIUsageToLanguageModelUsage(response.Usage),
 		ModelName: p.BaseAgentProvider.Context().ModelName,
+		Text:      response.OutputText(),
 	}, nil
 }
 

@@ -106,6 +106,7 @@ func (p DeepSeekProvider) ResolveToolCall(
 		ToolCalls: convertOutputToToolCalls(response),
 		Usage:     convertUsageToLanguageModelUsage(response.Usage),
 		ModelName: p.BaseAgentProvider.Context().ModelName,
+		Text:      response.OutputText(),
 	}, nil
 }
 

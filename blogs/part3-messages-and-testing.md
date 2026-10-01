@@ -85,6 +85,15 @@ Notice the elegant design here:
 - **Factory functions**: Clean ways to create different message types with `NewHumanStringMessage()`, `NewAssistantStringMessage()`, etc.
 - **This mirrors real APIs**: OpenAI, Claude, and Gemini all use this pattern!
 
+> **📌 Update (this post predates it):** the "simple content model" bullet has since
+> grown. Message content is now a slice of typed parts (`models/message_content.go`):
+> `TextContentPart`, `ToolCallContentPart`, and `ToolResultContentPart`, plus a
+> `MessageRoleTool` role. That was necessary because Anthropic's native Messages API
+> rejects a `tool_result` that doesn't reference a preceding `tool_use` — tool
+> correlation needs more than one text blob. `Content().Text()` still concatenates
+> the text parts, so everything shown below still works for text-only messages. See
+> the "Message model" section of `AGENTS.md` for the current shape.
+
 ### Using Messages: The Params Pattern
 
 The key to passing messages through our SDK is the `Params` struct:

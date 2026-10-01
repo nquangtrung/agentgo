@@ -17,6 +17,10 @@ type LanguageModelToolCallResolveOutput struct {
 	Usage     LanguageModelUsage
 	ModelName string
 	Context   *ToolExecutionsArchive
+	// Text is any narration the model emitted alongside its tool calls. When
+	// non-empty it is recorded on the assistant turn so the conversation
+	// reflects what the model actually said.
+	Text string
 }
 
 func NewLanguageModelOutput(text string, usage LanguageModelUsage, modelName string) LanguageModelOutput {
@@ -42,17 +46,17 @@ type ToolExecutionsArchive struct {
 type ContextKey string
 
 const (
-	ProviderContextKey        ContextKey = "provider_context"
-	MachineContextKey         ContextKey = "machine_context"
-	EndConditionsContextKey   ContextKey = "end_conditions_context"
-	ToolsContextKey           ContextKey = "tools_context"
-	StreamContextKey          ContextKey = "stream_context"
-	PartEmitterContextKey     ContextKey = "part_emitter_context"
-	AccumulatorContextKey     ContextKey = "accumulator_context"
-	PrepareStepFnContextKey   ContextKey = "prepare_step_fn_context"
-	ToolMiddlewaresContextKey ContextKey = "tool_middlewares_context"
-	StepMiddlewaresContextKey ContextKey = "step_middlewares_context"
-	SchemaContextKey          ContextKey = "schema_context"
+	ProviderContextKey         ContextKey = "provider_context"
+	MachineContextKey          ContextKey = "machine_context"
+	EndConditionsContextKey    ContextKey = "end_conditions_context"
+	ToolsContextKey            ContextKey = "tools_context"
+	StreamContextKey           ContextKey = "stream_context"
+	PartEmitterContextKey      ContextKey = "part_emitter_context"
+	AccumulatorContextKey      ContextKey = "accumulator_context"
+	PrepareStepFnContextKey    ContextKey = "prepare_step_fn_context"
+	ToolMiddlewaresContextKey  ContextKey = "tool_middlewares_context"
+	StepMiddlewaresContextKey  ContextKey = "step_middlewares_context"
+	SchemaContextKey           ContextKey = "schema_context"
 	MaxObjectRetriesContextKey ContextKey = "max_object_retries_context"
 )
 

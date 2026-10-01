@@ -2,7 +2,6 @@ package agentgo
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"log"
 	"testing"
@@ -11,7 +10,6 @@ import (
 	"github.com/nquangtrung/agentgo/mocks"
 	"github.com/nquangtrung/agentgo/models"
 	"github.com/nquangtrung/agentgo/providers"
-	"github.com/nquangtrung/agentgo/utils"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 )
@@ -117,7 +115,6 @@ func TestStreamTextWithTool(t *testing.T) {
 		"key1": "value1",
 		"key2": "value2",
 	}
-	jsonedToolResult := utils.Must(json.Marshal(toolResult))
 	tools := []models.BaseTool{
 		models.NewTool(models.NewToolParams{
 			Name: "mock_tool",
@@ -147,16 +144,36 @@ func TestStreamTextWithTool(t *testing.T) {
 		Tools: tools,
 	}
 
+	// Structured tool round-trip: human prompt, assistant tool call, tool
+	// result correlated by call id.
 	checkResolveToolCall := func(p providers.AgentProviderPromptMessageParams) bool {
 		switch {
-		case len(p.Messages) != 2:
-			log.Printf("Expected at least 2 message, got %d", len(p.Messages))
+		case len(p.Messages) != 3:
+			log.Printf("Expected prompt, tool call, and tool result, got %d messages", len(p.Messages))
+			return false
+		case p.Messages[0].Type() != models.MessageRoleHuman:
+			log.Printf("Expected first message to be the human prompt, got %s", p.Messages[0].Type())
 			return false
 		case p.Messages[0].Content().Text() != prompt:
 			log.Printf("Expected first message to be prompt '%s', got '%s'", prompt, p.Messages[0].Content().Text())
 			return false
-		case p.Messages[1].Content().Text() != fmt.Sprintf("Tool [%s] execution result: %s", tools[0].Name(), jsonedToolResult):
-			log.Printf("Expected second message to be tool result, got '%s'", p.Messages[1].Content().Text())
+		case p.Messages[1].Type() != models.MessageRoleAssistant:
+			log.Printf("Expected second message to record the tool call, got %s", p.Messages[1].Type())
+			return false
+		case len(p.Messages[1].Content().ToolCalls()) != 1:
+			log.Printf("Expected one tool call part, got %d", len(p.Messages[1].Content().ToolCalls()))
+			return false
+		case p.Messages[1].Content().ToolCalls()[0].Name() != tools[0].Name():
+			log.Printf("Expected tool call %s, got %s", tools[0].Name(), p.Messages[1].Content().ToolCalls()[0].Name())
+			return false
+		case p.Messages[2].Type() != models.MessageRoleTool:
+			log.Printf("Expected third message to be the tool result, got %s", p.Messages[2].Type())
+			return false
+		case len(p.Messages[2].Content().ToolResults()) != 1:
+			log.Printf("Expected one tool result part, got %d", len(p.Messages[2].Content().ToolResults()))
+			return false
+		case p.Messages[2].Content().ToolResults()[0].ToolCallID() != "call_1":
+			log.Printf("Expected result to correlate to call_1, got %s", p.Messages[2].Content().ToolResults()[0].ToolCallID())
 			return false
 		default:
 			return true
@@ -190,6 +207,7 @@ func TestStreamTextWithTool(t *testing.T) {
 					{
 						ToolName: "mock_tool",
 						Params:   toolParams,
+						ID:       "call_1",
 					},
 				},
 			}),
@@ -208,12 +226,19 @@ func TestStreamTextWithTool(t *testing.T) {
 		gomock.Cond(
 			func(p providers.AgentProviderPromptMessageParams) bool {
 				switch {
-				case len(p.Messages) != 2:
+				case len(p.Messages) != 3:
+					return false
+				case p.Messages[0].Type() != models.MessageRoleHuman:
 					return false
 				case p.Messages[0].Content().Text() != params.Prompt:
 					return false
-				case p.Messages[1].Content().Text() != fmt.Sprintf("Tool [%s] execution result: %s", tools[0].Name(), jsonedToolResult):
-					log.Printf("Expected second message to be tool result, got '%s'", p.Messages[1].Content().Text())
+				case p.Messages[1].Type() != models.MessageRoleAssistant:
+					return false
+				case len(p.Messages[1].Content().ToolCalls()) != 1:
+					return false
+				case p.Messages[2].Type() != models.MessageRoleTool:
+					return false
+				case len(p.Messages[2].Content().ToolResults()) != 1:
 					return false
 				default:
 					return true

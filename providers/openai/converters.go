@@ -18,48 +18,87 @@ func convertInputFromParams(params providers.AgentProviderPromptMessageParams) r
 	return convertMessageObjectToInput(params.Messages)
 }
 
+// convertMessageObjectToInput maps SDK messages onto Responses API input items.
+//
+// Tool calls and tool results become dedicated function_call / function_call_output
+// items rather than message items, which is what lets the API correlate a result
+// with the call that produced it. The Responses API accepts one input item per
+// tool part, so a message carrying several parts expands to several items.
 func convertMessageObjectToInput(messages []models.Message) responses.ResponseNewParamsInputUnion {
-	var inputItems []responses.ResponseInputItemUnionParam = utils.Map(
-		messages,
-		func(message models.Message) responses.ResponseInputItemUnionParam {
-			switch message.Type() {
-			case models.MessageRoleSystem:
-				return responses.ResponseInputItemParamOfMessage(
-					responses.ResponseInputMessageContentListParam{
-						responses.ResponseInputContentParamOfInputText(message.Content().Text()),
-					},
-					responses.EasyInputMessageRoleSystem,
-				)
-			case models.MessageRoleHuman:
-				return responses.ResponseInputItemParamOfMessage(
-					responses.ResponseInputMessageContentListParam{
-						responses.ResponseInputContentParamOfInputText(message.Content().Text()),
-					},
-					responses.EasyInputMessageRoleUser,
-				)
-			case models.MessageRoleAssistant:
-				return responses.ResponseInputItemParamOfOutputMessage(
+	var inputItems []responses.ResponseInputItemUnionParam
+
+	for _, message := range messages {
+		content := message.Content()
+		toolCalls := content.ToolCalls()
+		toolResults := content.ToolResults()
+
+		// Tool-bearing messages map to dedicated item types, not message items.
+		if len(toolCalls) > 0 || len(toolResults) > 0 {
+			for _, call := range toolCalls {
+				arguments := utils.Must(json.Marshal(call.Input()))
+				inputItems = append(inputItems, responses.ResponseInputItemParamOfFunctionCall(
+					string(arguments),
+					call.ID(),
+					call.Name(),
+				))
+			}
+			for _, result := range toolResults {
+				inputItems = append(inputItems, responses.ResponseInputItemParamOfFunctionCallOutput(
+					result.ToolCallID(),
+					result.Payload(),
+				))
+			}
+
+			// Any narration alongside the tool parts is a normal output message.
+			if text := content.Text(); text != "" {
+				inputItems = append(inputItems, responses.ResponseInputItemParamOfOutputMessage(
 					[]responses.ResponseOutputMessageContentUnionParam{
-						{OfOutputText: &responses.ResponseOutputTextParam{
-							Text: message.Content().Text(),
-							// Annotations: []responses.ResponseOutputTextAnnotationUnionParam{},
-						}},
+						{OfOutputText: &responses.ResponseOutputTextParam{Text: text}},
 					},
 					"",
 					responses.ResponseOutputMessageStatusCompleted,
-				)
-			default:
-				return responses.ResponseInputItemParamOfMessage(
-					responses.ResponseInputMessageContentListParam{
-						responses.ResponseInputContentParamOfInputText(message.Content().Text()),
-					},
-					responses.EasyInputMessageRoleUser,
-				)
+				))
 			}
-		},
-	)
+			continue
+		}
+
+		inputItems = append(inputItems, convertTextMessageToInputItem(message))
+	}
 
 	return responses.ResponseNewParamsInputUnion{OfInputItemList: inputItems}
+}
+
+// convertTextMessageToInputItem maps a text-only message. A tool call without an
+// id cannot be expressed as a function_call item, so it degrades to prose rather
+// than being sent as an uncorrelatable item.
+func convertTextMessageToInputItem(message models.Message) responses.ResponseInputItemUnionParam {
+	text := message.Content().Text()
+
+	switch message.Type() {
+	case models.MessageRoleSystem:
+		return responses.ResponseInputItemParamOfMessage(
+			responses.ResponseInputMessageContentListParam{
+				responses.ResponseInputContentParamOfInputText(text),
+			},
+			responses.EasyInputMessageRoleSystem,
+		)
+	case models.MessageRoleAssistant:
+		return responses.ResponseInputItemParamOfOutputMessage(
+			[]responses.ResponseOutputMessageContentUnionParam{
+				{OfOutputText: &responses.ResponseOutputTextParam{Text: text}},
+			},
+			"",
+			responses.ResponseOutputMessageStatusCompleted,
+		)
+	default:
+		// Human, tool results without ids, and any unknown role.
+		return responses.ResponseInputItemParamOfMessage(
+			responses.ResponseInputMessageContentListParam{
+				responses.ResponseInputContentParamOfInputText(text),
+			},
+			responses.EasyInputMessageRoleUser,
+		)
+	}
 }
 
 // convertResponseFormat maps a models.ResponseFormat to the OpenAI Responses

@@ -133,6 +133,7 @@ func (p ClaudeProvider) ResolveToolCall(
 		ToolCalls: convertOutputToToolCalls(completion),
 		Usage:     convertUsageToLanguageModelUsage(completion.Usage),
 		ModelName: p.BaseAgentProvider.Context().ModelName,
+		Text:      firstChoiceContent(completion),
 	}, nil
 }
 

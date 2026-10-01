@@ -77,7 +77,23 @@ Each provider package is deliberately self-contained and duplicates its converte
 
 - **Claude cannot do structured output.** Anthropic's OpenAI compatibility layer documents `response_format` as ignored, so `providers/claude/converters.go: convertResponseFormat` returns a `*models.StructuredOutputUnsupportedError` instead of silently dropping the schema. `GenerateObject`/`StreamObject` therefore fail on Claude by design. Supporting it would mean adding the native `anthropic-sdk-go` dependency and implementing the Messages API.
 - **Claude reports no usage details.** Both `usage.prompt_tokens_details` and `usage.completion_tokens_details` are documented as always empty, so cached and reasoning token counts are always zero.
-- **`models.ToolCall.ID`** was added so providers can surface the provider-assigned call id (`call_id` / tool call id). It is currently populated by all four converters but **not consumed anywhere**: `models.NewMessageFromToolResult` still renders results as assistant prose (`Tool [x] execution result: ...`) with no role or id, because `models.MessageRole` has no tool/function role and `BaseMessageContent` is text-only. Anthropic's native API and Gemini both require structured tool-result messages correlated by id, so native SDK support for those providers would need that message model widened first. The end conditions in `endconditions/` are unaffected — they read the tool archive, not messages.
+- **Tool calls without an id are dropped** by the Chat Completions converters (claude, gemini). A result that references a call the provider did not identify cannot be correlated, so replaying it would leave the API rejecting the pair. The Responses API converters (openai, deepseek) send such calls as uncorrelatable items instead.
+
+## Message model
+
+`models.Message` content is a slice of typed parts (`models/message_content.go`), not a text blob:
+
+- `TextContentPart` — plain text
+- `ToolCallContentPart` — the model's request, carrying `ID()` (the provider-assigned call id), `Name()`, `Input()`
+- `ToolResultContentPart` — the execution outcome, carrying `ToolCallID()` that echoes the originating call's id
+
+`Content().Text()` still concatenates the text parts and returns `""` when there are none, so text-only code paths are unaffected. Use `Content().ToolCalls()` / `Content().ToolResults()` / `Content().Parts()` for structured access.
+
+`MessageRoleTool` carries results. Anthropic models these as `tool_result` blocks on a user turn, but they are results rather than user input, so each provider maps the role onto its own wire format.
+
+A tool round-trip appends **three** messages: the human prompt, an assistant turn recording the model's calls (`models.NewAssistantToolCallsMessage`, built in `resolveTool`), then one tool message per result (`archiveToolResult`). Replaying the call is what lets Anthropic's native Messages API validate the pairing; it errors on a `tool_result` with no matching preceding `tool_use`.
+
+The end conditions in `endconditions/` are unaffected — they read the tool archive, not messages.
 
 ## Context patterns
 

@@ -6,25 +6,17 @@ import (
 	"github.com/nquangtrung/agentgo/utils"
 )
 
-func newMessageFromTools(toolOutputs []models.ToolExecuteOutput) []models.Message {
-	messages := []models.Message{}
-	for _, toolOutput := range toolOutputs {
-		messages = append(messages, models.NewMessageFromToolResult(toolOutput))
-	}
-	return messages
-}
-
 func resolveMessages(params Params) []models.Message {
-	messages := params.Messages
+	// Copy before appending: appending to the caller's slice would write into
+	// their backing array whenever capacity allows, so reusing one slice across
+	// calls could silently clobber their messages.
+	messages := make([]models.Message, 0, len(params.Messages)+1)
+	messages = append(messages, params.Messages...)
 	if params.Prompt != "" {
 		messages = append(messages, models.NewHumanStringMessage(params.Prompt))
 	}
 
 	return messages
-}
-
-func resolveToolCallExecution(params Params, provider providers.AgentProvider, tool models.ToolCall) (models.ToolExecuteOutput, error) {
-	return models.ToolExecuteOutput{}, nil
 }
 
 func resolveProviderFromParams(params Params) (providers.AgentProvider, error) {

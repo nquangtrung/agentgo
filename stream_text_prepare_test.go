@@ -117,7 +117,7 @@ func TestStreamTextPrepareStepWithMessages(t *testing.T) {
 			// Override messages on first step
 			customMessages := []models.Message{
 				models.NewStringMessage("system", "You are a helpful assistant"),
-				models.NewStringMessage("user", "Modified prompt in prepare step"),
+				models.NewStringMessage(models.MessageRoleHuman, "Modified prompt in prepare step"),
 			}
 			return PrepareStepResult{
 				Messages: &customMessages,
@@ -293,7 +293,7 @@ func TestStreamTextPrepareStepMultipleOverrides(t *testing.T) {
 			// Override all three options
 			activeTools := []string{"search"}
 			customMessages := []models.Message{
-				models.NewStringMessage("user", "Search for information"),
+				models.NewStringMessage(models.MessageRoleHuman, "Search for information"),
 			}
 			return PrepareStepResult{
 				ToolChoice:  &ToolChoice{Name: "search"},

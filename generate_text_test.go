@@ -3,7 +3,6 @@ package agentgo
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"testing"
 
 	"github.com/nquangtrung/agentgo/endconditions"
@@ -94,7 +93,6 @@ func TestGenerateTextWithTool(t *testing.T) {
 		"key1": "value1",
 		"key2": "value2",
 	}
-	jsonedToolResult := utils.Must(json.Marshal(toolResult))
 	tools := []models.BaseTool{
 		models.NewTool(models.NewToolParams{
 			Name: "mock_tool",
@@ -124,16 +122,43 @@ func TestGenerateTextWithTool(t *testing.T) {
 		Tools: tools,
 	}
 
+	// The tool round-trip is now structured: the assistant's request is
+	// replayed as a tool-call turn, followed by a tool result turn correlated by
+	// call id. Assert that shape rather than the old prose format.
 	checkResolveToolCall := func(p providers.AgentProviderPromptMessageParams) bool {
 		switch {
-		case len(p.Messages) != 2:
-			logger.Info("Expected at least 2 message", "actual", len(p.Messages))
+		case len(p.Messages) != 3:
+			logger.Info("Expected prompt, tool call, and tool result", "actual", len(p.Messages))
+			return false
+		case p.Messages[0].Type() != models.MessageRoleHuman:
+			logger.Info("Expected first message to be the human prompt", "actual", p.Messages[0].Type())
 			return false
 		case p.Messages[0].Content().Text() != prompt:
 			logger.Info("Expected first message to be prompt", "expected", prompt, "actual", p.Messages[0].Content().Text())
 			return false
-		case p.Messages[1].Content().Text() != fmt.Sprintf("Tool [%s] execution result: %s", tools[0].Name(), jsonedToolResult):
-			logger.Info("Expected second message to be tool result", "actual", p.Messages[1].Content().Text())
+		case p.Messages[1].Type() != models.MessageRoleAssistant:
+			logger.Info("Expected second message to record the tool call", "actual", p.Messages[1].Type())
+			return false
+		case len(p.Messages[1].Content().ToolCalls()) != 1:
+			logger.Info("Expected one tool call part", "actual", len(p.Messages[1].Content().ToolCalls()))
+			return false
+		case p.Messages[1].Content().ToolCalls()[0].Name() != tools[0].Name():
+			logger.Info("Expected tool call name", "expected", tools[0].Name(), "actual", p.Messages[1].Content().ToolCalls()[0].Name())
+			return false
+		case p.Messages[2].Type() != models.MessageRoleTool:
+			logger.Info("Expected third message to be the tool result", "actual", p.Messages[2].Type())
+			return false
+		case len(p.Messages[2].Content().ToolResults()) != 1:
+			logger.Info("Expected one tool result part", "actual", len(p.Messages[2].Content().ToolResults()))
+			return false
+		case p.Messages[2].Content().ToolResults()[0].Name() != tools[0].Name():
+			logger.Info("Expected tool result name", "expected", tools[0].Name(), "actual", p.Messages[2].Content().ToolResults()[0].Name())
+			return false
+		case p.Messages[2].Content().ToolResults()[0].ToolCallID() != "call_1":
+			logger.Info("Expected result to correlate back to the call", "actual", p.Messages[2].Content().ToolResults()[0].ToolCallID())
+			return false
+		case !json.Valid([]byte(p.Messages[2].Content().ToolResults()[0].Payload())):
+			logger.Info("Expected tool result payload to be JSON", "actual", p.Messages[2].Content().ToolResults()[0].Payload())
 			return false
 		default:
 			return true
@@ -167,6 +192,7 @@ func TestGenerateTextWithTool(t *testing.T) {
 					{
 						ToolName: "mock_tool",
 						Params:   toolParams,
+						ID:       "call_1",
 					},
 				},
 			}),

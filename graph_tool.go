@@ -123,8 +123,19 @@ func resolveTool(ctx context.Context, state agentState) (agentStateDelta, error)
 	}
 
 	logger.Info("Resolved tool calls", "calls", calls, "usage", resolveOutput.Usage)
+
+	// Record the model's own requests in the conversation before any results
+	// arrive. Providers with structured tool protocols require a result to
+	// reference the call that produced it, so the call turn has to precede the
+	// result turns that archiveToolResult appends.
+	var appendMessages []models.Message
+	if len(calls) > 0 {
+		appendMessages = append(appendMessages, models.NewAssistantToolCallsMessage(calls, resolveOutput.Text))
+	}
+
 	return agentStateDelta{
 		from:           RESOLVE_TOOL,
 		availableTools: calls,
+		appendMessages: appendMessages,
 	}, nil
 }

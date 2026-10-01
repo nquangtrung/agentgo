@@ -38,47 +38,79 @@ func convertInputFromParams(params providers.AgentProviderPromptMessageParams) r
 	return convertMessageObjectToInput(params.Messages)
 }
 
+// convertMessageObjectToInput maps SDK messages onto Responses API input items.
+//
+// Tool calls and tool results become dedicated function_call / function_call_output
+// items so the API can correlate a result with the call that produced it. A
+// message with several tool parts expands into several items.
 func convertMessageObjectToInput(messages []models.Message) responses.ResponseNewParamsInputUnion {
-	var inputItems []responses.ResponseInputItemUnionParam = utils.Map(
-		messages,
-		func(message models.Message) responses.ResponseInputItemUnionParam {
-			switch message.Type() {
-			case models.MessageRoleSystem:
-				return responses.ResponseInputItemParamOfMessage(
-					responses.ResponseInputMessageContentListParam{
-						responses.ResponseInputContentParamOfInputText(message.Content().Text()),
-					},
-					responses.EasyInputMessageRoleSystem,
-				)
-			case models.MessageRoleHuman:
-				return responses.ResponseInputItemParamOfMessage(
-					responses.ResponseInputMessageContentListParam{
-						responses.ResponseInputContentParamOfInputText(message.Content().Text()),
-					},
-					responses.EasyInputMessageRoleUser,
-				)
-			case models.MessageRoleAssistant:
-				return responses.ResponseInputItemParamOfOutputMessage(
+	var inputItems []responses.ResponseInputItemUnionParam
+
+	for _, message := range messages {
+		content := message.Content()
+		toolCalls := content.ToolCalls()
+		toolResults := content.ToolResults()
+
+		if len(toolCalls) > 0 || len(toolResults) > 0 {
+			for _, call := range toolCalls {
+				arguments := utils.Must(json.Marshal(call.Input()))
+				inputItems = append(inputItems, responses.ResponseInputItemParamOfFunctionCall(
+					string(arguments),
+					call.ID(),
+					call.Name(),
+				))
+			}
+			for _, result := range toolResults {
+				inputItems = append(inputItems, responses.ResponseInputItemParamOfFunctionCallOutput(
+					result.ToolCallID(),
+					result.Payload(),
+				))
+			}
+			if text := content.Text(); text != "" {
+				inputItems = append(inputItems, responses.ResponseInputItemParamOfOutputMessage(
 					[]responses.ResponseOutputMessageContentUnionParam{
-						{OfOutputText: &responses.ResponseOutputTextParam{
-							Text: message.Content().Text(),
-						}},
+						{OfOutputText: &responses.ResponseOutputTextParam{Text: text}},
 					},
 					"",
 					responses.ResponseOutputMessageStatusCompleted,
-				)
-			default:
-				return responses.ResponseInputItemParamOfMessage(
-					responses.ResponseInputMessageContentListParam{
-						responses.ResponseInputContentParamOfInputText(message.Content().Text()),
-					},
-					responses.EasyInputMessageRoleUser,
-				)
+				))
 			}
-		},
-	)
+			continue
+		}
+
+		inputItems = append(inputItems, convertTextMessageToInputItem(message))
+	}
 
 	return responses.ResponseNewParamsInputUnion{OfInputItemList: inputItems}
+}
+
+func convertTextMessageToInputItem(message models.Message) responses.ResponseInputItemUnionParam {
+	text := message.Content().Text()
+
+	switch message.Type() {
+	case models.MessageRoleSystem:
+		return responses.ResponseInputItemParamOfMessage(
+			responses.ResponseInputMessageContentListParam{
+				responses.ResponseInputContentParamOfInputText(text),
+			},
+			responses.EasyInputMessageRoleSystem,
+		)
+	case models.MessageRoleAssistant:
+		return responses.ResponseInputItemParamOfOutputMessage(
+			[]responses.ResponseOutputMessageContentUnionParam{
+				{OfOutputText: &responses.ResponseOutputTextParam{Text: text}},
+			},
+			"",
+			responses.ResponseOutputMessageStatusCompleted,
+		)
+	default:
+		return responses.ResponseInputItemParamOfMessage(
+			responses.ResponseInputMessageContentListParam{
+				responses.ResponseInputContentParamOfInputText(text),
+			},
+			responses.EasyInputMessageRoleUser,
+		)
+	}
 }
 
 // convertResponseFormat maps a models.ResponseFormat to the Responses API text
