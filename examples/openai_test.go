@@ -11,6 +11,7 @@ import (
 )
 
 func TestGenerateTextOpenAI(t *testing.T) {
+	requireLiveTest(t)
 	utils.LoadEnv("../.env")
 	ctx := context.Background()
 
@@ -32,6 +33,7 @@ func TestGenerateTextOpenAI(t *testing.T) {
 }
 
 func TestGenerateTextOpenAIWithInput(t *testing.T) {
+	requireLiveTest(t)
 	utils.LoadEnv("../.env")
 	ctx := context.Background()
 
@@ -83,6 +85,7 @@ func TestGenerateTextOpenAIWithInput(t *testing.T) {
 }
 
 func TestStreamTextOpenAI(t *testing.T) {
+	requireLiveTest(t)
 	utils.LoadEnv("../.env")
 	ctx := context.Background()
 	output := agentgo.StreamText(ctx, agentgo.Params{
@@ -107,6 +110,7 @@ func TestStreamTextOpenAI(t *testing.T) {
 }
 
 func TestStreamTextOpenAIWithInput(t *testing.T) {
+	requireLiveTest(t)
 	utils.LoadEnv("../.env")
 	ctx := context.Background()
 	modelName := "gpt-5-mini"

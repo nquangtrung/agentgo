@@ -5,6 +5,9 @@ import (
 
 	"github.com/nquangtrung/agentgo/models"
 	"github.com/nquangtrung/agentgo/providers"
+	"github.com/nquangtrung/agentgo/providers/claude"
+	"github.com/nquangtrung/agentgo/providers/deepseek"
+	"github.com/nquangtrung/agentgo/providers/gemini"
 	"github.com/nquangtrung/agentgo/providers/openai"
 	"github.com/nquangtrung/agentgo/utils"
 )
@@ -17,9 +20,10 @@ type AgentProviderFactoryParams struct {
 type ModelType string
 
 const (
-	MODEL_OPENAI ModelType = "openai"
-	MODEL_GEMINI ModelType = "gemini"
-	MODEL_CLAUDE ModelType = "claude"
+	MODEL_OPENAI   ModelType = "openai"
+	MODEL_GEMINI   ModelType = "gemini"
+	MODEL_CLAUDE   ModelType = "claude"
+	MODEL_DEEPSEEK ModelType = "deepseek"
 )
 
 func FindSupportedModel(modelName string) (ModelType, bool) {
@@ -30,6 +34,8 @@ func FindSupportedModel(modelName string) (ModelType, bool) {
 		return MODEL_GEMINI, true
 	case strings.HasPrefix(modelName, "claude"):
 		return MODEL_CLAUDE, true
+	case strings.HasPrefix(modelName, "deepseek"):
+		return MODEL_DEEPSEEK, true
 	default:
 		return "", false
 	}
@@ -42,6 +48,8 @@ func LoadAPIKeyFromEnv(modelType ModelType) (string, error) {
 		return utils.GetEnvVar("GEMINI_API_KEY"), nil
 	case MODEL_CLAUDE:
 		return utils.GetEnvVar("CLAUDE_API_KEY"), nil
+	case MODEL_DEEPSEEK:
+		return utils.GetEnvVar("DEEPSEEK_API_KEY"), nil
 	default:
 		return "", &models.UnsupportedModelError{ModelName: string(modelType)}
 	}
@@ -68,13 +76,13 @@ func CreateAgentProvider(params AgentProviderFactoryParams) (providers.AgentProv
 	switch modelType {
 	case MODEL_OPENAI:
 		return openai.NewOpenAIProvider(params.APIKey, params.ModelName), nil
+	case MODEL_DEEPSEEK:
+		return deepseek.NewDeepSeekProvider(params.APIKey, params.ModelName), nil
 	case MODEL_GEMINI:
-		// return NewGeminiProvider(params.APIKey, params.ModelName), nil
+		return gemini.NewGeminiProvider(params.APIKey, params.ModelName), nil
 	case MODEL_CLAUDE:
-		// return NewClaudeProvider(params.APIKey, params.ModelName), nil
+		return claude.NewClaudeProvider(params.APIKey, params.ModelName), nil
 	default:
 		return nil, &models.UnsupportedModelError{ModelName: params.ModelName}
 	}
-
-	return nil, &models.UnsupportedModelError{ModelName: params.ModelName}
 }

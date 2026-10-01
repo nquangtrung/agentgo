@@ -13,6 +13,7 @@ import (
 )
 
 func TestGenerateTextWithToolOpenAI(t *testing.T) {
+	requireLiveTest(t)
 	utils.LoadEnv("../.env")
 	ctx := context.Background()
 	output, err := agentgo.GenerateText(ctx, agentgo.Params{

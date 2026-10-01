@@ -1,4 +1,4 @@
-package openai
+package deepseek
 
 import (
 	"encoding/json"
@@ -10,9 +10,29 @@ import (
 	"github.com/openai/openai-go/v3/responses"
 )
 
+// convertUsageToLanguageModelUsage maps the Responses API usage object onto the
+// SDK usage type. DeepSeek reports context-cache hits under
+// input_tokens_details.cached_tokens and chain-of-thought tokens under
+// output_tokens_details.reasoning_tokens. It does not report cache writes, so
+// CacheWriteTokens is always left at zero.
+func convertUsageToLanguageModelUsage(usage responses.ResponseUsage) models.LanguageModelUsage {
+	return models.LanguageModelUsage{
+		InputTokens: int64(usage.InputTokens),
+		InputTokensDetails: models.LanguageModelUsageInputTokensDetails{
+			CachedTokens:     int64(usage.InputTokensDetails.CachedTokens),
+			CacheWriteTokens: int64(usage.InputTokensDetails.CacheWriteTokens),
+		},
+		OutputTokens: int64(usage.OutputTokens),
+		OutputTokensDetails: models.LanguageModelUsageOutputTokensDetails{
+			ReasoningTokens: int64(usage.OutputTokensDetails.ReasoningTokens),
+		},
+		TotalTokens: int64(usage.TotalTokens),
+	}
+}
+
 func convertInputFromParams(params providers.AgentProviderPromptMessageParams) responses.ResponseNewParamsInputUnion {
 	if len(params.Messages) == 0 {
-		panic("no messages provided to GetInputFromParams")
+		panic("no messages provided to convertInputFromParams")
 	}
 
 	return convertMessageObjectToInput(params.Messages)
@@ -42,7 +62,6 @@ func convertMessageObjectToInput(messages []models.Message) responses.ResponseNe
 					[]responses.ResponseOutputMessageContentUnionParam{
 						{OfOutputText: &responses.ResponseOutputTextParam{
 							Text: message.Content().Text(),
-							// Annotations: []responses.ResponseOutputTextAnnotationUnionParam{},
 						}},
 					},
 					"",
@@ -62,9 +81,11 @@ func convertMessageObjectToInput(messages []models.Message) responses.ResponseNe
 	return responses.ResponseNewParamsInputUnion{OfInputItemList: inputItems}
 }
 
-// convertResponseFormat maps a models.ResponseFormat to the OpenAI Responses
-// API text configuration. A nil format yields the zero value, which the API
-// treats as plain text.
+// convertResponseFormat maps a models.ResponseFormat to the Responses API text
+// configuration. DeepSeek fully supports the `text` parameter including
+// `format`, so JSON-schema structured output works the same way it does for
+// OpenAI. A nil format yields the zero value, which the API treats as plain
+// text.
 func convertResponseFormat(format *models.ResponseFormat) responses.ResponseTextConfigParam {
 	if format == nil {
 		return responses.ResponseTextConfigParam{}
@@ -84,14 +105,18 @@ func convertResponseFormat(format *models.ResponseFormat) responses.ResponseText
 	}
 }
 
+// convertToolParamsToInput builds function tools. DeepSeek supports `function`
+// tools and ignores every other tool type.
 func convertToolParamsToInput(tools []models.BaseTool) []responses.ToolUnionParam {
 	return utils.Map(tools, func(tool models.BaseTool) responses.ToolUnionParam {
-		openAiTool := responses.ToolParamOfFunction(tool.Name(), tool.InputSchema(), true)
-		openAiTool.OfFunction.Description = openai.String(tool.Description())
-		return openAiTool
+		deepSeekTool := responses.ToolParamOfFunction(tool.Name(), tool.InputSchema(), true)
+		deepSeekTool.OfFunction.Description = openai.String(tool.Description())
+		return deepSeekTool
 	})
 }
 
+// convertOutputToToolCalls extracts function calls from a completed response.
+// Responses that only contain text yield a nil slice.
 func convertOutputToToolCalls(response *responses.Response) []models.ToolCall {
 	filtered := utils.Filter(
 		response.Output,

@@ -32,9 +32,13 @@ Create a `.env` file in the root directory:
 
 ```env
 OPENAI_API_KEY=your-openai-api-key-here
+DEEPSEEK_API_KEY=your-deepseek-api-key-here
 GEMINI_API_KEY=your-gemini-api-key-here
 CLAUDE_API_KEY=your-claude-api-key-here
 ```
+
+Only set the key for the provider you actually use. `DEEPSEEK_API_KEY` is only
+read when the model name starts with `deepseek`.
 
 ### Basic Usage
 
@@ -130,7 +134,7 @@ output, _ := provider.GenerateText("Hello, AI!")
 ```
 agentgo/
 ├── models/           # Data structures (Output, Context, Usage, etc.)
-├── providers/        # Provider implementations (OpenAI, etc.)
+├── providers/        # Provider implementations (OpenAI, DeepSeek, Gemini, Claude)
 ├── utils/            # Utilities (env loading, etc.)
 ├── examples/         # Example usage
 ├── blogs/            # Educational blog posts
@@ -153,21 +157,44 @@ Each blog post explains the "why" behind the design decisions, not just the "how
 Currently implemented:
 
 - ✅ **OpenAI** - All GPT models (gpt-3.5, gpt-4, etc.)
+- ✅ **DeepSeek** - deepseek-flash, deepseek-v4-pro, and other `deepseek-*` models
+- ✅ **Google Gemini** - Gemini models (`gemini-*`), via Google's OpenAI-compatible endpoint
+- ✅ **Anthropic Claude** - Claude models (`claude-*`), via Anthropic's OpenAI-compatible endpoint
 
 Coming soon:
 
-- 🔜 **Google Gemini** - Google's language models
-- 🔜 **Anthropic Claude** - Claude models
 - 🔜 **Custom providers** - Implement your own!
+
+### Capability differences between providers
+
+Each provider targets a different underlying API, so support is not uniform:
+
+| Capability | OpenAI | DeepSeek | Gemini | Claude |
+| --- | --- | --- | --- | --- |
+| Text generation | ✅ | ✅ | ✅ | ✅ |
+| Streaming | ✅ | ✅ | ✅ | ✅ |
+| Tool calls | ✅ | ✅ | ✅ | ✅ (`strict` ignored) |
+| Structured output (`json_schema`) | ✅ | ✅ | ✅ | ❌ |
+| Cached / reasoning token counts | ✅ | ✅ | ✅ | ❌ (always empty) |
+
+Claude is reached through Anthropic's OpenAI SDK compatibility layer, which documents `response_format` as ignored. Rather than silently returning unvalidated prose, the Claude provider returns a `models.StructuredOutputUnsupportedError` when a `ResponseFormat` is supplied — so `GenerateObject` and `StreamObject` fail loudly on Claude. Use the native Anthropic API if you need structured output there.
 
 ## Examples
 
-Check the `examples/` folder for complete working examples:
+Check the `examples/` folder for complete working examples.
+
+The example tests call the real provider APIs, so they are skipped by default.
+This keeps `go test ./...` offline and free. Opt in with `AGENTGO_LIVE_TESTS=1`:
 
 ```bash
-# Run the OpenAI example
-go run examples/openai.go
+# Run every live example
+AGENTGO_LIVE_TESTS=1 go test -v ./examples/
+
+# Run just one
+AGENTGO_LIVE_TESTS=1 go test -v ./examples/ -run TestGenerateTextDeepSeek
 ```
+
+Only set `AGENTGO_LIVE_TESTS` when you deliberately want to spend API credits.
 
 ## Architecture Highlights
 

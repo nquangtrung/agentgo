@@ -8,3 +8,6 @@ builds/*
 *test.md
 
 graphify-out/cache
+
+# graphify writes a full graph backup (multi-MB) before each regeneration.
+graphify-out/2*-*-*/

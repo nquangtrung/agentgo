@@ -17,6 +17,11 @@ type ToolCall struct {
 	Tool     Tool
 	Messages []Message
 	NotFound bool
+	// ID is the provider-assigned identifier for this call (for example
+	// OpenAI's `call_id` or the Chat Completions tool call id). Providers that
+	// correlate tool results by id populate it; providers that do not leave it
+	// empty.
+	ID string
 }
 
 //go:generate mockgen -destination=../mocks/mock_tool.go -package=mocks github.com/nquangtrung/agentgo/models Tool

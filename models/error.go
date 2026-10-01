@@ -35,6 +35,19 @@ func (e *ToolNotFoundError) Error() string {
 	return fmt.Sprintf("tool not found: %s", e.ToolName)
 }
 
+// StructuredOutputUnsupportedError is returned when a caller requests schema-
+// constrained output from a provider that cannot enforce it. Providers raise
+// this instead of silently dropping the response format, which would otherwise
+// surface later as a confusing parse error inside the object-repair loop.
+type StructuredOutputUnsupportedError struct {
+	ProviderName string
+	Reason       string
+}
+
+func (e *StructuredOutputUnsupportedError) Error() string {
+	return fmt.Sprintf("structured output is not supported by provider %s: %s", e.ProviderName, e.Reason)
+}
+
 // ObjectValidationError is returned when a decoded value does not satisfy the
 // schema's validator.
 type ObjectValidationError struct {

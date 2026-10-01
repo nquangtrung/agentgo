@@ -13,10 +13,10 @@ Rules:
 
 ## Project overview
 
-**AgentGo** is an educational Go SDK for interacting with multiple AI providers (OpenAI, Gemini, Claude) through a common interface. Key architectural patterns:
+**AgentGo** is an educational Go SDK for interacting with multiple AI providers (OpenAI, DeepSeek, Gemini, Claude) through a common interface. Key architectural patterns:
 
 - **Provider Interface** (providers/provider.go): All providers must implement `AgentProvider` with `Context()` and `GenerateText(prompt string)`
-- **Factory Pattern** (factory.go): `CreateAgentProvider()` maps model names (gpt-*, gemini-*, claude-*) to implementations
+- **Factory Pattern** (factory.go): `CreateAgentProvider()` maps model name prefixes (gpt-*, deepseek-*, gemini-*, claude-*) to implementations
 - **FSM Orchestration** (fsm/): Finite state machine drives AI interactions through defined state transitions (StartState → TextGeneration → ToolResolve → EndState)
 - **Streaming** (stream_text.go): Async alternative using `LanguageModelStreamOutput` with channels for real-time parts
 - **Object Generation** (generate_object.go, stream_object.go): `GenerateObject[T]` / `StreamObject[T]` produce schema-validated objects with a graph-level repair loop
@@ -39,9 +39,18 @@ go test -v ./...
 
 Tests use testify assertions, uber/mock for mocks (generated, pre-committed in mocks/), and context.Background() for test contexts. Mocks are already generated; do not regenerate them unless interface signatures change.
 
+### Live example tests — do not run unless asked
+
+Every test in `examples/` calls a real provider API and spends credits. They are all gated behind the `AGENTGO_LIVE_TESTS` env var and skipped by default, so `go test ./...` is offline and free.
+
+- **Never set `AGENTGO_LIVE_TESTS` on your own.** Run live tests only when the user explicitly asks for them.
+- To run when asked: `AGENTGO_LIVE_TESTS=1 go test -v ./examples/ -run TestGenerateTextDeepSeek`
+- The guard is `requireLiveTest(t)` from `examples/live_test.go`, and it must stay the first statement in each live test — before `utils.LoadEnv("../.env")`, which calls `log.Fatal` when `.env` is missing.
+- New live examples need that same first-line guard. Do not add unguarded live calls.
+
 ## Environment & .env
 
-- SDK requires `.env` file in root with `OPENAI_API_KEY`, `GEMINI_API_KEY`, `CLAUDE_API_KEY`
+- SDK requires `.env` file in root with keys for the providers you use: `OPENAI_API_KEY`, `DEEPSEEK_API_KEY`, `GEMINI_API_KEY`, `CLAUDE_API_KEY`
 - Loaded by `utils.LoadEnv()`, panics if missing (intentional for now)
 - Each test sets up mocks to avoid real API calls; examples in examples/ show live usage
 
@@ -53,6 +62,22 @@ Tests use testify assertions, uber/mock for mocks (generated, pre-committed in m
 4. Add API key case in `LoadAPIKeyFromEnv()`
 5. Update factory.go `ModelType` const and test coverage
 6. Honor `params.ResponseFormat` in `GenerateText`/`StreamText` when the provider supports structured output (see `providers/openai/converters.go: convertResponseFormat`)
+7. Add a `*_test.go` next to the provider with gomock-based unit tests, plus a `factory_test.go` case for the new model prefix
+
+### Provider status and API families
+
+All four providers are implemented, but they split across two different wire formats. Both are spoken with the `openai-go/v3` client, just against different services and base URLs:
+
+- **Responses API** — `providers/openai` (default base URL) and `providers/deepseek` (`https://api.deepseek.com`). Use the `responses` service and `responses.ResponseNewParams`. Stream termination differs from OpenAI: DeepSeek ends with a `response.completed` event and sends no `[DONE]` sentinel.
+- **Chat Completions** — `providers/gemini` (`https://generativelanguage.googleapis.com/v1beta/openai/`) and `providers/claude` (`https://api.anthropic.com/v1/`). Use `client.Chat.Completions` and `openai.ChatCompletionNewParams`. Streaming requires `StreamOptions.IncludeUsage` or the stream carries no token counts.
+
+Each provider package is deliberately self-contained and duplicates its converters rather than sharing a package with the others. Follow that convention when adding a provider.
+
+### Known provider gaps
+
+- **Claude cannot do structured output.** Anthropic's OpenAI compatibility layer documents `response_format` as ignored, so `providers/claude/converters.go: convertResponseFormat` returns a `*models.StructuredOutputUnsupportedError` instead of silently dropping the schema. `GenerateObject`/`StreamObject` therefore fail on Claude by design. Supporting it would mean adding the native `anthropic-sdk-go` dependency and implementing the Messages API.
+- **Claude reports no usage details.** Both `usage.prompt_tokens_details` and `usage.completion_tokens_details` are documented as always empty, so cached and reasoning token counts are always zero.
+- **`models.ToolCall.ID`** was added so providers can surface the provider-assigned call id (`call_id` / tool call id). It is currently populated by all four converters but **not consumed anywhere**: `models.NewMessageFromToolResult` still renders results as assistant prose (`Tool [x] execution result: ...`) with no role or id, because `models.MessageRole` has no tool/function role and `BaseMessageContent` is text-only. Anthropic's native API and Gemini both require structured tool-result messages correlated by id, so native SDK support for those providers would need that message model widened first. The end conditions in `endconditions/` are unaffected — they read the tool archive, not messages.
 
 ## Context patterns
 
